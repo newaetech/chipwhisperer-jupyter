@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>tmpexo8b7qr</title>
+<title>tmp88thqnpb</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13116,14 +13116,14 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Introduction-to-Clock-Glitch-Attacks">Introduction to Clock Glitch Attacks<a class="anchor-link" href="#Introduction-to-Clock-Glitch-Attacks">&#182;</a></h1>
+<h1 id="Glitch-Buffer-Attacks">Glitch Buffer Attacks<a class="anchor-link" href="#Glitch-Buffer-Attacks">&#182;</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This advanced tutorial will demonstrate clock glitch attacks using the ChipWhisperer system. This will introduce you to many required features of the ChipWhisperer system when it comes to glitching. This will be built on in later tutorials to generate voltage glitching attacks, or when you wish to attack other targets.</p>
+<p>This tutorial discusses a specific type of glitch attack. It shows how a simple printing loop can be abused, causing a target to print some otherwise private information. This attack will be used to recover a plaintext without any knowledge of the encryption scheme being used.</p>
 
 </div>
 </div>
@@ -13131,68 +13131,48 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Background-on-Clock-Glitching">Background on Clock Glitching<a class="anchor-link" href="#Background-on-Clock-Glitching">&#182;</a></h2>
+<h2 id="Firmware">Firmware<a class="anchor-link" href="#Firmware">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Digital hardware devices almost always expect some form of reliable clock. We can manipulate the clock being presented to the device to cause unintended behaviour. We'll be concentrating on microcontrollers here, however other digital devices (e.g. hardware encryption accelerators) can also have faults injected using this technique.</p>
-<p>Consider a microcontroller first. The following figure is an excerpt the Atmel AVR ATMega328P datasheet:</p>
-<p><img src="https://wiki.newae.com/images/2/20/Mcu-unglitched.png" alt="A2_1"></p>
-<p>Rather than loading each instruction from FLASH and performing the entire execution, the system has a pipeline to speed up the execution process. This means that an instruction is being decoded while the next one is being retrieved, as the following diagram shows:</p>
-<p><img src="https://wiki.newae.com/images/a/a5/Clock-normal.png" alt="A2_2"></p>
-<p>But if we modify the clock, we could have a situation where the system doesn't have enough time to actually perform an instruction. Consider the following, where Execute #1 is effectively skipped. Before the system has time to actually execute it another clock edge comes, causing the microcontroller to start execution of the next instruction:</p>
-<p><img src="https://wiki.newae.com/images/1/1e/Clock-glitched.png" alt="A2_3"></p>
-<p>This causes the microcontroller to skip an instruction. Such attacks can be immensely powerful in practice. Consider for example the following code from <code>linux-util-2.24</code>:</p>
-<div class="highlight"><pre><span></span><span class="cm">/*</span>
-<span class="cm"> *   auth.c -- PAM authorization code, common between chsh and chfn</span>
-<span class="cm"> *   (c) 2012 by Cody Maloney &lt;cmaloney@theoreticalchaos.com&gt;</span>
-<span class="cm"> *</span>
-<span class="cm"> *   this program is free software.  you can redistribute it and</span>
-<span class="cm"> *   modify it under the terms of the gnu general public license.</span>
-<span class="cm"> *   there is no warranty.</span>
-<span class="cm"> *</span>
-<span class="cm"> */</span>
+<p>This section introduces the attack concept by showing some real world examples of vulnerable firmware. Then, it describes the victim firmware that will be used in this tutorial.</p>
 
-<span class="cp">#include</span> <span class="cpf">&quot;auth.h&quot;</span><span class="cp"></span>
-<span class="cp">#include</span> <span class="cpf">&quot;pamfail.h&quot;</span><span class="cp"></span>
-
-<span class="kt">int</span> <span class="nf">auth_pam</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">service_name</span><span class="p">,</span> <span class="kt">uid_t</span> <span class="n">uid</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">username</span><span class="p">)</span>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Real-Firmware">Real Firmware<a class="anchor-link" href="#Real-Firmware">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Typically, one of the slowest parts of an embedded system is its communication lines. It's pretty common to see a processor running in the MHz range with a serial connection of 96k baud. To make these two different speeds work together, embedded firmware usually fills up a buffer with data and lets a serial driver print on its own time. This setup means we can expect to see code like:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">number_of_bytes_to_print</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">uid</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">pam_handle_t</span> <span class="o">*</span><span class="n">pamh</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-        <span class="k">struct</span> <span class="n">pam_conv</span> <span class="n">conv</span> <span class="o">=</span> <span class="p">{</span> <span class="n">misc_conv</span><span class="p">,</span> <span class="nb">NULL</span> <span class="p">};</span>
-        <span class="kt">int</span> <span class="n">retcode</span><span class="p">;</span>
-
-        <span class="n">retcode</span> <span class="o">=</span> <span class="n">pam_start</span><span class="p">(</span><span class="n">service_name</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">conv</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pamh</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">pam_fail_check</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="n">retcode</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">FALSE</span><span class="p">;</span>
-
-        <span class="n">retcode</span> <span class="o">=</span> <span class="n">pam_authenticate</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">pam_fail_check</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="n">retcode</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">FALSE</span><span class="p">;</span>
-
-        <span class="n">retcode</span> <span class="o">=</span> <span class="n">pam_acct_mgmt</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">retcode</span> <span class="o">==</span> <span class="n">PAM_NEW_AUTHTOK_REQD</span><span class="p">)</span>
-            <span class="n">retcode</span> <span class="o">=</span>
-                <span class="n">pam_chauthtok</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="n">PAM_CHANGE_EXPIRED_AUTHTOK</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">pam_fail_check</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="n">retcode</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">FALSE</span><span class="p">;</span>
-
-        <span class="n">retcode</span> <span class="o">=</span> <span class="n">pam_setcred</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">pam_fail_check</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="n">retcode</span><span class="p">))</span>
-            <span class="k">return</span> <span class="n">FALSE</span><span class="p">;</span>
-
-        <span class="n">pam_end</span><span class="p">(</span><span class="n">pamh</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-        <span class="cm">/* no need to establish a session; this isn&#39;t a</span>
-<span class="cm">         * session-oriented activity...  */</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="n">TRUE</span><span class="p">;</span>
+    <span class="n">print_one_byte_to_serial</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
 <span class="p">}</span>
 </pre></div>
-<p>This is the login code for the Linux OS. Note that if we could skip the check of <code>if (uid != 0)</code> and simply branch to the end, we could avoid having to enter a password. This is the power of glitch attacks - not that we are breaking encryption, but simply bypassing the entire authentication module!</p>
+<p>This is a pretty vulnerable piece of C. Imagine that we could sneak into the source code and change it to:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">really_big_number</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">print_one_byte_to_serial</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="p">}</span>
+</pre></div>
+<p>C compilers don't care that <code>buffer[]</code> has a limited size - this loop will happily print every byte it comes across, which could include other variables, registers, and even source code. Although we probably don't have a good way of changing the source code on the fly, we do have glitches: a well-timed clock or power glitch could let us skip the <code>i &lt; number_of_bytes_to_print</code> check, which would have the same result.</p>
+<p>How could this be applied? Imagine that we have an encrypted firmware image that we're going to transmit to a bootloader. A typical communication process might look like:</p>
+<ol>
+<li>We send the encrypted image ciphertexts over a serial connection</li>
+<li>The bootloader decrypts the ciphertexts and stores the result somewhere in memory</li>
+<li>The bootloader sends back a response over the serial port</li>
+</ol>
+<p>We have a pretty straightforward attack for this type of bootloader. During the last step, we'll apply a glitch at precisely the right time, causing the bootloader to print all kinds of things to the serial connection. With some luck, we'll be able to find the decrypted plaintext somewhere in this memory dump.</p>
 
 </div>
 </div>
@@ -13200,51 +13180,24 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Glitch-Hardware">Glitch Hardware<a class="anchor-link" href="#Glitch-Hardware">&#182;</a></h2>
+<h3 id="Building-Firmware">Building Firmware<a class="anchor-link" href="#Building-Firmware">&#182;</a></h3>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The ChipWhisperer Glitch system uses the same synchronous methodology as it's Side Channel Analysis (SCA) capture. A system clock (which can come from either the ChipWhisperer or the Device Under Test (DUT)) is used to generate the glitches. These glitches are then inserted back into the clock, although it's possible to use the glitches alone for other purposes (i.e. for voltage glitching, EM glitching).</p>
-<p>The generation of glitches is done with two variable phase shift modules, configured as follows:</p>
-<p><img src="https://wiki.newae.com/images/6/65/Glitchgen-phaseshift.png" alt="A2_4"></p>
-<p>The enable line is used to determine when glitches are inserted. Glitches can be inserted continuously (useful for development) or triggered by some event. The following figure shows how the glitch can be muxd to output to the Device Under Test (DUT).</p>
-<p><img src="https://wiki.newae.com/images/c/c0/Glitchgen-mux.png" alt="A2_5"></p>
+<p>For this tutorial, a very simple bootloader using the SimpleSerial protocol has been set up. The source for this bootloader can be found in <code>chipwhisperer/hardware/victims/firmware/bootloader-glitch</code>. The following commands are used:</p>
+<ul>
+<li><code>pABCD\n</code>: Send an encrypted ciphertext to the bootloader. For example, this message is made up of the two bytes AB and CD.</li>
+<li><code>r0\n\n\n\n\n\n</code>: The reply from the bootloader. Acknowledges that a message was received. No other responses are used.</li>
+<li><code>x</code>: Clear the bootloader's received buffer.</li>
+<li><code>k</code>: See x.</li>
+</ul>
+<p>The bootloader uses triple-ROT-13 encryption to encrypt/decrypt the messages. To help you send messages to the target, the script private/encrypt.py prints the SimpleSerial command for a given fixed string. For example, the ciphertext for the string <code>Don't forget to buy milk!</code> is</p>
 
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Hardware-Support">Hardware Support<a class="anchor-link" href="#Hardware-Support">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The phase shift blocks use the Digital Clock Manager (DCM) blocks within the FPGA. These blocks have limited support for run-time configuration of parameters such as phase delay and frequency generation, and for maximum performance the configuration must be fixed at design time. The Xilinx-provided run-time adjustment can shift the phase only by about +/- 5nS in 30pS increments (exact values vary with operating conditions).</p>
-<p>For most operating conditions this is insufficient - if attacking a target at 7.37MHz the clock cycle would have a period of 136nS. In order to provide a larger adjustment range, an advanced FPGA feature called Partial Reconfiguration (PR) is used. The PR system requires special partial bitstreams which contain modifications to the FPGA bitstream. These are stored as two files inside a "firmware" zip which contains both the FPGA bitstream along with a file called <code>glitchwidth.p</code> and a file called <code>glitchoffset.p</code>. If a lone bitstream is being loaded into the FPGA (i.e. not from the zip-file), the partial reconfiguration system is disabled, as loading incorrect partial reconfiguration files could damage the FPGA. This damage is mostly theoretical, more likely the FPGA will fail to function correctly.</p>
-<p>If in the course of following this tutorial you find the FPGA appears to stop responding (i.e. certain features no longer work correctly), it could be the partial reconfiguration data is incorrect.</p>
-<p>We'll look at how to interface with these features later in the tutorial.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setting-Up-Firmware">Setting Up Firmware<a class="anchor-link" href="#Setting-Up-Firmware">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>As with previous tutorials, we'll start by creating a new project from base firmware, as well as setting up our <code>PLATFORM</code> and <code>CRYPTO_TARGET</code>. This tutorial doesn't use any crypto, so we'll leave the latter option as <code>NONE</code>. This time, we'll be using <code>glitch-simple</code>:</p>
+<pre><code>p516261276720736265747267206762206f686c207a76797821\n</code></pre>
+<p>Now that we've got some basic knowledge of the target code, build it, then navigate to the <code>bootloader-glitch</code> firmware directory:</p>
 
 </div>
 </div>
@@ -13254,9 +13207,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span>%%bash
-<span class="nb">cd</span> ../../hardware/victims/firmware/
-mkdir -p glitch-simple-lab1 <span class="o">&amp;&amp;</span> cp -r glitch-simple/* <span class="nv">$_</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">PLATFORM</span> <span class="o">=</span> <span class="s2">&quot;CWLITEARM&quot;</span>
+<span class="n">CRYPTO_TARGET</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span>
 </pre></div>
 
     </div>
@@ -13269,90 +13221,8 @@ mkdir -p glitch-simple-lab1 <span class="o">&amp;&amp;</span> cp -r glitch-simpl
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">PLATFORM</span> <span class="o">=</span> <span class="s2">&quot;CWLITEARM&quot;</span>
-<span class="n">CRYPTO_TARGET</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now navigate to the <code>glitch-simple-lab1</code> folder and open <code>glitchsimple.c</code> in a code editor. Scroll down until you find the <code>glitch1()</code> function:</p>
-<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">glitch1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="n">led_ok</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-
-    <span class="c1">//Some fake variable</span>
-    <span class="k">volatile</span> <span class="kt">uint8_t</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-    <span class="n">putch</span><span class="p">(</span><span class="sc">&#39;A&#39;</span><span class="p">);</span>
-
-    <span class="c1">//External trigger logic</span>
-    <span class="n">trigger_high</span><span class="p">();</span>
-    <span class="n">trigger_low</span><span class="p">();</span>
-
-    <span class="c1">//Should be an infinite loop</span>
-    <span class="k">while</span><span class="p">(</span><span class="n">a</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">){</span>
-    <span class="p">;</span>
-    <span class="p">}</span>    
-
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-
-    <span class="n">uart_puts</span><span class="p">(</span><span class="s">&quot;1234&quot;</span><span class="p">);</span>
-
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="n">led_error</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-
-    <span class="c1">//Several loops in order to try and prevent restarting</span>
-    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
-    <span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
-    <span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
-    <span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
-    <span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
-    <span class="p">;</span>
-    <span class="p">}</span>    
-<span class="p">}</span>
-</pre></div>
-<p>We can see here that sends back an <code>'A'</code>, toggles the trigger pin, then enters an infinite loop. After the infinite loop, the device sends back <code>"1234"</code>. On boards that support it, the firmware will also activate a green "OK" LED upon entering the function and a red "ERROR" LED when a successful glitch occurs. Our objective will be to glitch past the infinite loop.</p>
-<p>Before you build, navigate to <code>main()</code> and verify that this function is being called. Next, build the firmware:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/glitch-simple-lab1
+<span class="nb">cd</span> ../../hardware/victims/firmware/bootloader-glitch
 make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span>
 </pre></div>
 
@@ -13370,20 +13240,18 @@ make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>rm -f -- glitchsimple-CWLITEARM.hex
-rm -f -- glitchsimple-CWLITEARM.eep
-rm -f -- glitchsimple-CWLITEARM.cof
-rm -f -- glitchsimple-CWLITEARM.elf
-rm -f -- glitchsimple-CWLITEARM.map
-rm -f -- glitchsimple-CWLITEARM.sym
-rm -f -- glitchsimple-CWLITEARM.lss
+<pre>rm -f -- bootloader-CWLITEARM.hex
+rm -f -- bootloader-CWLITEARM.eep
+rm -f -- bootloader-CWLITEARM.cof
+rm -f -- bootloader-CWLITEARM.elf
+rm -f -- bootloader-CWLITEARM.map
+rm -f -- bootloader-CWLITEARM.sym
+rm -f -- bootloader-CWLITEARM.lss
 rm -f -- objdir/*.o
 rm -f -- objdir/*.lst
-rm -f -- glitchsimple.s simpleserial.s stm32f3_hal.s stm32f3_hal_lowlevel.s stm32f3_sysmem.s
-rm -f -- glitchsimple.d simpleserial.d stm32f3_hal.d stm32f3_hal_lowlevel.d stm32f3_sysmem.d
-rm -f -- glitchsimple.i simpleserial.i stm32f3_hal.i stm32f3_hal_lowlevel.i stm32f3_sysmem.i
-mkdir objdir 
-mkdir .dep
+rm -f -- bootloader.s decryption.s stm32f3_hal.s stm32f3_hal_lowlevel.s stm32f3_sysmem.s
+rm -f -- bootloader.d decryption.d stm32f3_hal.d stm32f3_hal_lowlevel.d stm32f3_sysmem.d
+rm -f -- bootloader.i decryption.i stm32f3_hal.i stm32f3_hal_lowlevel.i stm32f3_sysmem.i
 .
 -------- begin --------
 arm-none-eabi-gcc (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
@@ -13392,42 +13260,42 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 .
-Compiling C: glitchsimple.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple.o.d glitchsimple.c -o objdir/glitchsimple.o 
+Compiling C: bootloader.c
+arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/bootloader.lst -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/bootloader.o.d bootloader.c -o objdir/bootloader.o 
 .
-Compiling C: .././simpleserial/simpleserial.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
+Compiling C: decryption.c
+arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/decryption.lst -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/decryption.o.d decryption.c -o objdir/decryption.o 
 .
 Compiling C: .././hal/stm32f3/stm32f3_hal.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal.o.d .././hal/stm32f3/stm32f3_hal.c -o objdir/stm32f3_hal.o 
+arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal.lst -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal.o.d .././hal/stm32f3/stm32f3_hal.c -o objdir/stm32f3_hal.o 
 .
 Compiling C: .././hal/stm32f3/stm32f3_hal_lowlevel.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal_lowlevel.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal_lowlevel.o.d .././hal/stm32f3/stm32f3_hal_lowlevel.c -o objdir/stm32f3_hal_lowlevel.o 
+arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal_lowlevel.lst -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal_lowlevel.o.d .././hal/stm32f3/stm32f3_hal_lowlevel.c -o objdir/stm32f3_hal_lowlevel.o 
 .
 Compiling C: .././hal/stm32f3/stm32f3_sysmem.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_sysmem.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_sysmem.o.d .././hal/stm32f3/stm32f3_sysmem.c -o objdir/stm32f3_sysmem.o 
+arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_sysmem.lst -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_sysmem.o.d .././hal/stm32f3/stm32f3_sysmem.c -o objdir/stm32f3_sysmem.o 
 .
 Assembling: .././hal/stm32f3/stm32f3_startup.S
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -x assembler-with-cpp -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -DF_CPU=7372800 -Wa,-gstabs,-adhlns=objdir/stm32f3_startup.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ .././hal/stm32f3/stm32f3_startup.S -o objdir/stm32f3_startup.o
+arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -x assembler-with-cpp -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -DF_CPU=7372800 -Wa,-gstabs,-adhlns=objdir/stm32f3_startup.lst -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ .././hal/stm32f3/stm32f3_startup.S -o objdir/stm32f3_startup.o
 .
-Linking: glitchsimple-CWLITEARM.elf
-arm-none-eabi-gcc -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.o -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple-CWLITEARM.elf.d objdir/glitchsimple.o objdir/simpleserial.o objdir/stm32f3_hal.o objdir/stm32f3_hal_lowlevel.o objdir/stm32f3_sysmem.o objdir/stm32f3_startup.o --output glitchsimple-CWLITEARM.elf --specs=nano.specs -T .././hal/stm32f3/LinkerScript.ld -Wl,--gc-sections -lm -Wl,-Map=glitchsimple-CWLITEARM.map,--cref   -lm  
+Linking: bootloader-CWLITEARM.elf
+arm-none-eabi-gcc -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/bootloader.o -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/bootloader-CWLITEARM.elf.d objdir/bootloader.o objdir/decryption.o objdir/stm32f3_hal.o objdir/stm32f3_hal_lowlevel.o objdir/stm32f3_sysmem.o objdir/stm32f3_startup.o --output bootloader-CWLITEARM.elf --specs=nano.specs -T .././hal/stm32f3/LinkerScript.ld -Wl,--gc-sections -lm -Wl,-Map=bootloader-CWLITEARM.map,--cref   -lm  
 .
-Creating load file for Flash: glitchsimple-CWLITEARM.hex
-arm-none-eabi-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.hex
+Creating load file for Flash: bootloader-CWLITEARM.hex
+arm-none-eabi-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature bootloader-CWLITEARM.elf bootloader-CWLITEARM.hex
 .
-Creating load file for EEPROM: glitchsimple-CWLITEARM.eep
+Creating load file for EEPROM: bootloader-CWLITEARM.eep
 arm-none-eabi-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
-	--change-section-lma .eeprom=0 --no-change-warnings -O ihex glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.eep || exit 0
+	--change-section-lma .eeprom=0 --no-change-warnings -O ihex bootloader-CWLITEARM.elf bootloader-CWLITEARM.eep || exit 0
 .
-Creating Extended Listing: glitchsimple-CWLITEARM.lss
-arm-none-eabi-objdump -h -S -z glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.lss
+Creating Extended Listing: bootloader-CWLITEARM.lss
+arm-none-eabi-objdump -h -S -z bootloader-CWLITEARM.elf &gt; bootloader-CWLITEARM.lss
 .
-Creating Symbol Table: glitchsimple-CWLITEARM.sym
-arm-none-eabi-nm -n glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.sym
+Creating Symbol Table: bootloader-CWLITEARM.sym
+arm-none-eabi-nm -n bootloader-CWLITEARM.elf &gt; bootloader-CWLITEARM.sym
 Size after:
    text	   data	    bss	    dec	    hex	filename
-   4240	      8	   1176	   5424	   1530	glitchsimple-CWLITEARM.elf
+   4420	    120	   1296	   5836	   16cc	bootloader-CWLITEARM.elf
 +--------------------------------------------------------
 + Built for platform CW-Lite Arm (STM32F3)
 +--------------------------------------------------------
@@ -13442,7 +13310,151 @@ Size after:
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Attack-Script">Attack Script<a class="anchor-link" href="#Attack-Script">&#182;</a></h2>
+<h2 id="The-Attack-Plan">The Attack Plan<a class="anchor-link" href="#The-Attack-Plan">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="The-Sensitive-Code">The Sensitive Code<a class="anchor-link" href="#The-Sensitive-Code">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Inside <code>bootloader.c</code>, there are two buffers that are used to store most of the important data. The source code shows:</p>
+<div class="highlight"><pre><span></span><span class="cp">#define DATA_BUFLEN 40</span>
+<span class="cp">#define ASCII_BUFLEN (2 * DATA_BUFLEN)</span>
+
+<span class="kt">uint8_t</span> <span class="n">ascii_buffer</span><span class="p">[</span><span class="n">ASCII_BUFLEN</span><span class="p">];</span>
+<span class="kt">uint8_t</span> <span class="n">data_buffer</span><span class="p">[</span><span class="n">DATA_BUFLEN</span><span class="p">];</span>
+</pre></div>
+<p>This tells us that there will be two arrays stored somewhere in the target's memory. The AVR-GCC compiler doesn't usually try too hard to move these around, so we can expect to find them back-to-back in memory; that is, if we can read past the end of the ASCII buffer, we'll probably find the data buffer.</p>
+<p>Next, the code used to print a response to the serial port is:</p>
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">RESPOND</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Send the ascii buffer back </span>
+    <span class="n">trigger_high</span><span class="p">();</span>
+
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ascii_idx</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">putch</span><span class="p">(</span><span class="n">ascii_buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="n">trigger_low</span><span class="p">();</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">IDLE</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>This looks very similar to the example code given in the previous section, so it should be vulnerable to a glitching attack. The goal is to cause the loop to continue past its regular limit: <code>data_buffer[0]</code> is the same as <code>ascii_buffer[80]</code>, so a successful glitch should dump the data buffer for us.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Disassembly">Disassembly<a class="anchor-link" href="#Disassembly">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As a final step, let's check the assembly code to see exactly what we're trying to glitch through. In the same folder as the hex file you built, open the <code>*.lss</code> file that corresponds to your target (for example, <code>bootloader-CWLITEARM.lss</code>). This is called a listing file, and it contains a bunch of debug and assembly information. Most importantly, it will allow us to easily match the source code to what's in our hex file. Search the file for something close to the vulnerable loop, such as <code>state == RESPOND</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Compiler-Optimizations">Compiler Optimizations<a class="anchor-link" href="#Compiler-Optimizations">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>While reading the section on the bootloader commands, you may have been surprised to see more than one newline at the end of the respond command (<code>r0\n\n\n\n\n\n</code>). Because the response is both so short and always the same length, the compiler will perform loop unrolling. Loop unrolling is an optimization that trades code size for speed by replacing a constant size loop:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> 
+    <span class="n">do_something</span><span class="p">();</span>
+</pre></div>
+<p>by a repeated sequence of the loop's operations:</p>
+<div class="highlight"><pre><span></span><span class="n">do_something</span><span class="p">();</span>
+<span class="n">do_something</span><span class="p">();</span>
+<span class="n">do_something</span><span class="p">();</span>
+</pre></div>
+<p>For a small number of repititions, size-speed tradeoff is skewed towards the latter, making it very hard to get the compiler not to perform the optimization, thus we simply increase the size of the loop. Most bootloaders have multiple different reponses with varying length, so this isn't a typical obstacle you would face, but it is important for this situation.</p>
+<p>The <a href="https://en.wikipedia.org/wiki/Loop_unrolling">Wikipedia page on loop unrolling</a> contains more information on the topic if you're like to learn more.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="XMEGA-Disassembly">XMEGA Disassembly<a class="anchor-link" href="#XMEGA-Disassembly">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After searching the file, you should see something like this:</p>
+<div class="highlight"><pre><span></span><span class="err">38</span><span class="nl">c:</span>   <span class="err">89</span> <span class="err">91</span>           <span class="nf">ld</span>  <span class="no">r24</span><span class="p">,</span> <span class="no">Y</span><span class="err">+</span>
+ <span class="err">38</span><span class="nl">e:</span>   <span class="err">0</span><span class="nf">e</span> <span class="mi">94</span> <span class="mi">38</span> <span class="mi">02</span>     <span class="no">call</span>    <span class="mi">0x470</span>   <span class="c">; 0x470 &lt;output_ch_0&gt;</span>
+ <span class="mi">392</span><span class="p">:</span>   <span class="no">f0</span> <span class="no">e2</span>           <span class="no">ldi</span> <span class="no">r31</span><span class="p">,</span> <span class="mi">0x20</span>   <span class="c">; 32</span>
+ <span class="mi">394</span><span class="p">:</span>   <span class="no">c4</span> <span class="mi">38</span>           <span class="no">cpi</span> <span class="no">r28</span><span class="p">,</span> <span class="mi">0x84</span>   <span class="c">; 132</span>
+ <span class="mi">396</span><span class="p">:</span>   <span class="no">df</span> <span class="mi">07</span>           <span class="no">cpc</span> <span class="no">r29</span><span class="p">,</span> <span class="no">r31</span>
+ <span class="err">398:</span>   <span class="nf">c9</span> <span class="no">f7</span>           <span class="no">brne</span>    <span class="no">.-14</span>        <span class="c">; 0x38c &lt;main+0xbc&gt;</span>
+</pre></div>
+<p>This is our printing loop in assembly. It has the following steps in it:</p>
+<ul>
+<li>Look at the address <code>Y</code> and put the contents into <code>r24</code>. Increase the address stored in <code>Y</code>. (This is the i++ in the loop.)</li>
+<li>Call the function in location <code>0x470</code>. Presumably, this is the location of the <code>putch()</code> function.</li>
+<li>Compare <code>r28</code> and <code>r29</code> to <code>0x84</code> and <code>0x20</code>. Unless they're equal, go back to the top of the loop.</li>
+</ul>
+<p>There's one quirk to notice in this code. In the C source, the for loop checks whether <code>i &lt; ascii_idx</code>. However, in the assembly code, the check is effectively whether <code>i == ascii_idx</code>! This is even easier to glitch - as long as we can break past the <code>brne</code> instruction once, we'll get to the data buffer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Arm-Disassembly">Arm Disassembly<a class="anchor-link" href="#Arm-Disassembly">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After searching the file, you should see something like this:</p>
+<div class="highlight"><pre><span></span><span class="err">8000268:</span>   <span class="err">5</span><span class="nf">d28</span>        <span class="no">ldrb</span>    <span class="no">r0</span><span class="p">,</span> <span class="p">[</span><span class="no">r5</span><span class="p">,</span> <span class="no">r4</span><span class="p">]</span>
+ <span class="err">800026</span><span class="nl">a:</span>   <span class="err">3401</span>        <span class="nf">adds</span>    <span class="no">r4</span><span class="p">,</span> <span class="c">#1</span>
+ <span class="mi">800026</span><span class="no">c</span><span class="p">:</span>   <span class="no">f000</span> <span class="no">f8f2</span>   <span class="no">bl</span>  <span class="mh">8000454</span> <span class="p">&lt;</span><span class="no">putch</span><span class="p">&gt;</span>
+ <span class="err">8000270:</span>   <span class="err">2</span><span class="nf">c08</span>        <span class="no">cmp</span> <span class="no">r4</span><span class="p">,</span> <span class="c">#8</span>
+ <span class="mi">8000272</span><span class="p">:</span>   <span class="no">d1f9</span>        <span class="no">bne.n</span>   <span class="mh">8000268</span> <span class="p">&lt;</span><span class="no">main</span><span class="p">+</span><span class="mi">0x64</span><span class="p">&gt;</span>
+</pre></div>
+<p>We can break this assembly down into the following steps:</p>
+<ul>
+<li>Load the character we want to print into <code>r0</code> (<code>r5</code> contains the address of <code>ascii_buffer</code>, while <code>r4</code> is our loop index <code>i</code>)</li>
+<li>Add 1 to <code>r4</code> (<code>i</code>)</li>
+<li>Call <code>putch</code></li>
+<li>Compare <code>r4</code> to 8 (8 is always the value of <code>ascii_idx</code>)</li>
+<li>Branch back to the beginning of the loop if <code>r4</code> and 8 aren't equal</li>
+</ul>
+<p>There's one quirk to notice in this code. In the C source, the for loop checks whether <code>i &lt; ascii_idx</code>. However, in the assembly code, the check is effectively whether <code>i == ascii_idx</code>! This is even easier to glitch - as long as we can break past the <code>brne</code> instruction once, we'll get to the data buffer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="The-Attack-Script">The Attack Script<a class="anchor-link" href="#The-Attack-Script">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13456,14 +13468,14 @@ Size after:
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now that we've studied the code and have an objective, we can start looking at how to control the glitch module via Python. We'll start by connecting to and setting up the ChipWhisperer, then programming it. As usual, make sure you modify <code>fw_path</code> with the path to the file you built in the last step.</p>
+<p>Now that we know what our target is, we can start creating our attack script. Basic setup is the same as usual:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">chipwhisperer</span> <span class="k">as</span> <span class="nn">cw</span>
@@ -13478,7 +13490,7 @@ Size after:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">run</span> &quot;Helper_Scripts/Setup_Target_Generic.ipynb&quot;
@@ -13491,10 +13503,10 @@ Size after:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../../hardware/victims/firmware/glitch-simple-lab1/glitchsimple-CWLITEARM.hex&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../../hardware/victims/firmware/bootloader-glitch/bootloader-CWLITEARM.hex&quot;</span>
 <span class="n">prog</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">programmers</span><span class="o">.</span><span class="n">STM32FProgrammer</span>
 <span class="c1">#prog = cw.programmers.XMEGAProgrammer</span>
 </pre></div>
@@ -13506,7 +13518,7 @@ Size after:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
@@ -13528,10 +13540,10 @@ Size after:
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>Detected known STMF32: STM32F302xB(C)/303xB(C)
 Extended erase (0x44), this can take ten seconds or more
-Attempting to programming 4247 bytes at 0x8000000
+Attempting to programming 4539 bytes at 0x8000000
 STM32F Programming flash...
 STM32F Reading flash...
-Verified flash OK, 4247 bytes
+Verified flash OK, 4539 bytes
 </pre>
 </div>
 </div>
@@ -13543,8 +13555,32 @@ Verified flash OK, 4247 bytes
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Since the firmware enters an infinite loop, we'll need to reset the target between glitch attempts. Be sure to uncomment the reset pin for your target:</p>
+<p>And setup the glitch module:</p>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s1">&#39;clkgen&#39;</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s1">&#39;ext_single&#39;</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="XMEGA-Settings">XMEGA Settings<a class="anchor-link" href="#XMEGA-Settings">&#182;</a></h4>
 </div>
 </div>
 </div>
@@ -13553,8 +13589,189 @@ Verified flash OK, 4247 bytes
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.95</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="o">-</span><span class="mf">9.1</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Arm-Settings">Arm Settings<a class="anchor-link" href="#Arm-Settings">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="o">-</span><span class="mi">40</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.125</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Communicating-With-Bootloader">Communicating With Bootloader<a class="anchor-link" href="#Communicating-With-Bootloader">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now that we have our setup done, let's work on communicating with the bootloader. There's a few ways to do this, but the easiest is probably to use <code>target.ser.write</code> to send our text. Remember, to get to the print buffer, we need to send some <code>rot13</code> encoded text. For this example, we'll use <code>Don't forget to buy milk!</code>, whose <code>rot13</code> encoding is <code>516261276720736265747267206762206f686c207a76797821</code>.</p>
+<p>Let's also change the ADC clock from being x4 of the target clock to being x1. This way, we can easily use the ADC module (in particular <code>scope.adc.trig_count</code>) to see how long sending the response takes.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">adc_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen_x1&quot;</span>
+<span class="k">def</span> <span class="nf">send_milk</span><span class="p">(</span><span class="n">ser</span><span class="p">):</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;p516261276720736265747267206762206f686c207a76797821</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Next, let's send the command to the bootloader, observe the response, and measure how long it took.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
-<span class="k">def</span> <span class="nf">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">):</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_only&quot;</span> <span class="c1">#disable any glitches</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
+<span class="n">send_milk</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="p">)</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+<span class="n">response_time</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">trig_count</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The response took </span><span class="si">{}</span><span class="s2"> cycles&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response_time</span><span class="p">))</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span> <span class="c1">#reenable glitch</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre> r0
+
+
+
+
+
+
+The response took 17014 cycles
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this case, we got a trigger active count of 17014 cycles. Remember, we want to glitch the final few instructions of the loop, so our glitch point will be just before the end (say somewhere in the last 50 cycles):</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ext_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">response_time</span> <span class="o">-</span> <span class="mi">50</span><span class="p">,</span> <span class="n">response_time</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If you get really stuck, on the STM32F3 target the glitch almost always occurs 21 cycles before the end:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ext_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">response_time</span> <span class="o">-</span> <span class="mi">22</span><span class="p">,</span> <span class="n">response_time</span> <span class="o">-</span> <span class="mi">20</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Glitch-Loop">Glitch Loop<a class="anchor-link" href="#Glitch-Loop">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We're almost ready to create our glitch loop! Before we do, there's a few things to keep in mind. The first is dealing with crashes. As you might expect, we'll often crash the target instead of getting the glitch we want. In this case, we'll need to reset the target before we try communicating with the bootloader. Luckily we can tell if we crashed the target by looking at the state of the trigger pin: if the target crashes, it will never go low (this also happens with a successful glitch, but we'll be checking for success in the response, so this isn't much of an issue). We can check this via <code>scope.adc.state</code>.</p>
+<p>To reset the target, we'll define a simple function. Note that you'll have to uncomment the pin setup for your target (<code>nrst</code> or <code>pdic</code>).</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">):</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">nrst</span> <span class="o">=</span> <span class="s1">&#39;low&#39;</span>
     <span class="c1">#scope.io.pdic = &#39;low&#39;</span>
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
@@ -13570,558 +13787,7 @@ Verified flash OK, 4247 bytes
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's make sure the firmware works as we expect. We should get <code>"hello\nA"</code> back after resetting the target.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-
-<span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scope capture timed out&quot;</span><span class="p">)</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre> hello
-A hello
-A
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Glitch-Module">Glitch Module<a class="anchor-link" href="#Glitch-Module">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>All the settings/methods for the glitch module can be accessed under <code>scope.glitch</code>. As usual, documentation for the settings and methods can be accessed by the python <code>help</code> command:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Help on GlitchSettings in module chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch object:
-
-class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
- |  GlitchSettings(cwglitch)
- |  
- |  Provides an ability to disable setting new attributes in a class, useful to prevent typos.
- |  
- |  Usage:
- |  1. Make a class that inherits this class:
- |  &gt;&gt;&gt; class MyClass(DisableNewAttr):
- |  &gt;&gt;&gt;     # Your class definition here
- |  
- |  2. After setting up all attributes that your object needs, call disable_newattr():
- |  &gt;&gt;&gt;     def __init__(self):
- |  &gt;&gt;&gt;         self.my_attr = 123
- |  &gt;&gt;&gt;         self.disable_newattr()
- |  
- |  3. Subclasses raise an AttributeError when trying to make a new attribute:
- |  &gt;&gt;&gt; obj = MyClass()
- |  &gt;&gt;&gt; #obj.my_new_attr = 456   &lt;-- Raises AttributeError
- |  
- |  Method resolution order:
- |      GlitchSettings
- |      chipwhisperer.common.utils.util.DisableNewAttr
- |      builtins.object
- |  
- |  Methods defined here:
- |  
- |  __init__(self, cwglitch)
- |      Initialize self.  See help(type(self)) for accurate signature.
- |  
- |  __repr__(self)
- |      Return repr(self).
- |  
- |  __str__(self)
- |      Return str(self).
- |  
- |  manualTrigger(self)
- |      Manually trigger the glitch output.
- |      
- |      This trigger is most useful in Manual trigger mode, where this is the
- |      only way to cause a glitch.
- |  
- |  readStatus(self)
- |      Read the status of the two glitch DCMs.
- |      
- |      Return a tuple with 4 elements:
- |      - phase1: The phase shift of DCM1
- |      - phase2: The phase shift of DCM2
- |      - lock1: Whether DCM1 is locked
- |      - lock2: Whether DCM2 is locked
- |  
- |  resetDcms(self)
- |      Reset the two glitch DCMs.
- |      
- |      This is automatically run after changing the glitch width or offset,
- |      so this function is typically not necessary.
- |  
- |  ----------------------------------------------------------------------
- |  Data descriptors defined here:
- |  
- |  arm_timing
- |      When to arm the glitch in single-shot mode.
- |      
- |      If the glitch module is in &#34;ext_single&#34; trigger mode, it must be armed
- |      when the scope is armed. There are two timings for this event:
- |      - &#34;before_scope&#34;: The glitch module is armed first.
- |      - &#34;after_scope&#34;: The scope is armed first. This is the default.
- |      
- |      This setting may be helpful if trigger events are happening very early.
- |      
- |      If the glitch module is not in external trigger single-shot mode, this
- |      setting has no effect.
- |      
- |      Getter: Return the current arm timing (&#34;before_scope&#34; or &#34;after_scope&#34;)
- |      
- |      Setter: Change the arm timing
- |          Raises: ValueError if value not listed above
- |  
- |  clk_src
- |      The clock signal that the glitch DCM is using as input.
- |      
- |      This DCM can be clocked from two different sources:
- |      - &#34;target&#34;: The HS1 clock from the target device
- |      - &#34;clkgen&#34;: The CLKGEN DCM output
- |      
- |      Getter: Return the clock signal currently in use
- |      
- |      Setter: Change the glitch clock source
- |          Raises: ValueError if new value not one of &#34;target&#34; or &#34;clkgen&#34;
- |  
- |  ext_offset
- |      How long the glitch module waits between a trigger and a glitch.
- |      
- |      After the glitch module is triggered, it waits for a number of clock
- |      cycles before generating glitch pulses. This delay allows the glitch to
- |      be inserted at a precise moment during the target&#39;s execution to glitch
- |      specific instructions.
- |      
- |      Tip: it is possible to get more precise offsets by clocking the glitch
- |      module faster than the target board.
- |      
- |      This offset must be in the range [0, 2**32).
- |      
- |      Getter: Return the current external trigger offset.
- |      
- |      Setter: Set the external trigger offset.
- |          Raises:
- |              TypeError if offset not an integer
- |              ValueError if offset outside of range [0, 2**32)
- |  
- |  offset
- |      The offset from a rising clock edge to a glitch pulse rising edge,
- |      as a percentage of one period.
- |      
- |      A pulse may begin anywhere from -49.8% to 49.8% away from a rising
- |      edge, allowing glitches to be swept over the entire clock cycle.
- |      
- |      Getter: Return a float with the current glitch offset.
- |      
- |      Setter: Set the glitch offset. The new value is rounded to the nearest
- |      possible offset.
- |          Raises:
- |              TypeError if offset not an integer
- |              UserWarning if value outside range [-50, 50] (value is rounded)
- |  
- |  offset_fine
- |      The fine adjustment value on the glitch offset.
- |      
- |      This is a dimensionless number that makes small adjustments to the
- |      glitch pulses&#39; offset. Valid range is [-255, 255].
- |      
- |      Getter: Return the current glitch fine offset
- |      
- |      Setter: Update the glitch fine offset
- |          Raises:
- |              TypeError if offset not an integer
- |              ValueError if offset is outside of [-255, 255]
- |  
- |  output
- |      The type of output produced by the glitch module.
- |      
- |      There are 5 ways that the glitch module can combine the clock with its
- |      glitch pulses:
- |      - &#34;clock_only&#34;: Output only the original input clock.
- |      - &#34;glitch_only&#34;: Output only the glitch pulses - do not use the clock.
- |      - &#34;clock_or&#34;: Output is high if either the clock or glitch are high.
- |      - &#34;clock_xor&#34;: Output is high if clock and glitch are different.
- |      - &#34;enable_only&#34;: Output is high for glitch.repeat cycles.
- |      
- |      Some of these settings are only useful in certain scenarios:
- |      - Clock glitching: &#34;clock_or&#34; or &#34;clock_xor&#34;
- |      - Voltage glitching: &#34;glitch_only&#34; or &#34;enable_only&#34;
- |      
- |      Getter: Return the current glitch output mode (one of above strings)
- |      
- |      Setter: Change the glitch output mode.
- |          Raises: ValueError if value not in above strings
- |  
- |  repeat
- |      The number of glitch pulses to generate per trigger.
- |      
- |      When the glitch module is triggered, it produces a number of pulses
- |      that can be combined with the clock signal. This setting allows for
- |      the glitch module to produce stronger glitches (especially during
- |      voltage glitching).
- |      
- |      Repeat counter must be in the range [1, 255].
- |      
- |      Getter: Return the current repeat value (integer)
- |      
- |      Setter: Set the repeat counter
- |          Raises:
- |              TypeError if value not an integer
- |              ValueError if value outside [1, 255]
- |  
- |  trigger_src
- |      The trigger signal for the glitch pulses.
- |      
- |      The glitch module can use four different types of triggers:
- |      - &#34;continuous&#34;: Constantly trigger glitches
- |      - &#34;manual&#34;: Only trigger glitches through API calls/GUI actions
- |      - &#34;ext_single&#34;: Use the trigger module. One glitch per scope arm.
- |      - &#34;ext_continuous&#34;: Use the trigger module. Many glitches per arm.
- |      
- |      Getter: Return the current trigger source.
- |      
- |      Setter: Change the trigger source.
- |          Raises: ValueError if value not listed above
- |  
- |  width
- |      The width of a single glitch pulse, as a percentage of one period.
- |      
- |      One pulse can range from -49.8% to roughly 49.8% of a period. The
- |      system may not be reliable at 0%. Note that negative widths are allowed
- |       - these act as if they are positive widths on the other half of the
- |      clock cycle.
- |      
- |      Getter: Return a float with the current glitch width.
- |      
- |      Setter: Update the glitch pulse width. The value will be adjusted to
- |      the closest possible glitch width.
- |  
- |  width_fine
- |      The fine adjustment value on the glitch width.
- |      
- |      This is a dimensionless number that makes small adjustments to the
- |      glitch pulses&#39; width. Valid range is [-255, 255].
- |      
- |      Getter: Return the current glitch fine width
- |      
- |      Setter: Update the glitch fine width
- |          Raises:
- |              TypeError if offset not an integer
- |              ValueError if offset is outside of [-255, 255]
- |  
- |  ----------------------------------------------------------------------
- |  Methods inherited from chipwhisperer.common.utils.util.DisableNewAttr:
- |  
- |  __setattr__(self, name, value)
- |      Implement setattr(self, name, value).
- |  
- |  disable_newattr(self)
- |  
- |  enable_newattr(self)
- |  
- |  ----------------------------------------------------------------------
- |  Data descriptors inherited from chipwhisperer.common.utils.util.DisableNewAttr:
- |  
- |  __dict__
- |      dictionary for instance variables (if defined)
- |  
- |  __weakref__
- |      list of weak references to the object (if defined)
-
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Some of the important settings we'll want to look at here are:</p>
-<ul>
-<li>clk_src<blockquote><p>The clock signal that the glitch DCM is using as input. Can be set to "target" or "clkgen" In this case, we'll be providing the clock to the target, so we'll want this set to "clkgen"</p>
-</blockquote>
-</li>
-<li>offset<blockquote><p>Where in the output clock to place the glitch. Can be in the range <code>[-50, 50]</code>. Often, we'll want to try many offsets when trying to glitch a target.</p>
-</blockquote>
-</li>
-<li>width<blockquote><p>How wide to make the glitch. Can be in the range <code>[-50, 50]</code>. Wider glitches more easily cause glitches, but are also more likely to crash the target, meaning we'll often want to try a range of widths when attacking a target.</p>
-</blockquote>
-</li>
-<li>output<blockquote><p>The output produced by the glitch module. For clock glitching, clock_xor is often the most useful option.</p>
-</blockquote>
-</li>
-<li>ext_offset<blockquote><p>The number of clock cycles after the trigger to put the glitch.</p>
-</blockquote>
-</li>
-<li>repeat<blockquote><p>The number of clock cycles to repeat the glitch for. Higher values increase the number of instructions that can be glitched, but often increase the risk of crashing the target.</p>
-</blockquote>
-</li>
-<li>trigger_src<blockquote><p>How to trigger the glitch. For this tutorial, we want to automatically trigger the glitch from the trigger pin only after arming the ChipWhipserer, so we'll use <code>ext_single</code></p>
-</blockquote>
-</li>
-</ul>
-<p>In addition, we'll need to tell ChipWhipserer to use the glitch module's output as a clock source for the target by setting <code>scope.io.hs2 = "glitch"</code>. We'll also setup a large <code>repeat</code> to make glitching easier. Finally, we'll also use a <code>namedtuple</code> to make looping through parameters simpler.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_single&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">105</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
-<span class="n">Range</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Range&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">])</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>clk_src     = clkgen
-width       = 10.15625
-width_fine  = 0
-offset      = 10.15625
-offset_fine = 0
-trigger_src = ext_single
-arm_timing  = after_scope
-ext_offset  = 0
-repeat      = 105
-output      = clock_xor
-
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="XMEGA-Settings">XMEGA Settings<a class="anchor-link" href="#XMEGA-Settings">&#182;</a></h4>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="STM/CWLITEARM-Settings">STM/CWLITEARM Settings<a class="anchor-link" href="#STM/CWLITEARM-Settings">&#182;</a></h4>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">49</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="mi">37</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">10</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Attack-Loop">Attack Loop<a class="anchor-link" href="#Attack-Loop">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now that the setup's done and we know how to use the glitch module, we can start our attack. The key parameters that we'll need to iterate through are <code>width</code> and <code>offset</code>, so we'll need some loops to change these. To know if we got a successful glitch, we'll check for "1234" in the output we get back.</p>
-<p>One additional improvement that we can make is to try each parameter multiple times and keep track of the success rate. Incorporating all of these improvements, our loop looks like:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
-
-<span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">sample_size</span> <span class="o">=</span> <span class="mi">10</span>
-
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">min</span>
-<span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
-
-<span class="n">attack1_data</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">&lt;</span> <span class="n">width_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">min</span>
-    <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">&lt;</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
-        <span class="n">successes</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sample_size</span><span class="p">):</span>
-            <span class="c1"># call before trace things here</span>
-
-            <span class="c1"># flush the garbage from the computer&#39;s target read buffer</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-            <span class="c1"># run aux stuff that should run before the scope arms here</span>
-
-            <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-            <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-
-            <span class="n">timeout</span> <span class="o">=</span> <span class="mi">50</span>
-            <span class="c1"># wait for target to finish</span>
-            <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
-                <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-
-            <span class="c1"># get the results from the scope</span>
-            <span class="c1"># read from the targets buffer</span>
-            <span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
-
-            <span class="c1"># for table display purposes</span>
-            <span class="n">success</span> <span class="o">=</span> <span class="s1">&#39;1234&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="c1"># check for glitch success (depends on targets active firmware)</span>
-            <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
-                <span class="n">successes</span> <span class="o">+=</span> <span class="mi">1</span>
-            
-        <span class="n">attack1_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">successes</span><span class="o">/</span><span class="n">sample_size</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)])</span> 
-        <span class="c1"># run aux stuff that should happen after trace here</span>
-        <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">+=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">step</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">+=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">step</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done glitching&quot;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Done glitching
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now that we've tried some glitches, let's look at the results. There's going to be a lot of data here, so we'll only print parameters that lead to successful glitches:</p>
+<p>This part is optional, but to make the response easier to read, we'll also want to do some parsing on the response text, since the response won't all be in ASCII text. This will make use of the <code>termcolor</code> module to make non letter/number responses red, which doesn't come with ChipWhisperer and only works on Jupyter/Unix. If you're following along in a Windows command prompt or don't want to install this module, feel free to remove the import and the <code>colored()</code> calls.</p>
 
 </div>
 </div>
@@ -14131,108 +13797,29 @@ output      = clock_xor
 <div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">attack1_data</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-    <span class="c1">#print(row)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">termcolor</span> <span class="k">import</span> <span class="n">colored</span>
+<span class="k">def</span> <span class="nf">my_print</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">31</span> <span class="ow">and</span> <span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">127</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ch</span> <span class="o">==</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">:</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">colored</span><span class="p">(</span><span class="s2">&quot;0x</span><span class="si">{:02X}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)),</span> <span class="s1">&#39;red&#39;</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[-10.15625, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-10.15625, -37.109375, 0.9, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-8.984375, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-8.984375, -37.109375, 0.6, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[-7.8125, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-7.8125, -37.109375, 0.5, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[-6.640625, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-6.640625, -37.109375, 0.5, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-5.46875, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-5.46875, -37.109375, 0.3, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[-4.296875, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-4.296875, -37.109375, 0.8, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-3.125, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-3.125, -37.109375, 0.3, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-1.953125, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-1.953125, -37.109375, 0.4, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -44.140625, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -34.765625, 0.1, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>With any luck, you'll have some successful glitches. Create a smaller range of offsets and widths where the majority of successful glitches can be found. This will greatly speed up future attacks (though be sure not to make the bounds too small, since you might miss successful settings for some attacks). For example, you may have found most of your glitches between a width <code>[-9,-5]</code> and an offset of <code>[-37, -40]</code>, so good ranges might be <code>[-10, -4]</code> and <code>[-35, -41]</code>.</p>
-<p>If you didn't get any successful glitches, note that we only used an <code>offset</code> of <code>[-10,10]</code> or <code>[-49, -30]</code> (the max is <code>[-50, 50]</code>). Try using a larger range of offsets to see if a successful offset lies outside of this range.</p>
-<p>If you want to take this attack further, try reducing the <code>repeat</code> to 1 and iterating through <code>ext_offset</code> to look for the precise clock cycle where the glitch succeeds. To save time, pick a <code>width</code> and <code>offset</code> that worked for you and only vary <code>ext_offset</code>. Note that even with the right parameters and location, inserting a glitch won't always work, so a better strategy may be to loop infinitely over <code>ext_offset</code> values until you get a successful glitch.</p>
-<p><strong>HINT: We used a <code>repeat</code> of 105 for this attack (and an <code>ext_offset</code> of 0) on XMEGA, which put a glitch in each of the first 105 clock cycles. This means <code>ext_offset</code> must be in the range <code>[0,105]</code> for this target.</strong></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Attack-2">Attack 2<a class="anchor-link" href="#Attack-2">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now that you (hopefully) have parameters that cause semi-reliable glitches, we can look at a more challenging example: a password check. Go back to <code>glitchsimple.c</code> and find the <code>glitch3()</code> function:</p>
-<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">glitch3</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">char</span> <span class="n">inp</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
-    <span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="sc">&#39;A&#39;</span><span class="p">;</span>
-    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="n">uart_puts</span><span class="p">(</span><span class="s">&quot;Password:&quot;</span><span class="p">);</span>
-
-    <span class="k">while</span><span class="p">((</span><span class="n">c</span> <span class="o">!=</span> <span class="sc">&#39;\n&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">&lt;</span> <span class="mi">16</span><span class="p">)){</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">getch</span><span class="p">();</span>
-        <span class="n">inp</span><span class="p">[</span><span class="n">cnt</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span><span class="p">;</span>
-        <span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="kt">char</span> <span class="n">passwd</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;touch&quot;</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="n">passok</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-
-    <span class="n">trigger_high</span><span class="p">();</span>
-    <span class="n">trigger_low</span><span class="p">();</span>
-
-    <span class="c1">//Simple test - doesn&#39;t check for too-long password!</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">cnt</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">;</span> <span class="n">cnt</span><span class="o">++</span><span class="p">){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">cnt</span><span class="p">]</span> <span class="o">!=</span> <span class="n">passwd</span><span class="p">[</span><span class="n">cnt</span><span class="p">]){</span>
-            <span class="n">passok</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">passok</span><span class="p">){</span>
-        <span class="n">uart_puts</span><span class="p">(</span><span class="s">&quot;Denied</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-        <span class="n">uart_puts</span><span class="p">(</span><span class="s">&quot;Welcome</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-<p>As you might expect, we'll try to glitch past the <code>if(!passok)</code> check towards the end of the code. Change <code>main()</code> to call <code>glitch3()</code> (running the block below will do this). Like before, we'll build and program the new firmware.</p>
+<p>We can finally proceed on to our actual loop. Our loop will have the same basic idea as the one from <code>Fault_1</code>: we'll need to iterate through ext_offset, offset, and width to find the right settings for a glitch.</p>
+<p>As was mentioned earlier, we'll also need to check for a successful glitch to avoid resetting while we're still receiving data. This will also enable us to read the full serial output, since the target will be sending back a lot of data (much more than we can receive in one <code>ser.read()</code>).</p>
+<p>Careful inspection of the source reveals that most of what we sent to the device is still in the <code>ascii_buffer</code> (with the first 8 or so characters being overwritten). That means we can check for one of the characters after the overwritten part (say <code>"7"</code>).</p>
+<p>After we're sure we have a glitch, we can just keep looking for more data and printing it.</p>
+<p><strong>Make sure you update the values in the <code>external offset range</code> call to reflect what you got earlier in the tutorial</strong></p>
 
 </div>
 </div>
@@ -14242,296 +13829,41 @@ output      = clock_xor
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span>%%bash
-<span class="c1"># replaces glitch1() with glitch3()</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/glitch-simple-lab1
-awk <span class="s1">&#39;{gsub(/glitch1\(\)/, &quot;glitch3\(\)&quot;)}1&#39;</span> glitchsimple.c &gt; tmp.c <span class="m">2</span>&gt;/dev/null
-rm glitchsimple.c
-mv tmp.c glitchsimple.c
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/glitch-simple-lab1
-make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>rm -f -- glitchsimple-CWLITEARM.hex
-rm -f -- glitchsimple-CWLITEARM.eep
-rm -f -- glitchsimple-CWLITEARM.cof
-rm -f -- glitchsimple-CWLITEARM.elf
-rm -f -- glitchsimple-CWLITEARM.map
-rm -f -- glitchsimple-CWLITEARM.sym
-rm -f -- glitchsimple-CWLITEARM.lss
-rm -f -- objdir/*.o
-rm -f -- objdir/*.lst
-rm -f -- glitchsimple.s simpleserial.s stm32f3_hal.s stm32f3_hal_lowlevel.s stm32f3_sysmem.s
-rm -f -- glitchsimple.d simpleserial.d stm32f3_hal.d stm32f3_hal_lowlevel.d stm32f3_sysmem.d
-rm -f -- glitchsimple.i simpleserial.i stm32f3_hal.i stm32f3_hal_lowlevel.i stm32f3_sysmem.i
-.
--------- begin --------
-arm-none-eabi-gcc (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
-Copyright (C) 2017 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-.
-Compiling C: glitchsimple.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple.o.d glitchsimple.c -o objdir/glitchsimple.o 
-.
-Compiling C: .././simpleserial/simpleserial.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
-.
-Compiling C: .././hal/stm32f3/stm32f3_hal.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal.o.d .././hal/stm32f3/stm32f3_hal.c -o objdir/stm32f3_hal.o 
-.
-Compiling C: .././hal/stm32f3/stm32f3_hal_lowlevel.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal_lowlevel.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal_lowlevel.o.d .././hal/stm32f3/stm32f3_hal_lowlevel.c -o objdir/stm32f3_hal_lowlevel.o 
-.
-Compiling C: .././hal/stm32f3/stm32f3_sysmem.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_sysmem.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_sysmem.o.d .././hal/stm32f3/stm32f3_sysmem.c -o objdir/stm32f3_sysmem.o 
-.
-Assembling: .././hal/stm32f3/stm32f3_startup.S
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -x assembler-with-cpp -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -DF_CPU=7372800 -Wa,-gstabs,-adhlns=objdir/stm32f3_startup.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ .././hal/stm32f3/stm32f3_startup.S -o objdir/stm32f3_startup.o
-.
-Linking: glitchsimple-CWLITEARM.elf
-arm-none-eabi-gcc -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.o -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple-CWLITEARM.elf.d objdir/glitchsimple.o objdir/simpleserial.o objdir/stm32f3_hal.o objdir/stm32f3_hal_lowlevel.o objdir/stm32f3_sysmem.o objdir/stm32f3_startup.o --output glitchsimple-CWLITEARM.elf --specs=nano.specs -T .././hal/stm32f3/LinkerScript.ld -Wl,--gc-sections -lm -Wl,-Map=glitchsimple-CWLITEARM.map,--cref   -lm  
-.
-Creating load file for Flash: glitchsimple-CWLITEARM.hex
-arm-none-eabi-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.hex
-.
-Creating load file for EEPROM: glitchsimple-CWLITEARM.eep
-arm-none-eabi-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
-	--change-section-lma .eeprom=0 --no-change-warnings -O ihex glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.eep || exit 0
-.
-Creating Extended Listing: glitchsimple-CWLITEARM.lss
-arm-none-eabi-objdump -h -S -z glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.lss
-.
-Creating Symbol Table: glitchsimple-CWLITEARM.sym
-arm-none-eabi-nm -n glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.sym
-Size after:
-   text	   data	    bss	    dec	    hex	filename
-   4400	      8	   1176	   5584	   15d0	glitchsimple-CWLITEARM.elf
-+--------------------------------------------------------
-+ Built for platform CW-Lite Arm (STM32F3)
-+--------------------------------------------------------
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Detected known STMF32: STM32F302xB(C)/303xB(C)
-Extended erase (0x44), this can take ten seconds or more
-Attempting to programming 4407 bytes at 0x8000000
-STM32F Programming flash...
-STM32F Reading flash...
-Verified flash OK, 4407 bytes
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's make sure we can communicate with the password check with a successful password:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;touch</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scope capture timed out&quot;</span><span class="p">)</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre> hello
-Password:Welcome
-Password:
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>and an unsuccessful one:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;x</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scope capture timed out&quot;</span><span class="p">)</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Denied
-Password:
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>One thing that you may have run into in the previous part is that using a large repeat value makes the target more likely to crash. As mentioned in the previous part, we can use smaller ranges of offset and width, use a repeat value of 1, and iterate through the external offset instead to get a successful glitch. This is often a much more reliable way to glitch targets.</p>
-<p>One other thing we need to consider is crashing. In the previous part, we didn't need to worry about crashing since we always reset after a glitch attempt anyway. This is no longer true. Instead we'll need to detect glitches and, if they happen, reset the target. Typically a good way to detect crashes is by running through the loop again and looking for a timeout. This is rather slow, but for this attack, we don't really have a better method. One thing we can do to speed this up is to decrease the adc timeout value (via <code>scope.adc.timeout</code>). Resetting is the same in the last part.</p>
-<p>Putting it all together (don't forget to update the width and offset with ranges that worked in the last part):</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Attack-Loop">Attack Loop<a class="anchor-link" href="#Attack-Loop">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_single&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">trange</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
 
 <span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
-<span class="n">attack2_data</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mf">0.1</span>
-<span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">41</span><span class="p">,</span> <span class="o">-</span><span class="mi">35</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Init&quot;</span><span class="p">)</span>
+<span class="n">Range</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Range&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">])</span>
+
+<span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">41</span><span class="p">,</span> <span class="o">-</span><span class="mi">35</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+<span class="n">broken</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">0</span>
 
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">min</span>
 <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">&lt;</span> <span class="n">width_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">min</span>
+    <span class="k">if</span> <span class="n">broken</span><span class="p">:</span>
+        <span class="k">break</span>
     <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">&lt;</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">broken</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ext_range</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+                <span class="c1">#trigger never went low, target probably crashed</span>
+                <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                <span class="c1">#print(&quot;Crashed!&quot;)</span>
+
             <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="n">i</span>
-            <span class="c1"># call before trace things here</span>
-
-            <span class="c1"># flush the garbage from the computer&#39;s target read buffer</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-            <span class="c1"># run aux stuff that should run before the scope arms here</span>
-
             <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;x</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="n">timeout</span> <span class="o">=</span> <span class="mi">50</span>
-            <span class="c1"># wait for target to finish</span>
+            <span class="n">send_milk</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="p">)</span>
             <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
                 <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
                 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
@@ -14539,1014 +13871,34 @@ Password:
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
                     <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                    <span class="k">continue</span>
             <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 
-            <span class="c1"># get the results from the scope</span>
-            <span class="c1"># read from the targets buffer</span>
-            <span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">waiting</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 
-            <span class="c1"># for table display purposes</span>
-            <span class="n">success</span> <span class="o">=</span> <span class="s1">&#39;Welcome&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="c1"># check for glitch success (depends on targets active firmware)</span>
-            <span class="n">attack2_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)])</span> 
+            <span class="c1">#check if we were successful</span>
+            <span class="k">if</span> <span class="s2">&quot;7&quot;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Glitched!</span><span class="se">\n\t</span><span class="s2">Ext offset: </span><span class="si">{}</span><span class="se">\n\t</span><span class="s2">Offset: </span><span class="si">{}</span><span class="se">\n\t</span><span class="s2">Width: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">))</span>
+                <span class="n">my_print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+                <span class="n">broken</span> <span class="o">=</span> <span class="kc">True</span> 
+                <span class="k">for</span> <span class="n">__</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500</span><span class="p">):</span>
+                    <span class="n">waiting</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">waiting</span><span class="p">:</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+                        <span class="n">my_print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+                <span class="k">break</span>
 
-            <span class="c1"># run aux stuff that should happen after trace here</span>
+            <span class="k">if</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+                <span class="c1">#trigger never went low, target probably crashed</span>
+                <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                <span class="c1">#print(&quot;Crashed! Output: {}&quot;.format(output))</span>
+                
         <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">+=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">step</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">+=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">step</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done glitching&quot;</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-WARNING:root:Timeout in OpenADC capture(), trigger FORCED
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Timeout happened during acquisition
-Done glitching
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">trig_count</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">attack2_data</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -15563,16 +13915,7 @@ Done glitching
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>56
-[-39.84375, -10.15625, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -8.984375, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -8.984375, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -7.8125, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -7.8125, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -6.640625, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -6.640625, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -5.46875, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -5.46875, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
+<pre>Init
 </pre>
 </div>
 </div>
@@ -15584,15 +13927,15 @@ Done glitching
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>With any luck, you should have some successful attacks. If you weren't able to glitch the target, you may want to try a larger range of width/offset values. You may also want to try decreasing the step value for these ranges as well.</p>
-<p>With the tutorial now over, we should disconnect from the ChipWhisperer</p>
+<p>With any luck, you should see a whole bunch of text printed to the screen. Successful glitches might not happen every time, so you may need to rerun the loop a few times.</p>
+<p>You should be able to the plaintext near the beginning of the output! The data buffer has successfully been printed to the serial port, allowing us to see the decrypted text with no knowledge of the algorithm. Now that we've got a successful glitch, stop the cell above (since it's still looking for more stuff to print) and let's disconnect the scope and target:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">dis</span><span class="p">()</span>
@@ -15607,20 +13950,70 @@ Done glitching
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Glitching-Onward">Glitching Onward<a class="anchor-link" href="#Glitching-Onward">&#182;</a></h2>
+<h2 id="Ideas">Ideas<a class="anchor-link" href="#Ideas">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This basic tutorial has introduced you to glitch attacks. They are a powerful tool for bypassing authentication in embedded hardware devices. There are many ways to expand your knowledge with additional practice, such as:</p>
+<p>There's a lot more that can be done with this type of attack...</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Safer-Assembly-Code">Safer Assembly Code<a class="anchor-link" href="#Safer-Assembly-Code">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You may have been surprised to see that the assembly code uses a <code>brne</code> instruction to check if the loop is finished - after all, we used a less-than comparison in our C source code! Try changing this line to use a more prohibitive loop. Here's how you might do this:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Volatile-Variables">Volatile Variables<a class="anchor-link" href="#Volatile-Variables">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The reason why the original assembly code used the brne instruction is because GCC is an <em>optimizing compiler</em>. The compiler doesn't directly translate the C source code into assembly instructions. Instead, it tries to determine if any of the code can be modified to make it faster or more compact. For instance, consider the loop:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="s">&quot;Less&quot;</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="nf">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="s">&quot;Greater&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>If you take a careful look at this code, you'll notice that the following loop will produce the same output:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="s">&quot;Less&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>However, this second loop is smaller (less code) and faster (no conditional jumps). This is the kind of optimization a compiler can make.</p>
+<p>There are several ways we can stop the compiler from making some of these assumptions. One of these methods uses volatile variables, which look like</p>
+<div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</pre></div>
+<p>A volatile variable is one that could change at any time. There could be many reasons why the value might change on us:</p>
 <ul>
-<li>Manual glitches can be triggered by calling <code>scope.glitch.manualTrigger()</code> and <code>scope.glitch.trigger_src = "manual"</code>. Try using manual glitches to simply glitch past the prompt in <code>glitch3()</code>.</li>
-<li>Completing the VCC Glitch Attacks tutorial (not yet available), which introduces glitching via voltage instead of the clock.</li>
-<li>Download some example source code (bootloaders, login prompts, etc) and port them to your target. See how you can glitch past security checks.</li>
-<li>Use one of the IO triggers discussed in Tutorial_A1_Synchronization_to_Communication_Lines.</li>
+<li>Another thread might have access to the same memory location</li>
+<li>Another part of the computer might be able to change the variable's value (example: direct memory access)</li>
+<li>The variable might not actually be stored anywhere - it could be a read-only register in an embedded system</li>
 </ul>
+<p>In any case, the <code>volatile</code> keyword tells the compiler to make no guarantees about this variable.</p>
+<p>Try changing the bootloader's source code to use a volatile variable inside the loop. What happens to the disassembly? Is the loop body longer? Connect to the target board and capture a power trace. Does it look different? You'll have to find a new <em>Ext Trigger Offset</em> for the glitch module. Can you still perform the attack? Is it feasible to use this fix to avoid glitching attacks?</p>
 
 </div>
 </div>
@@ -15634,47 +14027,36 @@ Done glitching
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">attack1_data</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">assert</span> <span class="n">success</span><span class="p">,</span> <span class="s2">&quot;Failed to glitch attack 1</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attack1_data</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="p">(</span><span class="n">broken</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;Failed to break bootloader in </span><span class="si">{}</span><span class="s2"> glitches&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[25]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">attack2_data</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
-        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">assert</span> <span class="n">success</span><span class="p">,</span> <span class="s2">&quot;Failed to glitch attack 2</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attack2_data</span><span class="p">)</span>
-</pre></div>
+<div class="output_wrapper">
+<div class="output">
 
-    </div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">AssertionError</span>                            Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-18-a5d215074782&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 1</span><span class="ansi-yellow-intense-fg ansi-bold"> </span><span class="ansi-green-intense-fg ansi-bold">assert</span> <span class="ansi-yellow-intense-fg ansi-bold">(</span>broken <span class="ansi-yellow-intense-fg ansi-bold">==</span> <span class="ansi-green-intense-fg ansi-bold">True</span><span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> <span class="ansi-blue-intense-fg ansi-bold">&#34;Failed to break bootloader in {} glitches&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>format<span class="ansi-yellow-intense-fg ansi-bold">(</span>N<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+
+<span class="ansi-red-intense-fg ansi-bold">AssertionError</span>: Failed to break bootloader in 448 glitches</pre>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
 </div>
 </div>
 
