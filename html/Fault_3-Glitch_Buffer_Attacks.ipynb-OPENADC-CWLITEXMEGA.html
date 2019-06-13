@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>tmp__wnca7g</title>
+<title>Notebook</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13116,82 +13116,32 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="RSA-FaultAttack">RSA FaultAttack<a class="anchor-link" href="#RSA-FaultAttack">&#182;</a></h1>
+<h1 id="Glitch-Buffer-Attacks">Glitch Buffer Attacks<a class="anchor-link" href="#Glitch-Buffer-Attacks">&#182;</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This advanced tutorial will demonstrate an attack on RSA signatures that use the Chinese Remainder Theorem as an optimization. This tutorial will make use of glitching, so it's recommended that you complete at least Fault_1-Introduction_to_Clock_Glitch_Attacks before attempting this tutorial. You may also want to install gmpy2 before running this tutorial, as it makes a later section of the tutorial much faster. Linux users can install this via their package manager, Mac users via Brew, and Windows users via the <a href="https://www.lfd.uci.edu/~gohlke/pythonlibs/">Unofficial Windows Python Binaries</a>.</p>
-<p>Additionally, this tutorial has been designed for Arm targets only. Users of other hardware will likely need to make changes to available RSA libraries to complete this tutorial.</p>
-<p>This attack is was originally detailed in a <a href="https://www.researchgate.net/publication/2409434_On_the_Importance_of_Checking_Computations">1997 paper by Boneh, Demillo, and Lipton</a>. This tutorial draws heavily from a blog post by David Wong, which you can find <a href="https://www.cryptologie.net/article/371/fault-attacks-on-rsas-signatures/">here</a>.</p>
+<p>This tutorial discusses a specific type of glitch attack. It shows how a simple printing loop can be abused, causing a target to print some otherwise private information. This attack will be used to recover a plaintext without any knowledge of the encryption scheme being used.</p>
 
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Attack-Theory">Attack Theory<a class="anchor-link" href="#Attack-Theory">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We won't cover much about what RSA (there's a <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem">Wikipedia article</a>) for that), but we will give a quick summary.</p>
-<ul>
-<li>RSA is a public key crypto system. It can be used in a few different ways, but we'll be using it for signing messages in this case. In this mode, User A can sign a message using their private information. User B can then verify that User A was the one who signed the message using publically available information.</li>
-<li>This means that some information is public, while other information is private.</li>
-<li>Public information includes the public modulus n, and the public exponent e</li>
-<li>Private information includes the private exponent d, as well as p and q, which are prime factors of n</li>
-<li>The public information can be freely shared, but learning any private information compromises the whole system</li>
-</ul>
-<p>The math of RSA (once you have all the key parts generated) is actually pretty simple. To sign the message, the following equation can be applied (with signature s, message m, private exponent d, and public modulus n):</p>
-$$s = m^d({mod}\ n)$$<p>To verify a signature, the following equation is used (with signature s, public exponent e, message m, and public modulus n):</p>
-$$s^e = m(mod\ n)$$<p>Despite the simplicity of these equations, signing messages in particular is a very slow operation, with the implementation from MBEDTLS, a popular crypto library for Arm devices, taking over 12M cycles for RSA-1024 (and this is with the optimization we make in the next section). This is because all of the numbers used in these equations are huge (n and d are 1024 bits long in this case). As you can imagine, any improvement we can make to the speed of this operation is very important. It turns out there is a large speed optimization that we can make.</p>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">SCOPETYPE</span> <span class="o">=</span> <span class="s1">&#39;OPENADC&#39;</span>
+<span class="n">PLATFORM</span> <span class="o">=</span> <span class="s1">&#39;CWLITEXMEGA&#39;</span>
+<span class="n">GLITCHTYPE</span> <span class="o">=</span> <span class="s1">&#39;CLOCK&#39;</span>
+</pre></div>
 
+    </div>
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Chinese-Remainder-Theorem-(CRT)">Chinese Remainder Theorem (CRT)<a class="anchor-link" href="#Chinese-Remainder-Theorem-(CRT)">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Instead of computing $s = m^d(mod\ n)$, we can instead break n into two primes, p and q, such that $n = pq$, then use those to calculate the signature instead of n. As you might have guessed, p and q are the same private information we talked about earlier. Bascially, if we learn either, we'll be able to derive the rest of the private information fairly easily. We won't go into all the math, but here's the important operations:</p>
-<ul>
-<li>Derive $d_p$ from d and p and $d_q$ from d and q</li>
-<li>Calculate: $s_1 = m^{d_p}(mod\ p)$ and $s_2 = m^{d_q}(mod\ q)$</li>
-<li>Combine $s_1$ and $s_2$ into $s$ via CRT</li>
-</ul>
-<p>Since p and q are much smaller than n, creating signatures is much much faster this way. As such, many popular RSA implementations (including MBEDTLS) use CRT to speed up RSA.</p>
 
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="CRT-Attack">CRT Attack<a class="anchor-link" href="#CRT-Attack">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Suppose that instead of everything going smoothly as above, a fault happens during the calculation of $s_1$ or $s_2$ (we'll assume that the fault was with $s_2$ here, which will become $s^{'}_{2}$). If that happens, the following becomes true (with faulty signatures $s_2'$, which generates $s'$):</p>
-$$s'^e = m(mod\ p) \Rightarrow s'^e - m = 0 (mod\ p)$$$$s'^e \neq m(mod\ q) \Rightarrow s'^e - m \neq 0 (mod\ q)$$<p>The result of this is that p will be a factor of $s'^e - m$, but q and n will not be. Since p is also a factor of N, what follows is that:</p>
-$$p = gcd(s'^e - m, N)$$<p>Thus, if we introduce a fault in the calculation of either $s_1$ or $s_2$, we'll be able to get either q or p, and from there the rest of the private values!</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -13203,76 +13153,78 @@ $$p = gcd(s'^e - m, N)$$<p>Thus, if we introduce a fault in the calculation of e
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Next, let's take a look at the RSA implementation we're attacking. For this attack, we'll be using the <code>simpleserial-rsa-arm</code> project folder. There's a few files here, but the important one is <code>simpleserial-arm-rsa.c</code>. Open it. As you scroll through, you'll find all our public/private values. Next, navigate to <code>real_dec()</code>:</p>
-<div class="highlight"><pre><span></span><span class="kt">uint8_t</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
-<span class="kt">uint8_t</span> <span class="n">hash</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
-<span class="kt">uint8_t</span> <span class="nf">real_dec</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="o">*</span><span class="n">pt</span><span class="p">)</span>
+<p>This section introduces the attack concept by showing some real world examples of vulnerable firmware. Then, it describes the victim firmware that will be used in this tutorial.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Real-Firmware">Real Firmware<a class="anchor-link" href="#Real-Firmware">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Typically, one of the slowest parts of an embedded system is its communication lines. It's pretty common to see a processor running in the MHz range with a serial connection of 96k baud. To make these two different speeds work together, embedded firmware usually fills up a buffer with data and lets a serial driver print on its own time. This setup means we can expect to see code like:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">number_of_bytes_to_print</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
 <span class="p">{</span>
-     <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-
-     <span class="c1">//first need to hash our message</span>
-     <span class="n">memset</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">);</span>
-     <span class="n">mbedtls_sha256</span><span class="p">(</span><span class="n">MESSAGE</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">hash</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-
-     <span class="n">trigger_high</span><span class="p">();</span>
-     <span class="n">ret</span> <span class="o">=</span> <span class="n">simpleserial_mbedtls_rsa_rsassa_pkcs1_v15_sign</span><span class="p">(</span><span class="o">&amp;</span><span class="n">rsa_ctx</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">MBEDTLS_RSA_PRIVATE</span><span class="p">,</span> <span class="n">MBEDTLS_MD_SHA256</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">hash</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
-     <span class="n">trigger_low</span><span class="p">();</span>
-
-     <span class="c1">//send back first 48 bytes</span>
-     <span class="n">simpleserial_put</span><span class="p">(</span><span class="sc">&#39;r&#39;</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
-     <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="n">print_one_byte_to_serial</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
 <span class="p">}</span>
 </pre></div>
-<p>You'll notice that we first hash our message (<code>"Hello World!"</code>) using SHA256. Once this is passed to the signature function, it will be padded according to the PKCS#1 v1.5 standard. This isn't too important now, but it will be important later. Next we sign our message using <code>simpleserial_mbedtls_rsa_rsassa_pkcs1_v15_sign()</code>, then send back the first 48 bytes of it. We'll be sending the signature back in multiple chunks to avoid overflowing the CWLite's buffer of 128 bytes via <code>sig_chunk_1()</code> and <code>sig_chunk_2()</code> directly below this function.</p>
-<p>We'll actually skip over <code>simpleserial_mbedtls_rsa_rsassa_pkcs1_v15_sign()</code> here, since most of the important stuff actually happens in a different function. You should note, however, that this function has been modified to remove a signature check, which would need to be bypassed in a real attack.</p>
-<p>Next, find the function <code>simpleserial_mbedtls_rsa_private()</code>, a cleaned up version of <code>mbedtls_rsa_private()</code>, where the signature calculation actually happens:</p>
-<div class="highlight"><pre><span></span><span class="cm">/*</span>
-<span class="cm"> * Do an RSA private key operation</span>
-<span class="cm"> */</span>
-<span class="k">static</span> <span class="kt">int</span> <span class="n">simpleserial_mbedtls_rsa_private</span><span class="p">(</span> <span class="n">mbedtls_rsa_context</span> <span class="o">*</span><span class="n">ctx</span><span class="p">,</span>
-                 <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">f_rng</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">size_t</span><span class="p">),</span>
-                 <span class="kt">void</span> <span class="o">*</span><span class="n">p_rng</span><span class="p">,</span>
-                 <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">input</span><span class="p">,</span>
-                 <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">output</span> <span class="p">)</span>
+<p>This is a pretty vulnerable piece of C. Imagine that we could sneak into the source code and change it to:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">really_big_number</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">print_one_byte_to_serial</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="p">}</span>
 </pre></div>
-<p>scrolling down a bit, we do indeed find that this function uses CRT to speed up the calculation:</p>
-<div class="highlight"><pre><span></span><span class="cm">/*</span>
-<span class="cm">     * Faster decryption using the CRT</span>
-<span class="cm">     *</span>
-<span class="cm">     * T1 = input ^ dP mod P</span>
-<span class="cm">     * T2 = input ^ dQ mod Q</span>
-<span class="cm">     */</span>
-    <span class="n">MBEDTLS_MPI_CHK</span><span class="p">(</span> <span class="n">mbedtls_mpi_exp_mod</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">T1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">T</span><span class="p">,</span> <span class="n">DP</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">P</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">RP</span> <span class="p">)</span> <span class="p">);</span>
-    <span class="n">MBEDTLS_MPI_CHK</span><span class="p">(</span> <span class="n">mbedtls_mpi_exp_mod</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">T2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">T</span><span class="p">,</span> <span class="n">DQ</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">Q</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">RQ</span> <span class="p">)</span> <span class="p">);</span>
-</pre></div>
-<p>You can view more of the firmware if you want, but for now let's build our firmware and then move over to our python script:</p>
+<p>C compilers don't care that <code>buffer[]</code> has a limited size - this loop will happily print every byte it comes across, which could include other variables, registers, and even source code. Although we probably don't have a good way of changing the source code on the fly, we do have glitches: a well-timed clock or power glitch could let us skip the <code>i &lt; number_of_bytes_to_print</code> check, which would have the same result.</p>
+<p>How could this be applied? Imagine that we have an encrypted firmware image that we're going to transmit to a bootloader. A typical communication process might look like:</p>
+<ol>
+<li>We send the encrypted image ciphertexts over a serial connection</li>
+<li>The bootloader decrypts the ciphertexts and stores the result somewhere in memory</li>
+<li>The bootloader sends back a response over the serial port</li>
+</ol>
+<p>We have a pretty straightforward attack for this type of bootloader. During the last step, we'll apply a glitch at precisely the right time, causing the bootloader to print all kinds of things to the serial connection. With some luck, we'll be able to find the decrypted plaintext somewhere in this memory dump.</p>
 
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">PLATFORM</span> <span class="o">=</span> <span class="s2">&quot;CWLITEARM&quot;</span>
-<span class="n">CRYPTO_TARGET</span><span class="o">=</span><span class="s2">&quot;MBEDTLS&quot;</span>
-<span class="n">CRYPTO_OPTIONS</span><span class="o">=</span><span class="s2">&quot;RSA&quot;</span>
-</pre></div>
-
-    </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Building-Firmware">Building Firmware<a class="anchor-link" href="#Building-Firmware">&#182;</a></h3>
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>For this tutorial, a very simple bootloader using the SimpleSerial protocol has been set up. The source for this bootloader can be found in <code>chipwhisperer/hardware/victims/firmware/bootloader-glitch</code>. The following commands are used:</p>
+<ul>
+<li><code>pABCD\n</code>: Send an encrypted ciphertext to the bootloader. For example, this message is made up of the two bytes AB and CD.</li>
+<li><code>r0\n\n\n\n\n\n</code>: The reply from the bootloader. Acknowledges that a message was received. No other responses are used.</li>
+<li><code>x</code>: Clear the bootloader's received buffer.</li>
+<li><code>k</code>: See x.</li>
+</ul>
+<p>The bootloader uses triple-ROT-13 encryption to encrypt/decrypt the messages. To help you send messages to the target, the script private/encrypt.py prints the SimpleSerial command for a given fixed string. For example, the ciphertext for the string <code>Don't forget to buy milk!</code> is</p>
 
+<pre><code>p516261276720736265747267206762206f686c207a76797821\n</code></pre>
+<p>Now that we've got some basic knowledge of the target code, build it, then navigate to the <code>bootloader-glitch</code> firmware directory:</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_OPTIONS</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/simpleserial-rsa
-make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span> <span class="nv">CRYPTO_OPTIONS</span><span class="o">=</span><span class="nv">$3</span> <span class="nv">OPT</span><span class="o">=</span><span class="m">2</span>
+<div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span>
+<span class="nb">cd</span> ../../hardware/victims/firmware/bootloader-glitch
+make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span>NONE
 </pre></div>
 
     </div>
@@ -13289,133 +13241,65 @@ make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>rm -f -- simpleserial-rsa-CWLITEARM.hex
-rm -f -- simpleserial-rsa-CWLITEARM.eep
-rm -f -- simpleserial-rsa-CWLITEARM.cof
-rm -f -- simpleserial-rsa-CWLITEARM.elf
-rm -f -- simpleserial-rsa-CWLITEARM.map
-rm -f -- simpleserial-rsa-CWLITEARM.sym
-rm -f -- simpleserial-rsa-CWLITEARM.lss
+<pre>rm -f -- bootloader-CWLITEXMEGA.hex
+rm -f -- bootloader-CWLITEXMEGA.eep
+rm -f -- bootloader-CWLITEXMEGA.cof
+rm -f -- bootloader-CWLITEXMEGA.elf
+rm -f -- bootloader-CWLITEXMEGA.map
+rm -f -- bootloader-CWLITEXMEGA.sym
+rm -f -- bootloader-CWLITEXMEGA.lss
 rm -f -- objdir/*.o
 rm -f -- objdir/*.lst
-rm -f -- simpleserial-rsa.s simpleserial-rsa-xmega.s simpleserial-rsa-arm.s simpleserial.s stm32f3_hal.s stm32f3_hal_lowlevel.s stm32f3_sysmem.s rsa.s bignum.s md.s md5.s md_wrap.s sha1.s sha256.s sha512.s ripemd160.s oid.s
-rm -f -- simpleserial-rsa.d simpleserial-rsa-xmega.d simpleserial-rsa-arm.d simpleserial.d stm32f3_hal.d stm32f3_hal_lowlevel.d stm32f3_sysmem.d rsa.d bignum.d md.d md5.d md_wrap.d sha1.d sha256.d sha512.d ripemd160.d oid.d
-rm -f -- simpleserial-rsa.i simpleserial-rsa-xmega.i simpleserial-rsa-arm.i simpleserial.i stm32f3_hal.i stm32f3_hal_lowlevel.i stm32f3_sysmem.i rsa.i bignum.i md.i md5.i md_wrap.i sha1.i sha256.i sha512.i ripemd160.i oid.i
+rm -f -- bootloader.s decryption.s XMEGA_AES_driver.s uart.s usart_driver.s xmega_hal.s
+rm -f -- bootloader.d decryption.d XMEGA_AES_driver.d uart.d usart_driver.d xmega_hal.d
+rm -f -- bootloader.i decryption.i XMEGA_AES_driver.i uart.i usart_driver.i xmega_hal.i
 .
 -------- begin --------
-arm-none-eabi-gcc (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
-Copyright (C) 2017 Free Software Foundation, Inc.
+avr-gcc (WinAVR 20100110) 4.3.3
+Copyright (C) 2008 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 .
-Compiling C: simpleserial-rsa.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial-rsa.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/simpleserial-rsa.o.d simpleserial-rsa.c -o objdir/simpleserial-rsa.o 
+Compiling C: bootloader.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/bootloader.lst -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/bootloader.o.d bootloader.c -o objdir/bootloader.o 
 .
-Compiling C: simpleserial-rsa-xmega.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial-rsa-xmega.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/simpleserial-rsa-xmega.o.d simpleserial-rsa-xmega.c -o objdir/simpleserial-rsa-xmega.o 
+Compiling C: decryption.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/decryption.lst -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/decryption.o.d decryption.c -o objdir/decryption.o 
 .
-Compiling C: simpleserial-rsa-arm.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial-rsa-arm.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/simpleserial-rsa-arm.o.d simpleserial-rsa-arm.c -o objdir/simpleserial-rsa-arm.o 
+Compiling C: .././hal/xmega/XMEGA_AES_driver.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/XMEGA_AES_driver.lst -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/XMEGA_AES_driver.o.d .././hal/xmega/XMEGA_AES_driver.c -o objdir/XMEGA_AES_driver.o 
 .
-Compiling C: .././simpleserial/simpleserial.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
+Compiling C: .././hal/xmega/uart.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/uart.lst -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/uart.o.d .././hal/xmega/uart.c -o objdir/uart.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_hal.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal.o.d .././hal/stm32f3/stm32f3_hal.c -o objdir/stm32f3_hal.o 
+Compiling C: .././hal/xmega/usart_driver.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/usart_driver.lst -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/usart_driver.o.d .././hal/xmega/usart_driver.c -o objdir/usart_driver.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_hal_lowlevel.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal_lowlevel.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal_lowlevel.o.d .././hal/stm32f3/stm32f3_hal_lowlevel.c -o objdir/stm32f3_hal_lowlevel.o 
+Compiling C: .././hal/xmega/xmega_hal.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/xmega_hal.lst -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/xmega_hal.o.d .././hal/xmega/xmega_hal.c -o objdir/xmega_hal.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_sysmem.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_sysmem.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/stm32f3_sysmem.o.d .././hal/stm32f3/stm32f3_sysmem.c -o objdir/stm32f3_sysmem.o 
+Linking: bootloader-CWLITEXMEGA.elf
+avr-gcc -mmcu=atxmega128d3 -I. -fpack-struct -gdwarf-2 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/bootloader.o -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/bootloader-CWLITEXMEGA.elf.d objdir/bootloader.o objdir/decryption.o objdir/XMEGA_AES_driver.o objdir/uart.o objdir/usart_driver.o objdir/xmega_hal.o --output bootloader-CWLITEXMEGA.elf -Wl,-Map=bootloader-CWLITEXMEGA.map,--cref   -lm  
 .
-Compiling C: .././crypto/mbedtls//library/rsa.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/rsa.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/rsa.o.d .././crypto/mbedtls//library/rsa.c -o objdir/rsa.o 
+Creating load file for Flash: bootloader-CWLITEXMEGA.hex
+avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature bootloader-CWLITEXMEGA.elf bootloader-CWLITEXMEGA.hex
 .
-Compiling C: .././crypto/mbedtls//library/bignum.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/bignum.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/bignum.o.d .././crypto/mbedtls//library/bignum.c -o objdir/bignum.o 
+Creating load file for EEPROM: bootloader-CWLITEXMEGA.eep
+avr-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
+	--change-section-lma .eeprom=0 --no-change-warnings -O ihex bootloader-CWLITEXMEGA.elf bootloader-CWLITEXMEGA.eep || exit 0
 .
-Compiling C: .././crypto/mbedtls//library/md.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/md.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/md.o.d .././crypto/mbedtls//library/md.c -o objdir/md.o 
+Creating Extended Listing: bootloader-CWLITEXMEGA.lss
+avr-objdump -h -S -z bootloader-CWLITEXMEGA.elf &gt; bootloader-CWLITEXMEGA.lss
 .
-Compiling C: .././crypto/mbedtls//library/md5.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/md5.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/md5.o.d .././crypto/mbedtls//library/md5.c -o objdir/md5.o 
-.
-Compiling C: .././crypto/mbedtls//library/md_wrap.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/md_wrap.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/md_wrap.o.d .././crypto/mbedtls//library/md_wrap.c -o objdir/md_wrap.o 
-.
-Compiling C: .././crypto/mbedtls//library/sha1.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/sha1.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/sha1.o.d .././crypto/mbedtls//library/sha1.c -o objdir/sha1.o 
-.
-Compiling C: .././crypto/mbedtls//library/sha256.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/sha256.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/sha256.o.d .././crypto/mbedtls//library/sha256.c -o objdir/sha256.o 
-.
-Compiling C: .././crypto/mbedtls//library/sha512.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/sha512.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/sha512.o.d .././crypto/mbedtls//library/sha512.c -o objdir/sha512.o 
-.
-Compiling C: .././crypto/mbedtls//library/ripemd160.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/ripemd160.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/ripemd160.o.d .././crypto/mbedtls//library/ripemd160.c -o objdir/ripemd160.o 
-.
-Compiling C: .././crypto/mbedtls//library/oid.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/oid.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/oid.o.d .././crypto/mbedtls//library/oid.c -o objdir/oid.o 
-.
-Assembling: .././hal/stm32f3/stm32f3_startup.S
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -x assembler-with-cpp -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -DF_CPU=7372800 -Wa,-gstabs,-adhlns=objdir/stm32f3_startup.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include .././hal/stm32f3/stm32f3_startup.S -o objdir/stm32f3_startup.o
-.
-Linking: simpleserial-rsa-CWLITEARM.elf
-arm-none-eabi-gcc -mcpu=cortex-m4 -I. -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DMBEDTLS -DMBEDTLS_SHA -DF_CPU=7372800UL -O2 -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial-rsa.o -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -I.././crypto/mbedtls//include -std=gnu99 -MMD -MP -MF .dep/simpleserial-rsa-CWLITEARM.elf.d objdir/simpleserial-rsa.o objdir/simpleserial-rsa-xmega.o objdir/simpleserial-rsa-arm.o objdir/simpleserial.o objdir/stm32f3_hal.o objdir/stm32f3_hal_lowlevel.o objdir/stm32f3_sysmem.o objdir/rsa.o objdir/bignum.o objdir/md.o objdir/md5.o objdir/md_wrap.o objdir/sha1.o objdir/sha256.o objdir/sha512.o objdir/ripemd160.o objdir/oid.o objdir/stm32f3_startup.o --output simpleserial-rsa-CWLITEARM.elf --specs=nano.specs -T .././hal/stm32f3/LinkerScript.ld -Wl,--gc-sections -lm -Wl,-Map=simpleserial-rsa-CWLITEARM.map,--cref   -lm  
-.
-Creating load file for Flash: simpleserial-rsa-CWLITEARM.hex
-arm-none-eabi-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature simpleserial-rsa-CWLITEARM.elf simpleserial-rsa-CWLITEARM.hex
-.
-Creating load file for EEPROM: simpleserial-rsa-CWLITEARM.eep
-arm-none-eabi-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
-	--change-section-lma .eeprom=0 --no-change-warnings -O ihex simpleserial-rsa-CWLITEARM.elf simpleserial-rsa-CWLITEARM.eep || exit 0
-.
-Creating Extended Listing: simpleserial-rsa-CWLITEARM.lss
-arm-none-eabi-objdump -h -S -z simpleserial-rsa-CWLITEARM.elf &gt; simpleserial-rsa-CWLITEARM.lss
-.
-Creating Symbol Table: simpleserial-rsa-CWLITEARM.sym
-arm-none-eabi-nm -n simpleserial-rsa-CWLITEARM.elf &gt; simpleserial-rsa-CWLITEARM.sym
+Creating Symbol Table: bootloader-CWLITEXMEGA.sym
+avr-nm -n bootloader-CWLITEXMEGA.elf &gt; bootloader-CWLITEXMEGA.sym
 Size after:
    text	   data	    bss	    dec	    hex	filename
-  49192	    108	   1820	  51120	   c7b0	simpleserial-rsa-CWLITEARM.elf
+   1540	    124	    120	   1784	    6f8	bootloader-CWLITEXMEGA.elf
 +--------------------------------------------------------
-+ Built for platform CW-Lite Arm (STM32F3)
++ Built for platform CW-Lite XMEGA
 +--------------------------------------------------------
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>simpleserial-rsa-arm.c: In function &#39;simpleserial_mbedtls_rsa_rsassa_pkcs1_v15_sign&#39;:
-simpleserial-rsa-arm.c:190:28: warning: unused variable &#39;diff_no_optimize&#39; [-Wunused-variable]
-     volatile unsigned char diff_no_optimize;
-                            ^~~~~~~~~~~~~~~~
-simpleserial-rsa-arm.c:189:19: warning: unused variable &#39;diff&#39; [-Wunused-variable]
-     unsigned char diff;
-                   ^~~~
-simpleserial-rsa-arm.c:188:12: warning: unused variable &#39;i&#39; [-Wunused-variable]
-     size_t i;
-            ^
-simpleserial-rsa-arm.c: In function &#39;real_dec&#39;:
-simpleserial-rsa-arm.c:344:21: warning: pointer targets in passing argument 1 of &#39;mbedtls_sha256&#39; differ in signedness [-Wpointer-sign]
-      mbedtls_sha256(MESSAGE, 12, hash, 0);
-                     ^~~~~~~
-In file included from simpleserial-rsa-arm.c:28:0:
-.././crypto/mbedtls//include/mbedtls/sha256.h:127:6: note: expected &#39;const unsigned char *&#39; but argument is of type &#39;const char *&#39;
- void mbedtls_sha256( const unsigned char *input, size_t ilen,
-      ^~~~~~~~~~~~~~
-simpleserial-rsa-arm.c: In function &#39;get_pt&#39;:
-simpleserial-rsa-arm.c:370:1: warning: control reaches end of non-void function [-Wreturn-type]
- }
- ^
 </pre>
 </div>
 </div>
@@ -13427,14 +13311,165 @@ simpleserial-rsa-arm.c:370:1: warning: control reaches end of non-void function 
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Attack-Script">Attack Script<a class="anchor-link" href="#Attack-Script">&#182;</a></h2>
+<h2 id="The-Attack-Plan">The Attack Plan<a class="anchor-link" href="#The-Attack-Plan">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Start by initializing the ChipWhisperer:</p>
+<h3 id="The-Sensitive-Code">The Sensitive Code<a class="anchor-link" href="#The-Sensitive-Code">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Inside <code>bootloader.c</code>, there are two buffers that are used to store most of the important data. The source code shows:</p>
+<div class="highlight"><pre><span></span><span class="cp">#define DATA_BUFLEN 40</span>
+<span class="cp">#define ASCII_BUFLEN (2 * DATA_BUFLEN)</span>
+
+<span class="kt">uint8_t</span> <span class="n">ascii_buffer</span><span class="p">[</span><span class="n">ASCII_BUFLEN</span><span class="p">];</span>
+<span class="kt">uint8_t</span> <span class="n">data_buffer</span><span class="p">[</span><span class="n">DATA_BUFLEN</span><span class="p">];</span>
+</pre></div>
+<p>This tells us that there will be two arrays stored somewhere in the target's memory. The AVR-GCC compiler doesn't usually try too hard to move these around, so we can expect to find them back-to-back in memory; that is, if we can read past the end of the ASCII buffer, we'll probably find the data buffer.</p>
+<p>Next, the code used to print a response to the serial port is:</p>
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="p">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">RESPOND</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Send the ascii buffer back </span>
+    <span class="n">trigger_high</span><span class="p">();</span>
+
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ascii_idx</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">putch</span><span class="p">(</span><span class="n">ascii_buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="n">trigger_low</span><span class="p">();</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">IDLE</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>This looks very similar to the example code given in the previous section, so it should be vulnerable to a glitching attack. The goal is to cause the loop to continue past its regular limit: <code>data_buffer[0]</code> is the same as <code>ascii_buffer[80]</code>, so a successful glitch should dump the data buffer for us.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Disassembly">Disassembly<a class="anchor-link" href="#Disassembly">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As a final step, let's check the assembly code to see exactly what we're trying to glitch through. In the same folder as the hex file you built, open the <code>*.lss</code> file that corresponds to your target (for example, <code>bootloader-CWLITEARM.lss</code>). This is called a listing file, and it contains a bunch of debug and assembly information. Most importantly, it will allow us to easily match the source code to what's in our hex file. Search the file for something close to the vulnerable loop, such as <code>state == RESPOND</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Compiler-Optimizations">Compiler Optimizations<a class="anchor-link" href="#Compiler-Optimizations">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>While reading the section on the bootloader commands, you may have been surprised to see more than one newline at the end of the respond command (<code>r0\n\n\n\n\n\n</code>). Because the response is both so short and always the same length, the compiler will perform loop unrolling. Loop unrolling is an optimization that trades code size for speed by replacing a constant size loop:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> 
+    <span class="n">do_something</span><span class="p">();</span>
+</pre></div>
+<p>by a repeated sequence of the loop's operations:</p>
+<div class="highlight"><pre><span></span><span class="n">do_something</span><span class="p">();</span>
+<span class="n">do_something</span><span class="p">();</span>
+<span class="n">do_something</span><span class="p">();</span>
+</pre></div>
+<p>For a small number of repititions, size-speed tradeoff is skewed towards the latter, making it very hard to get the compiler not to perform the optimization, thus we simply increase the size of the loop. Most bootloaders have multiple different reponses with varying length, so this isn't a typical obstacle you would face, but it is important for this situation.</p>
+<p>The <a href="https://en.wikipedia.org/wiki/Loop_unrolling">Wikipedia page on loop unrolling</a> contains more information on the topic if you're like to learn more.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="XMEGA-Disassembly">XMEGA Disassembly<a class="anchor-link" href="#XMEGA-Disassembly">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After searching the file, you should see something like this:</p>
+<div class="highlight"><pre><span></span><span class="err">38</span><span class="nl">c:</span>   <span class="err">89</span> <span class="err">91</span>           <span class="nf">ld</span>  <span class="no">r24</span><span class="p">,</span> <span class="no">Y</span><span class="err">+</span>
+ <span class="err">38</span><span class="nl">e:</span>   <span class="err">0</span><span class="nf">e</span> <span class="mi">94</span> <span class="mi">38</span> <span class="mi">02</span>     <span class="no">call</span>    <span class="mi">0x470</span>   <span class="c">; 0x470 &lt;output_ch_0&gt;</span>
+ <span class="mi">392</span><span class="p">:</span>   <span class="no">f0</span> <span class="no">e2</span>           <span class="no">ldi</span> <span class="no">r31</span><span class="p">,</span> <span class="mi">0x20</span>   <span class="c">; 32</span>
+ <span class="mi">394</span><span class="p">:</span>   <span class="no">c4</span> <span class="mi">38</span>           <span class="no">cpi</span> <span class="no">r28</span><span class="p">,</span> <span class="mi">0x84</span>   <span class="c">; 132</span>
+ <span class="mi">396</span><span class="p">:</span>   <span class="no">df</span> <span class="mi">07</span>           <span class="no">cpc</span> <span class="no">r29</span><span class="p">,</span> <span class="no">r31</span>
+ <span class="err">398:</span>   <span class="nf">c9</span> <span class="no">f7</span>           <span class="no">brne</span>    <span class="no">.-14</span>        <span class="c">; 0x38c &lt;main+0xbc&gt;</span>
+</pre></div>
+<p>This is our printing loop in assembly. It has the following steps in it:</p>
+<ul>
+<li>Look at the address <code>Y</code> and put the contents into <code>r24</code>. Increase the address stored in <code>Y</code>. (This is the i++ in the loop.)</li>
+<li>Call the function in location <code>0x470</code>. Presumably, this is the location of the <code>putch()</code> function.</li>
+<li>Compare <code>r28</code> and <code>r29</code> to <code>0x84</code> and <code>0x20</code>. Unless they're equal, go back to the top of the loop.</li>
+</ul>
+<p>There's one quirk to notice in this code. In the C source, the for loop checks whether <code>i &lt; ascii_idx</code>. However, in the assembly code, the check is effectively whether <code>i == ascii_idx</code>! This is even easier to glitch - as long as we can break past the <code>brne</code> instruction once, we'll get to the data buffer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Arm-Disassembly">Arm Disassembly<a class="anchor-link" href="#Arm-Disassembly">&#182;</a></h4>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After searching the file, you should see something like this:</p>
+<div class="highlight"><pre><span></span><span class="err">8000268:</span>   <span class="err">5</span><span class="nf">d28</span>        <span class="no">ldrb</span>    <span class="no">r0</span><span class="p">,</span> <span class="p">[</span><span class="no">r5</span><span class="p">,</span> <span class="no">r4</span><span class="p">]</span>
+ <span class="err">800026</span><span class="nl">a:</span>   <span class="err">3401</span>        <span class="nf">adds</span>    <span class="no">r4</span><span class="p">,</span> <span class="c">#1</span>
+ <span class="mi">800026</span><span class="no">c</span><span class="p">:</span>   <span class="no">f000</span> <span class="no">f8f2</span>   <span class="no">bl</span>  <span class="mh">8000454</span> <span class="p">&lt;</span><span class="no">putch</span><span class="p">&gt;</span>
+ <span class="err">8000270:</span>   <span class="err">2</span><span class="nf">c08</span>        <span class="no">cmp</span> <span class="no">r4</span><span class="p">,</span> <span class="c">#8</span>
+ <span class="mi">8000272</span><span class="p">:</span>   <span class="no">d1f9</span>        <span class="no">bne.n</span>   <span class="mh">8000268</span> <span class="p">&lt;</span><span class="no">main</span><span class="p">+</span><span class="mi">0x64</span><span class="p">&gt;</span>
+</pre></div>
+<p>We can break this assembly down into the following steps:</p>
+<ul>
+<li>Load the character we want to print into <code>r0</code> (<code>r5</code> contains the address of <code>ascii_buffer</code>, while <code>r4</code> is our loop index <code>i</code>)</li>
+<li>Add 1 to <code>r4</code> (<code>i</code>)</li>
+<li>Call <code>putch</code></li>
+<li>Compare <code>r4</code> to 8 (8 is always the value of <code>ascii_idx</code>)</li>
+<li>Branch back to the beginning of the loop if <code>r4</code> and 8 aren't equal</li>
+</ul>
+<p>There's one quirk to notice in this code. In the C source, the for loop checks whether <code>i &lt; ascii_idx</code>. However, in the assembly code, the check is effectively whether <code>i == ascii_idx</code>! This is even easier to glitch - as long as we can break past the <code>brne</code> instruction once, we'll get to the data buffer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="The-Attack-Script">The Attack Script<a class="anchor-link" href="#The-Attack-Script">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Setup">Setup<a class="anchor-link" href="#Setup">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now that we know what our target is, we can start creating our attack script. Basic setup is the same as usual:</p>
 
 </div>
 </div>
@@ -13444,124 +13479,33 @@ simpleserial-rsa-arm.c:370:1: warning: control reaches end of non-void function 
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">chipwhisperer</span> <span class="k">as</span> <span class="nn">cw</span>
-<span class="kn">import</span> <span class="nn">binascii</span>
-<span class="n">scope</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">scope</span><span class="p">()</span>
-<span class="n">target</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">basic_mode</span> <span class="o">=</span> <span class="s2">&quot;rising_edge&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">clkgen_freq</span> <span class="o">=</span> <span class="mi">7370000</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">adc_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen_x1&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">trigger</span><span class="o">.</span><span class="n">triggers</span> <span class="o">=</span> <span class="s2">&quot;tio4&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">tio1</span> <span class="o">=</span> <span class="s2">&quot;serial_rx&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">tio2</span> <span class="o">=</span> <span class="s2">&quot;serial_tx&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">run</span> &quot;Helper_Scripts/Setup.ipynb&quot;
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Next, program it with our new firmware:</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
-<span class="n">prog</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">programmers</span><span class="o">.</span><span class="n">STM32FProgrammer</span>
-<span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../../hardware/victims/firmware/simpleserial-rsa/simpleserial-rsa-CWLITEARM.hex&quot;</span>
-<span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
-<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../../hardware/victims/firmware/bootloader-glitch/bootloader-</span><span class="si">{}</span><span class="s2">.hex&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Detected known STMF32: STM32F302xB(C)/303xB(C)
-Extended erase (0x44), this can take ten seconds or more
-Attempting to programming 49303 bytes at 0x8000000
-STM32F Programming flash...
-STM32F Reading flash...
-Verified flash OK, 49303 bytes
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Verifying-Signatures">Verifying Signatures<a class="anchor-link" href="#Verifying-Signatures">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's start by seeing if we can verify the signature that we get back. First, we run the signature calculation (there's a <code>time.sleep()</code> here to make sure the calculation finishes. You may need to increase this):</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;t</span><span class="se">\\</span><span class="s1">n&#39;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-
-<span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-    <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-    
-<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">trig_count</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13578,7 +13522,9 @@ Verified flash OK, 49303 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>12693594
+<pre>XMEGA Programming flash...
+XMEGA Reading flash...
+Verified flash OK, 1663 bytes
 </pre>
 </div>
 </div>
@@ -13590,8 +13536,44 @@ Verified flash OK, 49303 bytes
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As you can see, the signature takes a long time! For the STM32F3, it should be around 12.7M cycles. Next, let's get the rest of the signature back and see what it looks like.</p>
+<p>And setup the glitch module:</p>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s1">&#39;clkgen&#39;</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s1">&#39;ext_single&#39;</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_only&quot;</span>
+    <span class="k">if</span> <span class="n">GLITCHTYPE</span> <span class="o">==</span> <span class="s2">&quot;CLOCK&quot;</span><span class="p">:</span>
+        <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
+        <span class="k">if</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEARM&quot;</span><span class="p">:</span>
+            <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="o">-</span><span class="mf">37.9</span>
+            <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="o">-</span><span class="mi">7</span>
+        <span class="k">elif</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEXMEGA&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW303&quot;</span><span class="p">:</span>
+            <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="o">-</span><span class="mf">4.3</span>
+            <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mf">1.56</span>
+    <span class="k">elif</span> <span class="n">GLITCHTYPE</span> <span class="o">==</span> <span class="s2">&quot;VCC&quot;</span><span class="p">:</span>
+        <span class="k">pass</span>
+<span class="k">elif</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;CWNANO&quot;</span><span class="p">:</span>
+    <span class="k">pass</span> <span class="c1">#do this later instead </span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Communicating-With-Bootloader">Communicating With Bootloader<a class="anchor-link" href="#Communicating-With-Bootloader">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -13600,30 +13582,7 @@ Verified flash OK, 49303 bytes
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;1</span><span class="se">\\</span><span class="s1">n&#39;</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
-<span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;2</span><span class="se">\\</span><span class="s1">n&#39;</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13640,12 +13599,61 @@ Verified flash OK, 49303 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>r4F09799F6A59081B725599753330B7A2440ABC42606601622FE0C582646E32555303E1062A2989D9B4C265431ADB58DD
-z00
-r85BB33C4BB237A311BC40C1279528FD6BB36F94F534A4D8284A18AB8E5670E734C55A6CCAB5FB5EAE02BA37E2D56648D
-z00
-r7A13BBF17A0E07D607C07CBB72C7A7A77076376E8434CE6E136832DC95DB3D80
-z00
+<pre>cwlite Device
+gain = 
+    mode = low
+    gain = 45
+    db   = 22.50390625
+adc = 
+    state      = False
+    basic_mode = rising_edge
+    timeout    = 2
+    offset     = 0
+    presamples = 0
+    samples    = 5000
+    decimate   = 1
+    trig_count = 45216523
+clock = 
+    adc_src       = clkgen_x4
+    adc_phase     = 0
+    adc_freq      = 29538459
+    adc_rate      = 29538459.0
+    adc_locked    = True
+    freq_ctr      = 0
+    freq_ctr_src  = extclk
+    clkgen_src    = system
+    extclk_freq   = 10000000
+    clkgen_mul    = 2
+    clkgen_div    = 26
+    clkgen_freq   = 7384615.384615385
+    clkgen_locked = True
+trigger = 
+    triggers = tio4
+    module   = basic
+io = 
+    tio1       = serial_rx
+    tio2       = serial_tx
+    tio3       = high_z
+    tio4       = high_z
+    pdid       = high_z
+    pdic       = high_z
+    nrst       = high_z
+    glitch_hp  = False
+    glitch_lp  = False
+    extclk_src = hs1
+    hs2        = glitch
+    target_pwr = True
+glitch = 
+    clk_src     = clkgen
+    width       = 1.5625
+    width_fine  = 0
+    offset      = -4.296875
+    offset_fine = 0
+    trigger_src = ext_single
+    arm_timing  = after_scope
+    ext_offset  = 0
+    repeat      = 1
+    output      = clock_only
 
 </pre>
 </div>
@@ -13658,15 +13666,33 @@ z00
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>You should see something like:</p>
+<p>Now that we have our setup done, let's work on communicating with the bootloader. There's a few ways to do this, but the easiest is probably to use <code>target.ser.write</code> to send our text. Remember, to get to the print buffer, we need to send some <code>rot13</code> encoded text. For this example, we'll use <code>Don't forget to buy milk!</code>, whose <code>rot13</code> encoding is <code>516261276720736265747267206762206f686c207a76797821</code>.</p>
+<p>Let's also change the ADC clock from being x4 of the target clock to being x1. This way, we can easily use the ADC module (in particular <code>scope.adc.trig_count</code>) to see how long sending the response takes.</p>
 
-<pre><code>r4F09799F6A59081B725599753330B7A2440ABC42606601622FE0C582646E32555303E1062A2989D9B4C265431ADB58DD
-z00
-r85BB33C4BB237A311BC40C1279528FD6BB36F94F534A4D8284A18AB8E5670E734C55A6CCAB5FB5EAE02BA37E2D56648D
-z00
-r7A13BBF17A0E07D607C07CBB72C7A7A77076376E8434CE6E136832DC95DB3D80
-z00</code></pre>
-<p>We'll need to strip all the extra simpleserial stuff out. This can be done like so:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">adc_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen_x1&quot;</span>
+<span class="k">def</span> <span class="nf">send_milk</span><span class="p">(</span><span class="n">ser</span><span class="p">):</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;p516261276720736265747267206762206f686c207a76797821</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Next, let's send the command to the bootloader, observe the response, and measure how long it took. Unfortunately, the CWNANO board doesn't include this functionality. Instead, if you have an oscilloscope or logic analyzer on hand, you can use one of these instead to measure how long the trigger was high for.</p>
 
 </div>
 </div>
@@ -13676,8 +13702,19 @@ z00</code></pre>
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">newout</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">z00&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
+<span class="n">send_milk</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="p">)</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+<span class="n">response_type</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
+    <span class="n">response_time</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">trig_count</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The response took </span><span class="si">{}</span><span class="s2"> cycles&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response_time</span><span class="p">))</span>
 </pre></div>
 
     </div>
@@ -13694,7 +13731,14 @@ z00</code></pre>
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>4F09799F6A59081B725599753330B7A2440ABC42606601622FE0C582646E32555303E1062A2989D9B4C265431ADB58DD85BB33C4BB237A311BC40C1279528FD6BB36F94F534A4D8284A18AB8E5670E734C55A6CCAB5FB5EAE02BA37E2D56648D7A13BBF17A0E07D607C07CBB72C7A7A77076376E8434CE6E136832DC95DB3D80
+<pre> r0
+
+
+
+
+
+
+The response took 9645 cycles
 </pre>
 </div>
 </div>
@@ -13706,7 +13750,7 @@ z00</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Then we can convert this to binary using binascii:</p>
+<p>In this case, of the STM32F3 target, you should have an active trigger count of roughly 17014 cycles. Remember, we want to glitch the final few instructions of the loop, so our glitch point will be just before the end (say somewhere in the last 50 cycles). Some targets have better defined ranges where the glitch happens (the STM32F3, for example, always happens 21 cycles before the trigger goes low). We don't have this information for the CWNANO, but it should be about the same (say 17020 cycles):</p>
 
 </div>
 </div>
@@ -13716,11 +13760,36 @@ z00</code></pre>
 <div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">binascii</span>
-<span class="n">sig</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;CWNANO&quot;</span><span class="p">:</span>
+    <span class="n">response_time</span> <span class="o">=</span> <span class="mi">17020</span>
+<span class="k">if</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEARM&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW308_STM32F3&quot;</span><span class="p">:</span>
+    <span class="n">ext_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">response_time</span> <span class="o">-</span> <span class="mi">22</span><span class="p">,</span> <span class="n">response_time</span> <span class="o">-</span> <span class="mi">19</span><span class="p">)</span>
+<span class="k">elif</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEXMEGA&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW303&quot;</span><span class="p">:</span>
+    <span class="n">ext_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">response_time</span> <span class="o">-</span> <span class="mi">15</span><span class="p">,</span> <span class="n">response_time</span> <span class="o">-</span> <span class="mi">0</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">ext_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">response_time</span> <span class="o">-</span> <span class="mi">40</span><span class="p">,</span> <span class="n">response_time</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ext_range</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>range(9630, 9645)
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -13728,7 +13797,22 @@ z00</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Finally, we can verify that the signature is correct using the PyCryptodome package:</p>
+<h3 id="Glitch-Loop">Glitch Loop<a class="anchor-link" href="#Glitch-Loop">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We're almost ready to create our glitch loop! Before we do, there's a few things to keep in mind. The first is dealing with crashes. As you might expect, we'll often crash the target instead of getting the glitch we want. In this case, we'll need to reset the target before we try communicating with the bootloader. Luckily we can tell if we crashed the target by looking at the state of the trigger pin: if the target crashes, it will never go low (this also happens with a successful glitch, but we'll be checking for success in the response, so this isn't much of an issue). We can check this via <code>scope.adc.state</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This part is optional, but to make the response easier to read, we'll also want to do some parsing on the response text, since the response won't all be in ASCII text. This will make use of the <code>termcolor</code> module to make non letter/number responses red, which doesn't come with ChipWhisperer and only works on Jupyter/Unix. If you're following along in a Windows command prompt or don't want to install this module, feel free to remove the import and the <code>colored()</code> calls.</p>
 
 </div>
 </div>
@@ -13738,66 +13822,24 @@ z00</code></pre>
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">Crypto.PublicKey</span> <span class="k">import</span> <span class="n">RSA</span>
-<span class="kn">from</span> <span class="nn">Crypto.Signature</span> <span class="k">import</span> <span class="n">PKCS1_v1_5</span> 
-
-<span class="kn">from</span> <span class="nn">Crypto.Hash</span> <span class="k">import</span> <span class="n">SHA256</span>
-
-<span class="n">E</span> <span class="o">=</span> <span class="mh">0x10001</span>
-<span class="n">N</span> <span class="o">=</span> <span class="mh">0x9292758453063D803DD603D5E777D7888ED1D5BF35786190FA2F23EBC0848AEADDA92CA6C3D80B32C4D109BE0F36D6AE7130B9CED7ACDF54CFC7555AC14EEBAB93A89813FBF3C4F8066D2D800F7C38A81AE31942917403FF4946B0A83D3D3E05EE57C6F5F5606FB5D4BC6CD34EE0801A5E94BB77B07507233A0BC7BAC8F90F79</span>
-<span class="n">m</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;Hello World!&quot;</span>
-
-<span class="n">hash_object</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
-<span class="n">pub_key</span> <span class="o">=</span> <span class="n">RSA</span><span class="o">.</span><span class="n">construct</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">E</span><span class="p">))</span>
-<span class="n">signer</span> <span class="o">=</span> <span class="n">PKCS1_v1_5</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">pub_key</span><span class="p">)</span> 
-<span class="n">sig_check</span> <span class="o">=</span> <span class="n">signer</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">hash_object</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">sig_check</span><span class="p">)</span>
-
-<span class="k">assert</span> <span class="n">sig_check</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Failed to verify signature on device. Got: </span><span class="si">{newout}</span><span class="s2">&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">my_print</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">31</span> <span class="ow">and</span> <span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">127</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ch</span> <span class="o">==</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">:</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;0x</span><span class="si">{:02X}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">ch</span><span class="p">)),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>True
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>If everything worked out correctly, you should see <code>True</code> printed above. Now onto the actual attack.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Getting-a-Glitch">Getting a Glitch<a class="anchor-link" href="#Getting-a-Glitch">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>As usual, we'll start off by setting up the glitch module:</p>
+<p>Our last step before proceeding to the attack loop is to active the glitch module:</p>
 
 </div>
 </div>
@@ -13807,47 +13849,13 @@ z00</code></pre>
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_single&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="o">-</span><span class="mf">38.3</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
-<span class="n">Range</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Range&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">GLITCHTYPE</span> <span class="o">==</span> <span class="s2">&quot;CLOCK&quot;</span><span class="p">:</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span>
+<span class="k">elif</span> <span class="n">GLITCHTYPE</span> <span class="o">==</span> <span class="s2">&quot;VCC&quot;</span><span class="p">:</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">glitch_lp</span> <span class="o">=</span> <span class="kc">True</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>clk_src     = clkgen
-width       = -8.984375
-width_fine  = 0
-offset      = -38.28125
-offset_fine = 0
-trigger_src = ext_single
-arm_timing  = after_scope
-ext_offset  = 0
-repeat      = 1
-output      = clock_xor
-
-</pre>
-</div>
-</div>
-
 </div>
 </div>
 
@@ -13855,7 +13863,11 @@ output      = clock_xor
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Next, the glitch attempts may crash the target, so we'll define a function to reset our target:</p>
+<p>We can finally proceed on to our actual loop. Our loop will have the same basic idea as the one from <code>Fault_1</code>: we'll need to iterate through ext_offset, offset, and width to find the right settings for a glitch.</p>
+<p>As was mentioned earlier, we'll also need to check for a successful glitch to avoid resetting while we're still receiving data. This will also enable us to read the full serial output, since the target will be sending back a lot of data (much more than we can receive in one <code>ser.read()</code>).</p>
+<p>Careful inspection of the source reveals that most of what we sent to the device is still in the <code>ascii_buffer</code> (with the first 8 or so characters being overwritten). That means we can check for one of the characters after the overwritten part (say <code>"7"</code>).</p>
+<p>After we're sure we have a glitch, we can just keep looking for more data and printing it.</p>
+<p><strong>Make sure you update the values in the <code>external offset range</code> call to reflect what you got earlier in the tutorial</strong></p>
 
 </div>
 </div>
@@ -13865,139 +13877,112 @@ output      = clock_xor
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tnrange</span>
-<span class="k">def</span> <span class="nf">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">):</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">nrst</span> <span class="o">=</span> <span class="s1">&#39;low&#39;</span>
-    <span class="c1">#scope.io.pdic = &#39;low&#39;</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">nrst</span> <span class="o">=</span> <span class="s1">&#39;high&#39;</span>
-    <span class="c1">#scope.io.pdic = &#39;high&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="sd">&quot;&quot;&quot;Range = namedtuple(&#39;Range&#39;, [&#39;min&#39;, &#39;max&#39;, &#39;step&#39;])</span>
+
+<span class="sd">offset_range = Range(scope.glitch.offset, scope.glitch.offset + 5, 0.4)</span>
+<span class="sd">width_range = Range(scope.glitch.width - 2, scope.glitch.width + 5, 0.4)&quot;&quot;&quot;</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[13]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#34;Range = namedtuple(&#39;Range&#39;, [&#39;min&#39;, &#39;max&#39;, &#39;step&#39;])\n\noffset_range = Range(scope.glitch.offset, scope.glitch.offset + 5, 0.4)\nwidth_range = Range(scope.glitch.width - 2, scope.glitch.width + 5, 0.4)&#34;</pre>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now for our actual attack loop. There's a lot going on here, so we'll move through a little slower than usual. Overall, what we want to do is:</p>
-<ul>
-<li>Insert a glitch</li>
-<li>Read the signature back</li>
-<li>Verify that it's correct</li>
-</ul>
-<p>The first step is the same as earlier. For the last two, we'll cheat a little by checking the for the beginning of the correct signature before proceeding, but we could also read back the whole thing:</p>
-<div class="highlight"><pre><span></span><span class="c1"># Read back signature</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;4F09799&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-        <span class="c1">#Something abnormal has happened</span>
-</pre></div>
-<p>Now that we've found some abnormal behaviour, we need to verify that the target hasn't crashed. This can be done pretty easily by checking if we got anything at all:</p>
-<div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;4F09799&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-    <span class="c1">#Something abnormal has happened</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="c1"># Possible glitch!</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Crash, reset and try again</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Probably crash at {scope.glitch.ext_offset}&quot;</span><span class="p">)</span>
-        <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-</pre></div>
-<p>As a last step, we'll build our full signature and do one final check to make sure everything looks okay:</p>
-<div class="highlight"><pre><span></span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-    <span class="c1"># Possible glitch!</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Possible glitch at offset {scope.glitch.ext_offset}</span><span class="se">\n</span><span class="s2">Output: {output}&quot;</span><span class="p">)</span>
 
-    <span class="c1"># get rest of signature back</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;1</span><span class="se">\\</span><span class="s1">n&#39;</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
-    <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;2</span><span class="se">\\</span><span class="s1">n&#39;</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
-    <span class="c1"># strip out extra simpleserial stuff</span>
-    <span class="n">newout</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">z00&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Full output: {newout}&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span> <span class="o">==</span> <span class="mi">256</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;r0001F&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Very likely glitch!&quot;</span><span class="p">)</span>
-        <span class="k">break</span>
-</pre></div>
-<p>We'll add in scanning over different over different offsets as well. We'll start at an offset of 7M cycles. We actually have a lot of area that we could place the glitch in, so the starting point is fairly arbitrary. For the STM32F3, this places the glitch near the beginning of the calculation for $s_2$. If you'd like, you can move <code>trigger_low()</code> into <code>simpleserial_mbedtls_rsa_private()</code> to see how long different parts of the algorithm take.</p>
-<p>All together, our attack loops looks like this:</p>
+</div>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tnrange</span>
-<span class="kn">import</span> <span class="nn">binascii</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="mi">7000000</span><span class="p">,</span> <span class="mi">7100000</span><span class="p">):</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="n">i</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;t</span><span class="se">\\</span><span class="s1">n&#39;</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm_notebook</span><span class="p">,</span> <span class="n">tnrange</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
 
-    <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-        <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+<span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Init&quot;</span><span class="p">)</span>
+<span class="n">broken</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    
-    <span class="c1"># Read back signature</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;4F09799&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-        <span class="c1"># Something abnormal happened</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># Possible glitch!</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Possible glitch at offset </span><span class="si">{scope.glitch.ext_offset}</span><span class="se">\n</span><span class="s2">Output: </span><span class="si">{output}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1">#scope.glitch.width = width_range.min</span>
+<span class="c1">#while scope.glitch.width &lt; width_range.max:</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;width&quot;</span><span class="p">):</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width_fine</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="c1">#scope.glitch.offset = offset_range.min</span>
+    <span class="k">if</span> <span class="n">broken</span><span class="p">:</span>
+        <span class="k">break</span>
+    <span class="c1">#while scope.glitch.offset &lt; offset_range.max:</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;offset&quot;</span><span class="p">):</span>
+        <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset_fine</span> <span class="o">=</span> <span class="n">j</span>
+        <span class="k">if</span> <span class="n">broken</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm_notebook</span><span class="p">(</span><span class="n">ext_range</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;ext_offset&quot;</span><span class="p">):</span>
+            <span class="n">N</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+                <span class="c1">#trigger never went low, target probably crashed</span>
+                <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                <span class="c1">#print(&quot;Crashed!&quot;)</span>
+
+            <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
+
+            <span class="n">send_milk</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+                    <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
             
-            <span class="c1"># Get rest of signature back</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;1</span><span class="se">\\</span><span class="s1">n&#39;</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-            <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+            <span class="n">waiting</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-            <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;2</span><span class="se">\\</span><span class="s1">n&#39;</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-            <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-            
-            <span class="c1"># Strip out extra simpleserial stuff</span>
-            <span class="n">newout</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">z00&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Full output: </span><span class="si">{newout}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span> <span class="o">==</span> <span class="mi">256</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;r0001F&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Very likely glitch!&quot;</span><span class="p">)</span>
+            <span class="c1">#check if we were successful</span>
+            <span class="k">if</span> <span class="s2">&quot;7&quot;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Glitched!</span><span class="se">\n\t</span><span class="s2">Ext offset: </span><span class="si">{}</span><span class="se">\n\t</span><span class="s2">Offset: </span><span class="si">{}</span><span class="se">\n\t</span><span class="s2">Width: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">))</span>
+                <span class="n">my_print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+                <span class="n">broken</span> <span class="o">=</span> <span class="kc">True</span> 
+                <span class="k">for</span> <span class="n">__</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500</span><span class="p">):</span>
+                    <span class="n">waiting</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">waiting</span><span class="p">:</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+                        <span class="n">my_print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
                 <span class="k">break</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Crash, reset and try again</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Probably crashed at </span><span class="si">{scope.glitch.ext_offset}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+                <span class="c1">#trigger never went low, target probably crashed</span>
+                <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                <span class="c1">#print(&quot;Crashed! Output: {}&quot;.format(output))</span>
+                
+        <span class="c1">#scope.glitch.offset += offset_range.step</span>
+    <span class="c1">#scope.glitch.width += width_range.step</span>
+    
+<span class="c1">#</span>
 </pre></div>
 
     </div>
@@ -14013,18 +13998,29 @@ output      = clock_xor
     <div class="prompt"></div>
 
 
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Init
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
 
 
 
  
  
-<div id="8d221c39-6832-4ecb-95bd-9cc66ee9c76c"></div>
+<div id="743e7fca-201a-4d72-b918-36f1f78bb789"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#8d221c39-6832-4ecb-95bd-9cc66ee9c76c');
+var element = $('#743e7fca-201a-4d72-b918-36f1f78bb789');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "08beca318b5243deb31dd046ddaf44b2", "version_major": 2, "version_minor": 0}
+{"version_major": 2, "version_minor": 0, "model_id": "40d894be7a6b4f55a388a3fe1026de3c"}
 </script>
 </div>
 
@@ -14035,38 +14031,381 @@ var element = $('#8d221c39-6832-4ecb-95bd-9cc66ee9c76c');
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Probably crashed at 7000001
-Possible glitch at offset 7000003
-Output: r1D7CA99A891E829D9270C7D65B3C49D1C958D51B8186B510CA484E584D1291C490B43EFAD959E8BC098081EBEFCAC245
-z00
 
-Full output: 1D7CA99A891E829D9270C7D65B3C49D1C958D51B8186B510CA484E584D1291C490B43EFAD959E8BC098081EBEFCAC2450A1BDCE18690EC4E30C8BAF40F9170920E43BE3BF998A496F83F087C120BCB75D87C8405ABEF2DBA3EEEC94604F36221A7CE11DA20C6DFF3C127ECDF05A42B9AE1806C455200AE2301AD4493C7734A6D
-Very likely glitch!
 
+
+ 
+ 
+<div id="c05d9b2f-e484-4042-94f7-0b0ce52b42fa"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#c05d9b2f-e484-4042-94f7-0b0ce52b42fa');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "d372f933b7a74a1eb3021ecbaff1f5c1"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="dc9080dc-51d8-409c-868b-a1430ba4ec5d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#dc9080dc-51d8-409c-868b-a1430ba4ec5d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "2d13a7c7d17c4be7b1f1756c7a215ebd"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
 
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Glitched!
+	Ext offset: 9632
+	Offset: -4.296875
+	Width: 1.5625
+0x00r0
+
+
+
+
+
+6720736265747267206762206f686c207a767978210x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00Don&#39;t forget to buy milk!0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
 </div>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now, let's convert our glitched signature to binary and move on to the final part of the tutorial</p>
+</div>
 
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sig</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -14083,7 +14422,8 @@ Very likely glitch!
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>b&#34;\x1d|\xa9\x9a\x89\x1e\x82\x9d\x92p\xc7\xd6[&lt;I\xd1\xc9X\xd5\x1b\x81\x86\xb5\x10\xcaHNXM\x12\x91\xc4\x90\xb4&gt;\xfa\xd9Y\xe8\xbc\t\x80\x81\xeb\xef\xca\xc2E\n\x1b\xdc\xe1\x86\x90\xecN0\xc8\xba\xf4\x0f\x91p\x92\x0eC\xbe;\xf9\x98\xa4\x96\xf8?\x08|\x12\x0b\xcbu\xd8|\x84\x05\xab\xef-\xba&gt;\xee\xc9F\x04\xf3b!\xa7\xce\x11\xda \xc6\xdf\xf3\xc1&#39;\xec\xdf\x05\xa4+\x9a\xe1\x80lER\x00\xae#\x01\xadD\x93\xc7sJm&#34;
+<pre>1.5625
+-4.296875
 </pre>
 </div>
 </div>
@@ -14095,17 +14435,8 @@ Very likely glitch!
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Completing-The-Attack">Completing The Attack<a class="anchor-link" href="#Completing-The-Attack">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We've got our glitched signature, but we've still got a little work to do. As was mentioned earlier, the message that's signed isn't the original message, it's a PKCS#1 v1.5 padded hash of it. Luckily, this standard's fairly simple. PKCS#1 v1.5 padding looks like:</p>
-<p>|00|01|ff...|00|hash_prefix|message_hash|</p>
-<p>Here, the ff... part is a string of ff bytes long enough to make the size of the padded message the same as n, while hash_prefix is an identifier number for the hash algorithm used on message_hash. In our case, SHA256 has the hash prefix <code>3031300d060960864801650304020105000420</code>.</p>
-<p>Altogether, the function to build this message looks like:</p>
+<p>With any luck, you should see a whole bunch of text printed to the screen. Successful glitches might not happen every time, so you may need to rerun the loop a few times.</p>
+<p>You should be able to the plaintext near the beginning of the output! The data buffer has successfully been printed to the serial port, allowing us to see the decrypted text with no knowledge of the algorithm. Now that we've got a successful glitch, stop the cell above (since it's still looking for more stuff to print) and let's disconnect the scope and target:</p>
 
 </div>
 </div>
@@ -14115,12 +14446,8 @@ Very likely glitch!
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">build_message</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
-    <span class="n">sha_id</span> <span class="o">=</span> <span class="s2">&quot;3031300d060960864801650304020105000420&quot;</span>
-    <span class="n">N_len</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">N</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">7</span><span class="p">)</span> <span class="o">//</span> <span class="mi">8</span>
-    <span class="n">pad_len</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">N</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">sha_id</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
-    <span class="n">padded_m</span> <span class="o">=</span> <span class="s2">&quot;0001&quot;</span> <span class="o">+</span> <span class="s2">&quot;ff&quot;</span> <span class="o">*</span> <span class="n">pad_len</span> <span class="o">+</span> <span class="s2">&quot;00&quot;</span> <span class="o">+</span> <span class="n">sha_id</span> <span class="o">+</span> <span class="n">m</span>
-    <span class="k">return</span> <span class="n">padded_m</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">dis</span><span class="p">()</span>
+<span class="n">target</span><span class="o">.</span><span class="n">dis</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -14131,240 +14458,70 @@ Very likely glitch!
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now that we've got our function, we can build our message:</p>
+<h2 id="Ideas">Ideas<a class="anchor-link" href="#Ideas">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>There's a lot more that can be done with this type of attack...</p>
 
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">Crypto.Hash</span> <span class="k">import</span> <span class="n">SHA256</span>
-<span class="kn">import</span> <span class="nn">binascii</span>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Safer-Assembly-Code">Safer Assembly Code<a class="anchor-link" href="#Safer-Assembly-Code">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You may have been surprised to see that the assembly code uses a <code>brne</code> instruction to check if the loop is finished - after all, we used a less-than comparison in our C source code! Try changing this line to use a more prohibitive loop. Here's how you might do this:</p>
 
-<span class="n">hash_object</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
-<span class="n">hashed_m</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">hash_object</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-<span class="n">padded_m</span> <span class="o">=</span> <span class="n">build_message</span><span class="p">(</span><span class="n">hashed_m</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">hashed_m</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">padded_m</span><span class="p">)</span>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Volatile-Variables">Volatile Variables<a class="anchor-link" href="#Volatile-Variables">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The reason why the original assembly code used the brne instruction is because GCC is an <em>optimizing compiler</em>. The compiler doesn't directly translate the C source code into assembly instructions. Instead, it tries to determine if any of the code can be modified to make it faster or more compact. For instance, consider the loop:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="s">&quot;Less&quot;</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="nf">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="s">&quot;Greater&quot;</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
-0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff003031300d0609608648016503040201050004207f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now all that's left is to use our gcd formula from earlier:</p>
-$$p = gcd(s'^e - m, N)$$<p>And we should get either p or q! These calculations can take a while (the Python version takes a few minutes), so the next block will try to use gmpy2 (a high precision library that runs much quicker than base Python). If you don't have gmpy2 installed, it will fall back to Python.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">gcd</span>
-<span class="n">N</span> <span class="o">=</span> <span class="mh">0x9292758453063D803DD603D5E777D7888ED1D5BF35786190FA2F23EBC0848AEADDA92CA6C3D80B32C4D109BE0F36D6AE7130B9CED7ACDF54CFC7555AC14EEBAB93A89813FBF3C4F8066D2D800F7C38A81AE31942917403FF4946B0A83D3D3E05EE57C6F5F5606FB5D4BC6CD34EE0801A5E94BB77B07507233A0BC7BAC8F90F79</span>
-<span class="n">e</span> <span class="o">=</span> <span class="mh">0x10001</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">gmpy2</span>
-    <span class="kn">from</span> <span class="nn">gmpy2</span> <span class="k">import</span> <span class="n">mpz</span>
-    <span class="n">sig_int</span> <span class="o">=</span> <span class="n">mpz</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">))</span>
-    <span class="n">m_int</span> <span class="o">=</span> <span class="n">mpz</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">))</span>
-    <span class="n">p_test</span> <span class="o">=</span> <span class="n">gmpy2</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">sig_int</span><span class="o">**</span><span class="n">e</span> <span class="o">-</span> <span class="n">m_int</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="n">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gmpy2 not found, falling back to Python&quot;</span><span class="p">)</span>
-    <span class="n">sig_int</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
-    <span class="n">padded_m_int</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span><span class="o">**</span><span class="n">e</span> <span class="o">-</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
-    <span class="n">p_test</span> <span class="o">=</span> <span class="n">gcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-    
-<span class="nb">print</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">p_test</span><span class="p">))</span>
+<p>If you take a careful look at this code, you'll notice that the following loop will produce the same output:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="s">&quot;Less&quot;</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0xc36d0eb7fcd285223cfb5aaba5bda3d82c01cad19ea484a87ea4377637e75500fcb2005c5c7dd6ec4ac023cda285d796c3d9e75e1efc42488bb4f1d13ac30a57
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Open up <code>simpleserial-arm-rsa.c</code> and see if the value printed out is either p or q!</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Getting-the-Rest-of-the-Private-Values">Getting the Rest of the Private Values<a class="anchor-link" href="#Getting-the-Rest-of-the-Private-Values">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>As mentioned earler, now that we have either p or q, we can derive the rest of the private values. The easiest is the other prime factor, which is just:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">q_test</span> <span class="o">=</span> <span class="n">N</span><span class="o">//</span><span class="n">p_test</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">q_test</span><span class="p">))</span>
+<p>However, this second loop is smaller (less code) and faster (no conditional jumps). This is the kind of optimization a compiler can make.</p>
+<p>There are several ways we can stop the compiler from making some of these assumptions. One of these methods uses volatile variables, which look like</p>
+<div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
 </pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0xc000df51a7c77ae8d7c7370c1ff55b69e211c2b9e5db1ed0bf61d0d9899620f4910e4168387e3c30aa1e00c339a795088452dd96a9a5ea5d9dca68da636032af
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Finally, there's d, which can be derived by:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">phi</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_test</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">p_test</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">egcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">0</span>
-    <span class="k">while</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">b</span><span class="o">//</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">%</span><span class="k">a</span>
-        <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">-</span><span class="n">u</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="n">v</span><span class="o">*</span><span class="n">q</span>
-        <span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span><span class="n">n</span>
-        <span class="n">gcd</span> <span class="o">=</span> <span class="n">b</span>
-    <span class="k">return</span> <span class="n">gcd</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
-
-<span class="n">gcd</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">egcd</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0x24bf6185468786fdd303083d25e64efc66ca472bc44d253102f8b4a9d3bfa75091386c0077937fe33fa3252d28855837ae1b484a8a9a45f7ee8c0c634f99e8cddf79c5ce07ee72c7f123142198164234cabb724cf78b8173b9f880fc86322407af1fedfdde2beb674ca15f3e81a1521e071513a1e85b5dfa031f21ecae91a34d
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Going-Further">Going Further<a class="anchor-link" href="#Going-Further">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>There's still more you can do with this attack:</p>
+<p>A volatile variable is one that could change at any time. There could be many reasons why the value might change on us:</p>
 <ul>
-<li>You can try glitching the other part of the signature calculation to verify that you get the other prime factor of n out</li>
-<li>We used clock glitching in this tutorial. You may want to try it with voltage glitching as well</li>
+<li>Another thread might have access to the same memory location</li>
+<li>Another part of the computer might be able to change the variable's value (example: direct memory access)</li>
+<li>The variable might not actually be stored anywhere - it could be a read-only register in an embedded system</li>
 </ul>
-<p>As mentioned earlier in the tutorial, a verification of the calculated signature was removed:</p>
-<div class="highlight"><pre><span></span><span class="cm">/* Compare in constant time just in case */</span>
-    <span class="cm">/* for( diff = 0, i = 0; i &lt; ctx-&gt;len; i++ ) */</span>
-    <span class="cm">/*     diff |= verif[i] ^ sig[i]; */</span>
-    <span class="cm">/* diff_no_optimize = diff; */</span>
-
-    <span class="cm">/* if( diff_no_optimize != 0 ) */</span>
-    <span class="cm">/* { */</span>
-    <span class="cm">/*     ret = MBEDTLS_ERR_RSA_PRIVATE_FAILED; */</span>
-    <span class="cm">/*     goto cleanup; */</span>
-    <span class="cm">/* } */</span>
-</pre></div>
-<p>This part is near the end of <code>simpleserial_mbedtls_rsa_rsassa_pkcs1_v15_sign()</code>. If you want a larger challenge, you can try uncommenting that and trying to glitch past it as well.</p>
+<p>In any case, the <code>volatile</code> keyword tells the compiler to make no guarantees about this variable.</p>
+<p>Try changing the bootloader's source code to use a volatile variable inside the loop. What happens to the disassembly? Is the loop body longer? Connect to the target board and capture a power trace. Does it look different? You'll have to find a new <em>Ext Trigger Offset</em> for the glitch module. Can you still perform the attack? Is it feasible to use this fix to avoid glitching attacks?</p>
 
 </div>
 </div>
@@ -14378,39 +14535,10 @@ $$p = gcd(s'^e - m, N)$$<p>And we should get either p or q! These calculations c
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">real_p</span> <span class="o">=</span> <span class="s2">&quot;0xC36D0EB7FCD285223CFB5AABA5BDA3D82C01CAD19EA484A87EA4377637E75500FCB2005C5C7DD6EC4AC023CDA285D796C3D9E75E1EFC42488BB4F1D13AC30A57&quot;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-<span class="n">real_q</span> <span class="o">=</span> <span class="s2">&quot;0xC000DF51A7C77AE8D7C7370C1FF55B69E211C2B9E5DB1ED0BF61D0D9899620F4910E4168387E3C30AA1E00C339A795088452DD96A9A5EA5D9DCA68DA636032AF&quot;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-<span class="k">assert</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">p_test</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_p</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">p_test</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_q</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Failed to break p or q. Got {hex(p_test)}, excepted </span><span class="si">{real_p}</span><span class="s2"> or </span><span class="si">{real_q}</span><span class="s2">&quot;</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">q_test</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_p</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">q_test</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_q</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Failed to break p or q. Got {hex(p_test)}, excepted </span><span class="si">{real_p}</span><span class="s2"> or </span><span class="si">{real_q}</span><span class="s2">&quot;</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">real_d</span> <span class="o">=</span> <span class="s2">&quot;0x24bf6185468786fdd303083d25e64efc66ca472bc44d253102f8b4a9d3bfa75091386c0077937fe33fa3252d28855837ae1b484a8a9a45f7ee8c0c634f99e8cddf79c5ce07ee72c7f123142198164234cabb724cf78b8173b9f880fc86322407af1fedfdde2beb674ca15f3e81a1521e071513a1e85b5dfa031f21ecae91a34d&quot;</span>
-<span class="k">assert</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_d</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Failed to break private key d. Got {hex(d)}, expected </span><span class="si">{real_d}</span><span class="s2">&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="p">(</span><span class="n">broken</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;Failed to break bootloader in </span><span class="si">{}</span><span class="s2"> glitches&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
 </pre></div>
 
     </div>

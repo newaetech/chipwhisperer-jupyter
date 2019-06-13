@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>tmpc5mqg_ro</title>
+<title>Notebook</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13128,6 +13128,22 @@ div#notebook {
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">SCOPETYPE</span> <span class="o">=</span> <span class="s1">&#39;OPENADC&#39;</span>
+<span class="n">PLATFORM</span> <span class="o">=</span> <span class="s1">&#39;CWLITEXMEGA&#39;</span>
+<span class="n">CRYPTO_TARGET</span> <span class="o">=</span> <span class="s1">&#39;NONE&#39;</span>
+<span class="n">sample_size</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13249,20 +13265,6 @@ div#notebook {
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">PLATFORM</span> <span class="o">=</span> <span class="s2">&quot;CWLITEARM&quot;</span>
-<span class="n">CRYPTO_TARGET</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -13355,64 +13357,64 @@ make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>rm -f -- glitchsimple-CWLITEARM.hex
-rm -f -- glitchsimple-CWLITEARM.eep
-rm -f -- glitchsimple-CWLITEARM.cof
-rm -f -- glitchsimple-CWLITEARM.elf
-rm -f -- glitchsimple-CWLITEARM.map
-rm -f -- glitchsimple-CWLITEARM.sym
-rm -f -- glitchsimple-CWLITEARM.lss
+<pre>rm -f -- glitchsimple-CWLITEXMEGA.hex
+rm -f -- glitchsimple-CWLITEXMEGA.eep
+rm -f -- glitchsimple-CWLITEXMEGA.cof
+rm -f -- glitchsimple-CWLITEXMEGA.elf
+rm -f -- glitchsimple-CWLITEXMEGA.map
+rm -f -- glitchsimple-CWLITEXMEGA.sym
+rm -f -- glitchsimple-CWLITEXMEGA.lss
 rm -f -- objdir/*.o
 rm -f -- objdir/*.lst
-rm -f -- glitchsimple.s simpleserial.s stm32f3_hal.s stm32f3_hal_lowlevel.s stm32f3_sysmem.s
-rm -f -- glitchsimple.d simpleserial.d stm32f3_hal.d stm32f3_hal_lowlevel.d stm32f3_sysmem.d
-rm -f -- glitchsimple.i simpleserial.i stm32f3_hal.i stm32f3_hal_lowlevel.i stm32f3_sysmem.i
+rm -f -- glitchsimple.s simpleserial.s XMEGA_AES_driver.s uart.s usart_driver.s xmega_hal.s
+rm -f -- glitchsimple.d simpleserial.d XMEGA_AES_driver.d uart.d usart_driver.d xmega_hal.d
+rm -f -- glitchsimple.i simpleserial.i XMEGA_AES_driver.i uart.i usart_driver.i xmega_hal.i
 .
 -------- begin --------
-arm-none-eabi-gcc (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
-Copyright (C) 2017 Free Software Foundation, Inc.
+avr-gcc (WinAVR 20100110) 4.3.3
+Copyright (C) 2008 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 .
 Compiling C: glitchsimple.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH1 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple.o.d glitchsimple.c -o objdir/glitchsimple.o 
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple.o.d glitchsimple.c -o objdir/glitchsimple.o 
 .
 Compiling C: .././simpleserial/simpleserial.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH1 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_hal.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH1 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal.o.d .././hal/stm32f3/stm32f3_hal.c -o objdir/stm32f3_hal.o 
+Compiling C: .././hal/xmega/XMEGA_AES_driver.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/XMEGA_AES_driver.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/XMEGA_AES_driver.o.d .././hal/xmega/XMEGA_AES_driver.c -o objdir/XMEGA_AES_driver.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_hal_lowlevel.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH1 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal_lowlevel.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal_lowlevel.o.d .././hal/stm32f3/stm32f3_hal_lowlevel.c -o objdir/stm32f3_hal_lowlevel.o 
+Compiling C: .././hal/xmega/uart.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/uart.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/uart.o.d .././hal/xmega/uart.c -o objdir/uart.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_sysmem.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH1 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_sysmem.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_sysmem.o.d .././hal/stm32f3/stm32f3_sysmem.c -o objdir/stm32f3_sysmem.o 
+Compiling C: .././hal/xmega/usart_driver.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/usart_driver.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/usart_driver.o.d .././hal/xmega/usart_driver.c -o objdir/usart_driver.o 
 .
-Assembling: .././hal/stm32f3/stm32f3_startup.S
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -x assembler-with-cpp -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -DF_CPU=7372800 -Wa,-gstabs,-adhlns=objdir/stm32f3_startup.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ .././hal/stm32f3/stm32f3_startup.S -o objdir/stm32f3_startup.o
+Compiling C: .././hal/xmega/xmega_hal.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/xmega_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/xmega_hal.o.d .././hal/xmega/xmega_hal.c -o objdir/xmega_hal.o 
 .
-Linking: glitchsimple-CWLITEARM.elf
-arm-none-eabi-gcc -mcpu=cortex-m4 -I. -DGLITCH1 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.o -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple-CWLITEARM.elf.d objdir/glitchsimple.o objdir/simpleserial.o objdir/stm32f3_hal.o objdir/stm32f3_hal_lowlevel.o objdir/stm32f3_sysmem.o objdir/stm32f3_startup.o --output glitchsimple-CWLITEARM.elf --specs=nano.specs -T .././hal/stm32f3/LinkerScript.ld -Wl,--gc-sections -lm -Wl,-Map=glitchsimple-CWLITEARM.map,--cref   -lm  
+Linking: glitchsimple-CWLITEXMEGA.elf
+avr-gcc -mmcu=atxmega128d3 -I. -DGLITCH1 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.o -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple-CWLITEXMEGA.elf.d objdir/glitchsimple.o objdir/simpleserial.o objdir/XMEGA_AES_driver.o objdir/uart.o objdir/usart_driver.o objdir/xmega_hal.o --output glitchsimple-CWLITEXMEGA.elf -Wl,-Map=glitchsimple-CWLITEXMEGA.map,--cref   -lm  
 .
-Creating load file for Flash: glitchsimple-CWLITEARM.hex
-arm-none-eabi-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.hex
+Creating load file for Flash: glitchsimple-CWLITEXMEGA.hex
+avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature glitchsimple-CWLITEXMEGA.elf glitchsimple-CWLITEXMEGA.hex
 .
-Creating load file for EEPROM: glitchsimple-CWLITEARM.eep
-arm-none-eabi-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
-	--change-section-lma .eeprom=0 --no-change-warnings -O ihex glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.eep || exit 0
+Creating load file for EEPROM: glitchsimple-CWLITEXMEGA.eep
+avr-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
+	--change-section-lma .eeprom=0 --no-change-warnings -O ihex glitchsimple-CWLITEXMEGA.elf glitchsimple-CWLITEXMEGA.eep || exit 0
 .
-Creating Extended Listing: glitchsimple-CWLITEARM.lss
-arm-none-eabi-objdump -h -S -z glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.lss
+Creating Extended Listing: glitchsimple-CWLITEXMEGA.lss
+avr-objdump -h -S -z glitchsimple-CWLITEXMEGA.elf &gt; glitchsimple-CWLITEXMEGA.lss
 .
-Creating Symbol Table: glitchsimple-CWLITEARM.sym
-arm-none-eabi-nm -n glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.sym
+Creating Symbol Table: glitchsimple-CWLITEXMEGA.sym
+avr-nm -n glitchsimple-CWLITEXMEGA.elf &gt; glitchsimple-CWLITEXMEGA.sym
 Size after:
    text	   data	    bss	    dec	    hex	filename
-   4240	      8	   1176	   5424	   1530	glitchsimple-CWLITEARM.elf
+   3766	     68	     52	   3886	    f2e	glitchsimple-CWLITEXMEGA.elf
 +--------------------------------------------------------
-+ Built for platform CW-Lite Arm (STM32F3)
++ Built for platform CW-Lite XMEGA
 +--------------------------------------------------------
 </pre>
 </div>
@@ -13449,9 +13451,7 @@ Size after:
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">chipwhisperer</span> <span class="k">as</span> <span class="nn">cw</span>
-<span class="n">scope</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">scope</span><span class="p">()</span>
-<span class="n">target</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">run</span> &quot;Helper_Scripts/Setup.ipynb&quot;
 </pre></div>
 
     </div>
@@ -13464,7 +13464,7 @@ Size after:
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">run</span> &quot;Helper_Scripts/Setup_Target_Generic.ipynb&quot;
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../../hardware/victims/firmware/glitch-simple/glitchsimple-</span><span class="si">{}</span><span class="s2">.hex&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13475,21 +13475,6 @@ Size after:
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../../hardware/victims/firmware/glitch-simple/glitchsimple-CWLITEARM.hex&quot;</span>
-<span class="n">prog</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">programmers</span><span class="o">.</span><span class="n">STM32FProgrammer</span>
-<span class="c1">#prog = cw.programmers.XMEGAProgrammer</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
@@ -13509,12 +13494,9 @@ Size after:
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Detected known STMF32: STM32F302xB(C)/303xB(C)
-Extended erase (0x44), this can take ten seconds or more
-Attempting to programming 4247 bytes at 0x8000000
-STM32F Programming flash...
-STM32F Reading flash...
-Verified flash OK, 4247 bytes
+<pre>XMEGA Programming flash...
+XMEGA Reading flash...
+Verified flash OK, 3833 bytes
 </pre>
 </div>
 </div>
@@ -13526,41 +13508,14 @@ Verified flash OK, 4247 bytes
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Since the firmware enters an infinite loop, we'll need to reset the target between glitch attempts. Be sure to uncomment the reset pin for your target:</p>
+<p>Since the firmware enters an infinite loop, we'll need to reset the target between glitch attempts. <code>"Helper_Scripts/Setup.ipynb"</code> defines a reset function <code>reset_target(scope)</code> that we'll use here. Now let's make sure the firmware works as we expect. We should get <code>"hello\nA"</code> back after resetting the target.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
-<span class="k">def</span> <span class="nf">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">):</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">nrst</span> <span class="o">=</span> <span class="s1">&#39;low&#39;</span>
-    <span class="c1">#scope.io.pdic = &#39;low&#39;</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">nrst</span> <span class="o">=</span> <span class="s1">&#39;high&#39;</span>
-    <span class="c1">#scope.io.pdic = &#39;high&#39;</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's make sure the firmware works as we expect. We should get <code>"hello\nA"</code> back after resetting the target.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
@@ -13588,8 +13543,8 @@ Verified flash OK, 4247 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>û²        hello
-A(       hello
+<pre> hello
+A hello
 A
 </pre>
 </div>
@@ -13616,7 +13571,7 @@ A
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="p">)</span>
@@ -13913,17 +13868,26 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;clock_xor&quot;</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_single&quot;</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">105</span>
+
 <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+
 <span class="n">Range</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Range&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">])</span>
+<span class="k">if</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEXMEGA&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW303&quot;</span><span class="p">:</span>
+    <span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">105</span>
+<span class="k">elif</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEARM&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW308_STM32F3&quot;</span><span class="p">:</span>
+    <span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">49</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="mi">37</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">10</span>
+    
+<span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13962,48 +13926,6 @@ output      = clock_xor
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="XMEGA-Settings">XMEGA Settings<a class="anchor-link" href="#XMEGA-Settings">&#182;</a></h4>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="STM/CWLITEARM-Settings">STM/CWLITEARM Settings<a class="anchor-link" href="#STM/CWLITEARM-Settings">&#182;</a></h4>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">49</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="mi">37</span>
-<span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">10</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Attack-Loop">Attack Loop<a class="anchor-link" href="#Attack-Loop">&#182;</a></h3>
 </div>
 </div>
@@ -14019,13 +13941,12 @@ output      = clock_xor
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
 
 <span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">sample_size</span> <span class="o">=</span> <span class="mi">10</span>
 
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">min</span>
 <span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
@@ -14091,6 +14012,29 @@ output      = clock_xor
     <div class="prompt"></div>
 
 
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>Done glitching
 </pre>
@@ -14111,7 +14055,7 @@ output      = clock_xor
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">attack1_data</span><span class="p">:</span>
@@ -14134,26 +14078,24 @@ output      = clock_xor
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[-10.15625, -38.28125, 1.0, &#34;&#39;ë\\x01\\x00\\x00\\x00\\x00!\\x00\\x00hello\\nA1234&#39;&#34;]
-[-10.15625, -37.109375, 0.8, &#34;&#39;\\x00\\x04\\x00\\x00\\x00   \\x00hello\\nA1234&#39;&#34;]
-[-8.984375, -38.28125, 1.0, &#34;&#39;!   \\x00\\x00\\x00\\x00\\x00\\x00hello\\nA1234&#39;&#34;]
-[-8.984375, -37.109375, 1.0, &#34;&#39; ()\\x00   \\x01\\x00\\x00hello\\nA1234&#39;&#34;]
-[-7.8125, -39.453125, 0.3, &#34;&#39;ï(\\x00\\x00\\x00 \\x00\\x00\\x00 \\x00\\x00\\x00hello\\nA&#39;&#34;]
-[-7.8125, -38.28125, 1.0, &#34;&#39;\\x00( \\x00\\x00)\\x00\\x01\\x00hello\\nA1234&#39;&#34;]
-[-7.8125, -37.109375, 1.0, &#34;&#39;\\x00!\\x04\\x00 \\x00\\x00\\x00(\\x00\\x00hello\\nA1234&#39;&#34;]
-[-6.640625, -39.453125, 0.2, &#34;&#39;\\x00 \\x00\\x00 \\x00\\x00 \\x00\\x00hello\\nA&#39;&#34;]
-[-6.640625, -38.28125, 1.0, &#34;&#39;!\\x00\\x01\\x00\\x08\\x00\\x00\\x00\\x00\\x00hello\\nA1234&#39;&#34;]
-[-6.640625, -37.109375, 0.5, &#34;&#39;(\\x00\\x04\\x00 \\x00\\x00\\x00\\x00hello\\nA1234&#39;&#34;]
-[-5.46875, -39.453125, 0.2, &#34;&#39;( \\x04 \\x08 \\x00\\x00\\x00hello\\nA&#39;&#34;]
-[-5.46875, -38.28125, 1.0, &#34;&#39;!\\x00\\x00\\x00\\x00\\x00\\x00 \\x00\\x00\\x00hello\\nA1234&#39;&#34;]
-[-5.46875, -37.109375, 0.4, &#34;&#39;!!\\x00\\x00\\x00\\x00\\x00 \\x00\\x00hello\\nA&#39;&#34;]
-[-4.296875, -39.453125, 0.4, &#34;&#39;ë\\x8bB\\x00\\x00 \\x00\\x01 \\x01\\x00\\x00\\x00hello\\nA1234&#39;&#34;]
-[-4.296875, -38.28125, 1.0, &#34;&#39;ë     \\x00\\x00\\x00 \\x01\\x00hello\\nA1234&#39;&#34;]
-[-4.296875, -37.109375, 0.4, &#34;&#39;* ( \\x00\\x08  \\x00\\x00\\x00hello\\nA&#39;&#34;]
-[-3.125, -39.453125, 0.1, &#34;&#39;\\x01(!\\x01\\x00 !\\x01 \\x00\\x00\\x00hello\\nA&#39;&#34;]
-[-3.125, -38.28125, 1.0, &#34;&#39;\\x00\\x08\\x00\\x01\\x01!\\x00\\x00\\x00hello\\nA1234&#39;&#34;]
-[-3.125, -37.109375, 1.0, &#39;\&#39;&#34; \\x01\\x00\\x00 \\x00\\x01\\x00\\x00\\x00hello\\nA1234\&#39;&#39;]
-[3.90625, -48.828125, 0.1, &#34;&#39;\\x00\\x00\\x04\\x00\\x00\\x00\\x00 hello\\nA&#39;&#34;]
+<pre>[-10.15625, -1.953125, 0.15, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
+[-8.984375, -1.953125, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
+[-8.984375, 9.765625, 0.05, &#34;&#39;\\x00hello\\nA&#39;&#34;]
+[-7.8125, -1.953125, 0.2, &#34;&#39;\\x00hello\\nA1\\nhello\\nA&#39;&#34;]
+[-7.8125, 8.59375, 0.05, &#34;&#39;\\x00hello\\nAhello\\nA&#39;&#34;]
+[-6.640625, -1.953125, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
+[-6.640625, 7.421875, 0.05, &#34;&#39;\\x00hello\\nAhello\\nA&#39;&#34;]
+[-5.46875, -1.953125, 0.2, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[-5.46875, 6.25, 0.05, &#34;&#39;\\x00hello\\nAhello\\nA&#39;&#34;]
+[-4.296875, 0.390625, 0.1, &#34;&#39;\\x00hello\\nA 234&#39;&#34;]
+[-3.125, -10.15625, 0.1, &#34;&#39;\\x00hello\\nÁ\\x00`\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01\\x0e\\x01&#39;&#34;]
+[-3.125, -8.984375, 0.05, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[-3.125, -7.8125, 0.15, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[-3.125, -6.640625, 0.05, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[-3.125, -5.46875, 0.05, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[-3.125, -4.296875, 0.05, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[-3.125, -3.125, 0.15, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
+[8.59375, 0.390625, 0.05, &#34;&#39;\\x00hello\\n\\xa0&#39;&#34;]
 </pre>
 </div>
 </div>
@@ -14224,7 +14166,7 @@ output      = clock_xor
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
@@ -14246,64 +14188,64 @@ make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>rm -f -- glitchsimple-CWLITEARM.hex
-rm -f -- glitchsimple-CWLITEARM.eep
-rm -f -- glitchsimple-CWLITEARM.cof
-rm -f -- glitchsimple-CWLITEARM.elf
-rm -f -- glitchsimple-CWLITEARM.map
-rm -f -- glitchsimple-CWLITEARM.sym
-rm -f -- glitchsimple-CWLITEARM.lss
+<pre>rm -f -- glitchsimple-CWLITEXMEGA.hex
+rm -f -- glitchsimple-CWLITEXMEGA.eep
+rm -f -- glitchsimple-CWLITEXMEGA.cof
+rm -f -- glitchsimple-CWLITEXMEGA.elf
+rm -f -- glitchsimple-CWLITEXMEGA.map
+rm -f -- glitchsimple-CWLITEXMEGA.sym
+rm -f -- glitchsimple-CWLITEXMEGA.lss
 rm -f -- objdir/*.o
 rm -f -- objdir/*.lst
-rm -f -- glitchsimple.s simpleserial.s stm32f3_hal.s stm32f3_hal_lowlevel.s stm32f3_sysmem.s
-rm -f -- glitchsimple.d simpleserial.d stm32f3_hal.d stm32f3_hal_lowlevel.d stm32f3_sysmem.d
-rm -f -- glitchsimple.i simpleserial.i stm32f3_hal.i stm32f3_hal_lowlevel.i stm32f3_sysmem.i
+rm -f -- glitchsimple.s simpleserial.s XMEGA_AES_driver.s uart.s usart_driver.s xmega_hal.s
+rm -f -- glitchsimple.d simpleserial.d XMEGA_AES_driver.d uart.d usart_driver.d xmega_hal.d
+rm -f -- glitchsimple.i simpleserial.i XMEGA_AES_driver.i uart.i usart_driver.i xmega_hal.i
 .
 -------- begin --------
-arm-none-eabi-gcc (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
-Copyright (C) 2017 Free Software Foundation, Inc.
+avr-gcc (WinAVR 20100110) 4.3.3
+Copyright (C) 2008 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 .
 Compiling C: glitchsimple.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple.o.d glitchsimple.c -o objdir/glitchsimple.o 
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple.o.d glitchsimple.c -o objdir/glitchsimple.o 
 .
 Compiling C: .././simpleserial/simpleserial.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/simpleserial.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/simpleserial.o.d .././simpleserial/simpleserial.c -o objdir/simpleserial.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_hal.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal.o.d .././hal/stm32f3/stm32f3_hal.c -o objdir/stm32f3_hal.o 
+Compiling C: .././hal/xmega/XMEGA_AES_driver.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/XMEGA_AES_driver.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/XMEGA_AES_driver.o.d .././hal/xmega/XMEGA_AES_driver.c -o objdir/XMEGA_AES_driver.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_hal_lowlevel.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_hal_lowlevel.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_hal_lowlevel.o.d .././hal/stm32f3/stm32f3_hal_lowlevel.c -o objdir/stm32f3_hal_lowlevel.o 
+Compiling C: .././hal/xmega/uart.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/uart.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/uart.o.d .././hal/xmega/uart.c -o objdir/uart.o 
 .
-Compiling C: .././hal/stm32f3/stm32f3_sysmem.c
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -DGLITCH3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/stm32f3_sysmem.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/stm32f3_sysmem.o.d .././hal/stm32f3/stm32f3_sysmem.c -o objdir/stm32f3_sysmem.o 
+Compiling C: .././hal/xmega/usart_driver.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/usart_driver.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/usart_driver.o.d .././hal/xmega/usart_driver.c -o objdir/usart_driver.o 
 .
-Assembling: .././hal/stm32f3/stm32f3_startup.S
-arm-none-eabi-gcc -c -mcpu=cortex-m4 -I. -x assembler-with-cpp -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -DF_CPU=7372800 -Wa,-gstabs,-adhlns=objdir/stm32f3_startup.lst -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ .././hal/stm32f3/stm32f3_startup.S -o objdir/stm32f3_startup.o
+Compiling C: .././hal/xmega/xmega_hal.c
+avr-gcc -c -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/xmega_hal.lst -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/xmega_hal.o.d .././hal/xmega/xmega_hal.c -o objdir/xmega_hal.o 
 .
-Linking: glitchsimple-CWLITEARM.elf
-arm-none-eabi-gcc -mcpu=cortex-m4 -I. -DGLITCH3 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fmessage-length=0 -ffunction-sections -gdwarf-2 -DSS_VER=SS_VER_1_1 -DSTM32F303xC -DSTM32F3 -DSTM32 -DDEBUG -DHAL_TYPE=HAL_stm32f3 -DPLATFORM=CWLITEARM -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.o -I.././simpleserial/ -I.././hal -I.././hal/stm32f3 -I.././hal/stm32f3/CMSIS -I.././hal/stm32f3/CMSIS/core -I.././hal/stm32f3/CMSIS/device -I.././hal/stm32f4/Legacy -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple-CWLITEARM.elf.d objdir/glitchsimple.o objdir/simpleserial.o objdir/stm32f3_hal.o objdir/stm32f3_hal_lowlevel.o objdir/stm32f3_sysmem.o objdir/stm32f3_startup.o --output glitchsimple-CWLITEARM.elf --specs=nano.specs -T .././hal/stm32f3/LinkerScript.ld -Wl,--gc-sections -lm -Wl,-Map=glitchsimple-CWLITEARM.map,--cref   -lm  
+Linking: glitchsimple-CWLITEXMEGA.elf
+avr-gcc -mmcu=atxmega128d3 -I. -DGLITCH3 -fpack-struct -gdwarf-2 -DSS_VER=SS_VER_1_1 -DHAL_TYPE=HAL_xmega -DPLATFORM=CWLITEXMEGA -DF_CPU=7372800UL -Os -funsigned-char -funsigned-bitfields -fshort-enums -Wall -Wstrict-prototypes -Wa,-adhlns=objdir/glitchsimple.o -I.././simpleserial/ -I.././hal -I.././hal/xmega -I.././crypto/ -std=gnu99 -MMD -MP -MF .dep/glitchsimple-CWLITEXMEGA.elf.d objdir/glitchsimple.o objdir/simpleserial.o objdir/XMEGA_AES_driver.o objdir/uart.o objdir/usart_driver.o objdir/xmega_hal.o --output glitchsimple-CWLITEXMEGA.elf -Wl,-Map=glitchsimple-CWLITEXMEGA.map,--cref   -lm  
 .
-Creating load file for Flash: glitchsimple-CWLITEARM.hex
-arm-none-eabi-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.hex
+Creating load file for Flash: glitchsimple-CWLITEXMEGA.hex
+avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature glitchsimple-CWLITEXMEGA.elf glitchsimple-CWLITEXMEGA.hex
 .
-Creating load file for EEPROM: glitchsimple-CWLITEARM.eep
-arm-none-eabi-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
-	--change-section-lma .eeprom=0 --no-change-warnings -O ihex glitchsimple-CWLITEARM.elf glitchsimple-CWLITEARM.eep || exit 0
+Creating load file for EEPROM: glitchsimple-CWLITEXMEGA.eep
+avr-objcopy -j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34; \
+	--change-section-lma .eeprom=0 --no-change-warnings -O ihex glitchsimple-CWLITEXMEGA.elf glitchsimple-CWLITEXMEGA.eep || exit 0
 .
-Creating Extended Listing: glitchsimple-CWLITEARM.lss
-arm-none-eabi-objdump -h -S -z glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.lss
+Creating Extended Listing: glitchsimple-CWLITEXMEGA.lss
+avr-objdump -h -S -z glitchsimple-CWLITEXMEGA.elf &gt; glitchsimple-CWLITEXMEGA.lss
 .
-Creating Symbol Table: glitchsimple-CWLITEARM.sym
-arm-none-eabi-nm -n glitchsimple-CWLITEARM.elf &gt; glitchsimple-CWLITEARM.sym
+Creating Symbol Table: glitchsimple-CWLITEXMEGA.sym
+avr-nm -n glitchsimple-CWLITEXMEGA.elf &gt; glitchsimple-CWLITEXMEGA.sym
 Size after:
    text	   data	    bss	    dec	    hex	filename
-   4400	      8	   1176	   5584	   15d0	glitchsimple-CWLITEARM.elf
+   3766	     68	     52	   3886	    f2e	glitchsimple-CWLITEXMEGA.elf
 +--------------------------------------------------------
-+ Built for platform CW-Lite Arm (STM32F3)
++ Built for platform CW-Lite XMEGA
 +--------------------------------------------------------
 </pre>
 </div>
@@ -14315,7 +14257,7 @@ Size after:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
@@ -14335,12 +14277,9 @@ Size after:
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Detected known STMF32: STM32F302xB(C)/303xB(C)
-Extended erase (0x44), this can take ten seconds or more
-Attempting to programming 4407 bytes at 0x8000000
-STM32F Programming flash...
-STM32F Reading flash...
-Verified flash OK, 4407 bytes
+<pre>XMEGA Programming flash...
+XMEGA Reading flash...
+Verified flash OK, 3833 bytes
 </pre>
 </div>
 </div>
@@ -14359,7 +14298,7 @@ Verified flash OK, 4407 bytes
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
@@ -14387,7 +14326,7 @@ Verified flash OK, 4407 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>ú»&#34;         hello
+<pre> hello
 Password:Welcome
 Password:
 </pre>
@@ -14408,7 +14347,7 @@ Password:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
@@ -14465,7 +14404,7 @@ Password:
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">clk_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen&quot;</span>
@@ -14478,8 +14417,11 @@ Password:
 <span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
 <span class="n">attack2_data</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mf">0.1</span>
-<span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">41</span><span class="p">,</span> <span class="o">-</span><span class="mi">35</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW303&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEXMEGA&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="k">elif</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEARM&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW308_STM32F3&quot;</span><span class="p">:</span>
+    <span class="n">offset_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">41</span><span class="p">,</span> <span class="o">-</span><span class="mi">35</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">min</span>
 <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">&lt;</span> <span class="n">width_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
@@ -15450,6 +15392,742 @@ WARNING:root:Timeout in OpenADC capture(), trigger FORCED
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
 Done glitching
 </pre>
 </div>
@@ -15461,7 +16139,7 @@ Done glitching
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">trig_count</span><span class="p">)</span>
@@ -15484,16 +16162,9 @@ Done glitching
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>56
-[-39.84375, -10.15625, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -8.984375, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -8.984375, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -7.8125, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -7.8125, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -6.640625, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -6.640625, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-41.015625, -5.46875, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
-[-39.84375, -5.46875, 10, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
+<pre>8
+[-4.296875, 0.390625, 6, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
+[-4.296875, 1.5625, 6, True, &#34;&#39;Welcome\\nPassword:&#39;&#34;]
 </pre>
 </div>
 </div>
@@ -15513,7 +16184,7 @@ Done glitching
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">dis</span><span class="p">()</span>
@@ -15555,7 +16226,7 @@ Done glitching
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
@@ -15572,7 +16243,7 @@ Done glitching
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
