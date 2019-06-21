@@ -13266,7 +13266,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash
-<span class="nb">cd</span> ../../hardware/victims/firmware/
+<span class="nb">cd</span> ../hardware/victims/firmware/
 mkdir -p simpleserial-base-lab1 <span class="o">&amp;&amp;</span> cp -r simpleserial-base/* <span class="nv">$_</span>
 <span class="nb">cd</span> simpleserial-base-lab1
 </pre></div>
@@ -13313,7 +13313,7 @@ mkdir -p simpleserial-base-lab1 <span class="o">&amp;&amp;</span> cp -r simplese
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/simpleserial-base-lab1
+<span class="nb">cd</span> ../hardware/victims/firmware/simpleserial-base-lab1
 make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span>
 </pre></div>
 
@@ -13454,7 +13454,7 @@ Size after:
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/simpleserial-base-lab1
+<span class="nb">cd</span> ../hardware/victims/firmware/simpleserial-base-lab1
 make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span>
 </pre></div>
 
@@ -13779,7 +13779,7 @@ FILE
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We'll also need to setup the interface to the target (typically what we want to attack). Like with scopes, there's a few different interfaces we can use, which are available through <code>scope.targets.&lt;target_type&gt;</code>. The default, SimpleSerial communicates over UART and is almost always the correct choice.</p>
+<p>We'll also need to setup the interface to the target (typically what we want to attack). Like with scopes, there's a few different interfaces we can use, which are available through <code>scope.targets.&lt;target_type&gt;</code>. The default, SimpleSerial, communicates over UART and is almost always the correct choice.</p>
 
 </div>
 </div>
@@ -13856,7 +13856,7 @@ FILE
 <span class="k">else</span><span class="p">:</span>
     <span class="n">prog</span> <span class="o">=</span> <span class="kc">None</span>
     
-<span class="n">fw_path</span> <span class="o">=</span> <span class="s1">&#39;../../hardware/victims/firmware/simpleserial-base-lab1/simpleserial-base-</span><span class="si">{}</span><span class="s1">.hex&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
+<span class="n">fw_path</span> <span class="o">=</span> <span class="s1">&#39;../hardware/victims/firmware/simpleserial-base-lab1/simpleserial-base-</span><span class="si">{}</span><span class="s1">.hex&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13955,8 +13955,8 @@ Verified flash OK, 4671 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>b&#39;177CE8DC71456AFF6A2CDA540EECEFF3&#39;
-b&#39;177CE8DC71456AFF6A2CDA540EECEFF3&#39;
+<pre>b&#39;C48E39144838539CEBB683065FE374C9&#39;
+b&#39;C48E39144838539CEBB683065FE374C9&#39;
 </pre>
 </div>
 </div>
