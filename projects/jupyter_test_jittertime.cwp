@@ -1,0 +1,10 @@
+[Trace Management]
+tracefile0 = jupyter_test_jittertime_data\traces\config_2019.06.24-17.13.47_.cfg
+enabled0 = True
+[ChipWhisperer]
+[[General Settings]]
+Project Name = Untitled
+Project File Version = 1.00
+Project Author = Unknown
+Program Name = ChipWhisperer
+Program Version = ""
