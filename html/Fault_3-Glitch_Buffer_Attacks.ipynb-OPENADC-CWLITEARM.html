@@ -13504,7 +13504,7 @@ Size after:
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">program_target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13611,7 +13611,7 @@ adc =
     presamples = 0
     samples    = 5000
     decimate   = 1
-    trig_count = 272676879
+    trig_count = 277518706
 clock = 
     adc_src       = clkgen_x4
     adc_phase     = 0
@@ -13665,7 +13665,7 @@ glitch =
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now that we have our setup done, let's work on communicating with the bootloader. There's a few ways to do this, but the easiest is probably to use <code>target.ser.write</code> to send our text. Remember, to get to the print buffer, we need to send some <code>rot13</code> encoded text. For this example, we'll use <code>Don't forget to buy milk!</code>, whose <code>rot13</code> encoding is <code>516261276720736265747267206762206f686c207a76797821</code>.</p>
+<p>Now that we have our setup done, let's work on communicating with the bootloader. There's a few ways to do this, but the easiest is probably to use <code>target.write()</code> to send our text. Remember, to get to the print buffer, we need to send some <code>rot13</code> encoded text. For this example, we'll use <code>Don't forget to buy milk!</code>, whose <code>rot13</code> encoding is <code>516261276720736265747267206762206f686c207a76797821</code>.</p>
 <p>Let's also change the ADC clock from being x4 of the target clock to being x1. This way, we can easily use the ADC module (in particular <code>scope.adc.trig_count</code>) to see how long sending the response takes.</p>
 
 </div>
@@ -13678,9 +13678,8 @@ glitch =
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">adc_src</span> <span class="o">=</span> <span class="s2">&quot;clkgen_x1&quot;</span>
-<span class="k">def</span> <span class="nf">send_milk</span><span class="p">(</span><span class="n">ser</span><span class="p">):</span>
-    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;p516261276720736265747267206762206f686c207a76797821</span><span class="se">\n</span><span class="s2">&quot;</span>
-    <span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    
+<span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;p516261276720736265747267206762206f686c207a76797821</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13703,12 +13702,12 @@ glitch =
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
 
+<span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">send_milk</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="p">)</span>
+<span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;p516261276720736265747267206762206f686c207a76797821</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 <span class="n">response_type</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
@@ -13730,7 +13729,7 @@ glitch =
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre> r0
+<pre>r0
 
 
 
@@ -13811,7 +13810,7 @@ The response took 17014 cycles
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This part is optional, but to make the response easier to read, we'll also want to do some parsing on the response text, since the response won't all be in ASCII text. This will make use of the <code>termcolor</code> module to make non letter/number responses red, which doesn't come with ChipWhisperer and only works on Jupyter/Unix. If you're following along in a Windows command prompt or don't want to install this module, feel free to remove the import and the <code>colored()</code> calls.</p>
+<p>This part is optional, but to make the response easier to read, we'll also want to do some parsing on the response text, since the response won't all be in ASCII text.</p>
 
 </div>
 </div>
@@ -13877,20 +13876,14 @@ The response took 17014 cycles
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm_notebook</span><span class="p">,</span> <span class="n">tnrange</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
 
-<span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
 <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Init&quot;</span><span class="p">)</span>
 <span class="n">broken</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="n">N</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="c1">#scope.glitch.width = width_range.min</span>
-<span class="c1">#while scope.glitch.width &lt; width_range.max:</span>
 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;width&quot;</span><span class="p">):</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width_fine</span> <span class="o">=</span> <span class="n">k</span>
-    <span class="c1">#scope.glitch.offset = offset_range.min</span>
     <span class="k">if</span> <span class="n">broken</span><span class="p">:</span>
         <span class="k">break</span>
-    <span class="c1">#while scope.glitch.offset &lt; offset_range.max:</span>
     <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;offset&quot;</span><span class="p">):</span>
         <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset_fine</span> <span class="o">=</span> <span class="n">j</span>
         <span class="k">if</span> <span class="n">broken</span><span class="p">:</span>
@@ -13900,27 +13893,18 @@ The response took 17014 cycles
             <span class="k">if</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
                 <span class="c1">#trigger never went low, target probably crashed</span>
                 <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-                <span class="c1">#print(&quot;Crashed!&quot;)</span>
 
             <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="n">i</span>
             <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
 
-            <span class="n">send_milk</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="p">)</span>
-            <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
-                <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-                    <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-                    <span class="k">continue</span>
-            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;p516261276720736265747267206762206f686c207a76797821</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                <span class="k">continue</span>
             
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
-            <span class="n">waiting</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
             <span class="c1">#check if we were successful</span>
             <span class="k">if</span> <span class="s2">&quot;7&quot;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
@@ -13928,9 +13912,9 @@ The response took 17014 cycles
                 <span class="n">my_print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
                 <span class="n">broken</span> <span class="o">=</span> <span class="kc">True</span> 
                 <span class="k">for</span> <span class="n">__</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500</span><span class="p">):</span>
-                    <span class="n">waiting</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">waiting</span><span class="p">:</span>
-                        <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">in_waiting</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">num_char</span><span class="p">:</span>
+                        <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
                         <span class="n">my_print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
                 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
                 <span class="k">break</span>
@@ -13938,12 +13922,6 @@ The response took 17014 cycles
             <span class="k">if</span> <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
                 <span class="c1">#trigger never went low, target probably crashed</span>
                 <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-                <span class="c1">#print(&quot;Crashed! Output: {}&quot;.format(output))</span>
-                
-        <span class="c1">#scope.glitch.offset += offset_range.step</span>
-    <span class="c1">#scope.glitch.width += width_range.step</span>
-    
-<span class="c1">#</span>
 </pre></div>
 
     </div>
@@ -13959,29 +13937,18 @@ The response took 17014 cycles
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Init
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
 
 
 
  
  
-<div id="fc7e25ff-cf2c-40af-bc47-4928c0c56854"></div>
+<div id="83c61801-abd1-4c0f-9107-5e871a637950"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#fc7e25ff-cf2c-40af-bc47-4928c0c56854');
+var element = $('#83c61801-abd1-4c0f-9107-5e871a637950');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "d5c27f87ea8644d6852b600496c88637"}
+{"version_major": 2, "version_minor": 0, "model_id": "9e5b59268cba41b1bd2ac1ff301d6567"}
 </script>
 </div>
 
@@ -13997,13 +13964,13 @@ var element = $('#fc7e25ff-cf2c-40af-bc47-4928c0c56854');
 
  
  
-<div id="8e101d77-a870-4a24-afee-2ee4195ac8cf"></div>
+<div id="b517a94a-d4a1-4e91-81fc-a150db7dde8c"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#8e101d77-a870-4a24-afee-2ee4195ac8cf');
+var element = $('#b517a94a-d4a1-4e91-81fc-a150db7dde8c');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "48d5df63fd1a4b1f81eb21c2e3590123"}
+{"version_major": 2, "version_minor": 0, "model_id": "272516107ecd4c73a935fbfb8e2c8242"}
 </script>
 </div>
 
@@ -14019,13 +13986,13 @@ var element = $('#8e101d77-a870-4a24-afee-2ee4195ac8cf');
 
  
  
-<div id="0e4b6f49-c044-416e-a8bf-7dadf2081d90"></div>
+<div id="7c82e257-db84-4b9e-a257-fbc0c16a7214"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#0e4b6f49-c044-416e-a8bf-7dadf2081d90');
+var element = $('#7c82e257-db84-4b9e-a257-fbc0c16a7214');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "e9c2fa0f84d54abdb029c93fbdbc23c9"}
+{"version_major": 2, "version_minor": 0, "model_id": "a237d357c71c4edca0a188cc07bcce74"}
 </script>
 </div>
 
@@ -14041,13 +14008,13 @@ var element = $('#0e4b6f49-c044-416e-a8bf-7dadf2081d90');
 
  
  
-<div id="2e6e3918-1932-4c7a-81ff-1be1e2ba4f32"></div>
+<div id="b7969f60-3169-4e06-81f5-b6b51d72da12"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#2e6e3918-1932-4c7a-81ff-1be1e2ba4f32');
+var element = $('#b7969f60-3169-4e06-81f5-b6b51d72da12');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "38597766f98c40ab83ce9118bd927a0e"}
+{"version_major": 2, "version_minor": 0, "model_id": "ceb2a3277d6346f4bdc1b8bd51ea1c86"}
 </script>
 </div>
 
@@ -14063,13 +14030,13 @@ var element = $('#2e6e3918-1932-4c7a-81ff-1be1e2ba4f32');
 
  
  
-<div id="31884feb-c3ce-47ba-89fa-f46524531fe3"></div>
+<div id="484941fe-c9be-4744-ab26-fb8c0cb18840"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#31884feb-c3ce-47ba-89fa-f46524531fe3');
+var element = $('#484941fe-c9be-4744-ab26-fb8c0cb18840');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "afdb0c1c52e343499fb184ca20c1e762"}
+{"version_major": 2, "version_minor": 0, "model_id": "6f954ea248ca4e5b95cfea6fcbb28cf9"}
 </script>
 </div>
 
@@ -14085,13 +14052,13 @@ var element = $('#31884feb-c3ce-47ba-89fa-f46524531fe3');
 
  
  
-<div id="464d4fa5-c663-4ad6-b45a-ad7ea85976cc"></div>
+<div id="db089250-86d2-493b-ac8a-dd4da1e02990"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#464d4fa5-c663-4ad6-b45a-ad7ea85976cc');
+var element = $('#db089250-86d2-493b-ac8a-dd4da1e02990');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "52b654d5d17a4f1186b97567a1708657"}
+{"version_major": 2, "version_minor": 0, "model_id": "0d33676b79df4000916925606e4e8da8"}
 </script>
 </div>
 
@@ -14107,13 +14074,13 @@ var element = $('#464d4fa5-c663-4ad6-b45a-ad7ea85976cc');
 
  
  
-<div id="3d7875ff-ee45-4e9d-adee-352d114e7278"></div>
+<div id="ad25086b-f1c7-4ce3-b406-c94d47694601"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#3d7875ff-ee45-4e9d-adee-352d114e7278');
+var element = $('#ad25086b-f1c7-4ce3-b406-c94d47694601');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "0efa3606f9c24ef3aace3ebd9d706e02"}
+{"version_major": 2, "version_minor": 0, "model_id": "887f095c371e4569aeebb39502f344a6"}
 </script>
 </div>
 
@@ -14129,13 +14096,13 @@ var element = $('#3d7875ff-ee45-4e9d-adee-352d114e7278');
 
  
  
-<div id="d8d56c62-ad5e-487d-8dcf-3c66a29a770d"></div>
+<div id="d299e1ff-d4eb-4f2d-a2b0-b1b898bf739c"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#d8d56c62-ad5e-487d-8dcf-3c66a29a770d');
+var element = $('#d299e1ff-d4eb-4f2d-a2b0-b1b898bf739c');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "8ca533bc64464183b5ea7191c9049d82"}
+{"version_major": 2, "version_minor": 0, "model_id": "855b3c098a0641f98d811e89fa1b18d2"}
 </script>
 </div>
 
@@ -14151,13 +14118,13 @@ var element = $('#d8d56c62-ad5e-487d-8dcf-3c66a29a770d');
 
  
  
-<div id="ff326b4e-1236-42a1-946e-279ad091ad8e"></div>
+<div id="7ab01f2f-0cac-4d3c-86e0-7f5610e2cc7e"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#ff326b4e-1236-42a1-946e-279ad091ad8e');
+var element = $('#7ab01f2f-0cac-4d3c-86e0-7f5610e2cc7e');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "6c85b3c409324ebbb257ff876612ed12"}
+{"version_major": 2, "version_minor": 0, "model_id": "c27e0e199ba1429c8d29477157337aa0"}
 </script>
 </div>
 
@@ -14173,13 +14140,13 @@ var element = $('#ff326b4e-1236-42a1-946e-279ad091ad8e');
 
  
  
-<div id="8b2fcdcd-b469-496f-88be-814077c58065"></div>
+<div id="ec288e8d-c2f7-43a9-aab1-4a77605232c5"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#8b2fcdcd-b469-496f-88be-814077c58065');
+var element = $('#ec288e8d-c2f7-43a9-aab1-4a77605232c5');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "2c29f40c2bb34b4ebe254128ba23cc7f"}
+{"version_major": 2, "version_minor": 0, "model_id": "6d98fd9c38af470ba88d57b5b6bcef1c"}
 </script>
 </div>
 
@@ -14195,13 +14162,13 @@ var element = $('#8b2fcdcd-b469-496f-88be-814077c58065');
 
  
  
-<div id="2dd1d3fc-8fba-4162-abf9-16bc4ba11655"></div>
+<div id="fab57339-7307-4946-b082-64058354a657"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#2dd1d3fc-8fba-4162-abf9-16bc4ba11655');
+var element = $('#fab57339-7307-4946-b082-64058354a657');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "2ba2016fa07a4d0789fc593e00da25f5"}
+{"version_major": 2, "version_minor": 0, "model_id": "0bc1bdc495694c1a81b40f06534a80bc"}
 </script>
 </div>
 
@@ -14217,13 +14184,13 @@ var element = $('#2dd1d3fc-8fba-4162-abf9-16bc4ba11655');
 
  
  
-<div id="533def06-1728-43a7-ae76-0c2e98ec2c54"></div>
+<div id="4c7d6045-9523-4cdf-baf9-4386dc860393"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#533def06-1728-43a7-ae76-0c2e98ec2c54');
+var element = $('#4c7d6045-9523-4cdf-baf9-4386dc860393');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "252439459b9a4f5e9e130e8050cf7f49"}
+{"version_major": 2, "version_minor": 0, "model_id": "2cd63c2fbaa1450dac5c6156d381e8aa"}
 </script>
 </div>
 
@@ -14239,13 +14206,13 @@ var element = $('#533def06-1728-43a7-ae76-0c2e98ec2c54');
 
  
  
-<div id="e0d77664-0cc8-4782-a65e-07a085019bad"></div>
+<div id="1e85a878-47c0-45ed-8d43-87595cbd7e64"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#e0d77664-0cc8-4782-a65e-07a085019bad');
+var element = $('#1e85a878-47c0-45ed-8d43-87595cbd7e64');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "a4f56f843b2140978b59a5cc67b07472"}
+{"version_major": 2, "version_minor": 0, "model_id": "b22652f0e16c4ae4b063c91366808d78"}
 </script>
 </div>
 
@@ -14261,13 +14228,13 @@ var element = $('#e0d77664-0cc8-4782-a65e-07a085019bad');
 
  
  
-<div id="75facd7c-fde9-428e-b5c5-7b2c3ad2ee9a"></div>
+<div id="b5d60f10-72d5-4a0e-abe5-bf4a75d22a5b"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#75facd7c-fde9-428e-b5c5-7b2c3ad2ee9a');
+var element = $('#b5d60f10-72d5-4a0e-abe5-bf4a75d22a5b');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "321f9017df4147eeb13d1eafbbd162b1"}
+{"version_major": 2, "version_minor": 0, "model_id": "07f968b6a42946c4a8da8788f982f458"}
 </script>
 </div>
 
@@ -14283,13 +14250,13 @@ var element = $('#75facd7c-fde9-428e-b5c5-7b2c3ad2ee9a');
 
  
  
-<div id="a0bb60de-ec94-4480-bfb2-1012a6719a1c"></div>
+<div id="12fa5936-baaf-4638-b445-2303ca17dedc"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#a0bb60de-ec94-4480-bfb2-1012a6719a1c');
+var element = $('#12fa5936-baaf-4638-b445-2303ca17dedc');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "b0752d9beda64dd185b069234368be40"}
+{"version_major": 2, "version_minor": 0, "model_id": "4320ec5a669a46629420764a0fa00e8d"}
 </script>
 </div>
 
@@ -14305,13 +14272,13 @@ var element = $('#a0bb60de-ec94-4480-bfb2-1012a6719a1c');
 
  
  
-<div id="d27caa1c-3b11-464a-b0ce-9a94133ba0cf"></div>
+<div id="0a1671f8-62b9-4d2e-a179-41955872db28"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#d27caa1c-3b11-464a-b0ce-9a94133ba0cf');
+var element = $('#0a1671f8-62b9-4d2e-a179-41955872db28');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "0ac10cc3b00e4641a57ac4f74b258dca"}
+{"version_major": 2, "version_minor": 0, "model_id": "ab620fd3dc2043ffa2dae0bcf24295b5"}
 </script>
 </div>
 
@@ -14327,13 +14294,13 @@ var element = $('#d27caa1c-3b11-464a-b0ce-9a94133ba0cf');
 
  
  
-<div id="120021e8-24f9-4e86-bfa0-316f42e04f51"></div>
+<div id="5704291c-312b-4569-8a45-6e49a2b4f12c"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#120021e8-24f9-4e86-bfa0-316f42e04f51');
+var element = $('#5704291c-312b-4569-8a45-6e49a2b4f12c');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "923dd8f8cabd488eba358fa55e76c0a7"}
+{"version_major": 2, "version_minor": 0, "model_id": "652c5022a34b469bac2c00829945d2ae"}
 </script>
 </div>
 
@@ -14349,13 +14316,13 @@ var element = $('#120021e8-24f9-4e86-bfa0-316f42e04f51');
 
  
  
-<div id="71d0b3f5-1aaf-4494-822f-13257492fffe"></div>
+<div id="e1f83347-1ef7-4003-b1b0-4330306665a5"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#71d0b3f5-1aaf-4494-822f-13257492fffe');
+var element = $('#e1f83347-1ef7-4003-b1b0-4330306665a5');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "f7368ebea28e449b8ed659a4a3e2a370"}
+{"version_major": 2, "version_minor": 0, "model_id": "5cf87acc0eb147369748b03d1038d0c7"}
 </script>
 </div>
 
@@ -14371,13 +14338,13 @@ var element = $('#71d0b3f5-1aaf-4494-822f-13257492fffe');
 
  
  
-<div id="fc8805fe-7061-4649-9534-6e9ed9d15977"></div>
+<div id="a772964c-1a30-48cf-b21d-38528651864d"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#fc8805fe-7061-4649-9534-6e9ed9d15977');
+var element = $('#a772964c-1a30-48cf-b21d-38528651864d');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "34ef5f51b33945c9ad8fda9f53e38a9b"}
+{"version_major": 2, "version_minor": 0, "model_id": "98f0e32ba720441ea6894ce124e8407c"}
 </script>
 </div>
 
@@ -14393,13 +14360,13 @@ var element = $('#fc8805fe-7061-4649-9534-6e9ed9d15977');
 
  
  
-<div id="dd69c8c2-caab-4649-8a7f-35b498420ddc"></div>
+<div id="582da6a5-a1e0-48be-8a3c-bdf59f4e0fab"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#dd69c8c2-caab-4649-8a7f-35b498420ddc');
+var element = $('#582da6a5-a1e0-48be-8a3c-bdf59f4e0fab');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "8660b67cf0354edfa610c304abd58c3a"}
+{"version_major": 2, "version_minor": 0, "model_id": "397b2d0760474ddeb7c8aa0dac0fe454"}
 </script>
 </div>
 
@@ -14415,13 +14382,13 @@ var element = $('#dd69c8c2-caab-4649-8a7f-35b498420ddc');
 
  
  
-<div id="4f67d4d1-7bc6-4062-9e2f-9a6ef64772ef"></div>
+<div id="c3befc41-c95b-4926-9669-3a1d295736c2"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#4f67d4d1-7bc6-4062-9e2f-9a6ef64772ef');
+var element = $('#c3befc41-c95b-4926-9669-3a1d295736c2');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "1dbb1df8f4f347118b9134a34e9933a2"}
+{"version_major": 2, "version_minor": 0, "model_id": "44cd1afc37db41bd951411ca92610494"}
 </script>
 </div>
 
@@ -14437,13 +14404,453 @@ var element = $('#4f67d4d1-7bc6-4062-9e2f-9a6ef64772ef');
 
  
  
-<div id="8c44691c-31ad-4f9a-82dd-f54f8f45746c"></div>
+<div id="1fb03aa4-4230-4999-a334-866e5c1866a7"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#8c44691c-31ad-4f9a-82dd-f54f8f45746c');
+var element = $('#1fb03aa4-4230-4999-a334-866e5c1866a7');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "699e5626535f458e95ac63e2b7c19d54"}
+{"version_major": 2, "version_minor": 0, "model_id": "0363d74bc45a4ed4a7515b159d8b4858"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="9e967152-574c-4df8-a380-d62b225f99ea"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#9e967152-574c-4df8-a380-d62b225f99ea');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f470c98ae4984e07a2c3aafc9912cac0"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="01cdbc09-a111-4034-9652-fd21edd1933e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#01cdbc09-a111-4034-9652-fd21edd1933e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6466a596a62d45ec8450f4b152cc367f"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="ec763229-cad3-4d6c-a29c-f20e3a4d8873"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ec763229-cad3-4d6c-a29c-f20e3a4d8873');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "605055cc24fc4b188e2b1a9b05a075ac"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="1e6d3329-04f7-4224-8cd3-b91f88a32003"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#1e6d3329-04f7-4224-8cd3-b91f88a32003');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f5812ec257d84905ab8fa8aaa82fb30e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="7d36adc7-8dad-4ec8-94a0-00eca84d381b"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#7d36adc7-8dad-4ec8-94a0-00eca84d381b');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "10e0d0fd3b884174ab5d83a522169f77"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="b65eca82-4404-4e88-a132-18f4a22add24"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#b65eca82-4404-4e88-a132-18f4a22add24');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6c4185e583da49b0a8dbeba1ca64a7b9"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="85425cec-31cc-4256-8847-a47a014b2c87"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#85425cec-31cc-4256-8847-a47a014b2c87');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "e5573f25cfd24531955ad4db7883a743"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="d2de1acf-e4d8-47c0-8f7f-c1cdd521a3e4"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d2de1acf-e4d8-47c0-8f7f-c1cdd521a3e4');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "7505635b7a8f4e41b7f79b777ca07286"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="ae4cf592-742b-428c-bec1-fb98f054c5db"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ae4cf592-742b-428c-bec1-fb98f054c5db');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6ab205fd802548b7b20d96ab509e9a98"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="8fdba373-6bac-485b-aede-c6ebf05c80b1"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#8fdba373-6bac-485b-aede-c6ebf05c80b1');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "a08aa550b95d44cd804f7cc4749224e7"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="b827d7f1-0c1f-4e73-a637-d045c36ed26c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#b827d7f1-0c1f-4e73-a637-d045c36ed26c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "0990652a9de14c3da6aa83e9d704a660"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="c505f0b2-b0fb-4954-bc9d-d651207f8903"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#c505f0b2-b0fb-4954-bc9d-d651207f8903');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "5cf42b99ab0c4fd989fc4e20a2ecec7a"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="86a69070-56f7-4259-a12b-cbc3b2c943b1"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#86a69070-56f7-4259-a12b-cbc3b2c943b1');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "3958858a4d3041b3b7d2d00d428f09a1"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="3c06d8cb-df79-4224-b547-dc05726c56c5"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#3c06d8cb-df79-4224-b547-dc05726c56c5');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6f12c6151b1841f49ff51e87dc106b6e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="60460762-ecf0-4b23-9d38-0b17b5a9054c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#60460762-ecf0-4b23-9d38-0b17b5a9054c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "d747631510fc4a93913d3767b22ea9fd"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="b6238c6f-b8dc-4bbb-b14c-3b28b9cc3395"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#b6238c6f-b8dc-4bbb-b14c-3b28b9cc3395');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "7d1292f3576e4032ab7fab80829a4ecb"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="5d240c13-878a-44a8-b388-c639467b985c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#5d240c13-878a-44a8-b388-c639467b985c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "5f81c6b4404a4fcdbb74a809fe610078"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="2d30d6f8-6dea-4cc2-9690-bc37abfc5d72"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#2d30d6f8-6dea-4cc2-9690-bc37abfc5d72');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f7750cfd7f8a408f92f0bd6fb53624a0"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="05d2a6a6-bf52-4da0-a01e-671b276af1dc"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#05d2a6a6-bf52-4da0-a01e-671b276af1dc');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "d1a3d5ac9140450f959f41081ea91f96"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="28234106-d18a-4cca-aee2-0dd3d4138a71"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#28234106-d18a-4cca-aee2-0dd3d4138a71');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "7d62e159343d446c8c5cf0f075802d04"}
 </script>
 </div>
 
@@ -14487,6 +14894,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14497,7 +14905,7 @@ r0
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>0x000xBE0x060x010x000x010x000x800x060x000x000x070x000x000x000x840xFF0x0B0x000x120x010x000x010x000x000x00@0x830x040x110xDF0x00&#34;0x010x020x030x010x000x000xB80x010x00 0x120x000x000x00 0x010x00 $0x000x000x000x040x030x090x040x010x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+<pre>0x110xDF0x00&#34;0x010x020x030x010x000x000xB80x010x00 0x120x000x000x00 0x010x00 $0x000x000x000x040x030x090x040x010x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
 </div>
 </div>
 
@@ -14508,6 +14916,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14529,6 +14938,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14550,6 +14960,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14571,6 +14982,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14592,6 +15004,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14613,6 +15026,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14634,6 +15048,7 @@ r0
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
+WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
 </pre>
 </div>
 </div>
@@ -14644,70 +15059,7 @@ r0
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>IJKLMNOPQRSTUVWXYZ0x00nopqrstuvwxyzabcdefghijklmNOPQRSTUVWXYZABCDEFGHIJKLM0x000x000x0040x000x000x000x000x800x000xF00x0F0xF80xFF0xF70x9F0xF80xFE0xE7L0x110x000x080x000x000x00 p0x000x00 p0x000x00 |0x010x00 0xFE0xE70x000x00p0xB50x0DN0x0DL0xA40x1B0xA40x100x00%0xA5</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>WARNING:root:SAM3U Serial buffers OVERRUN - data loss has occurred.
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x000x00</pre>
+<pre>0xD1p0xBDV0xF8%00x98G0x0150xEE0xE7V0xF8%00x98G0x0150xF20xE7D0x110x000x08D0x110x00</pre>
 </div>
 </div>
 
@@ -14719,7 +15071,7 @@ r0
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>With any luck, you should see a whole bunch of text printed to the screen. Successful glitches might not happen every time, so you may need to rerun the loop a few times.</p>
-<p>You should be able to the plaintext near the beginning of the output! The data buffer has successfully been printed to the serial port, allowing us to see the decrypted text with no knowledge of the algorithm. Now that we've got a successful glitch, stop the cell above (since it's still looking for more stuff to print) and let's disconnect the scope and target:</p>
+<p>You should be able to the plaintext near the beginning of the output! The data buffer has successfully been printed to the serial port, allowing us to see the decrypted text with no knowledge of the algorithm. Now that we've got a successful glitch, let's disconnect the scope and target:</p>
 
 </div>
 </div>
@@ -14822,6 +15174,19 @@ r0
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="p">(</span><span class="n">broken</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span> <span class="s2">&quot;Failed to break bootloader in </span><span class="si">{}</span><span class="s2"> glitches&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>

@@ -13275,7 +13275,7 @@ $$p = gcd(s'^e - m, N)$$<p>Thus, if we introduce a fault in the calculation of e
 <span class="n">OPT</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
 <span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;CWNANO&quot;</span><span class="p">:</span>
     <span class="n">NANO_FLASH</span> <span class="o">=</span> <span class="s2">&quot;32K&quot;</span> <span class="c1">#Need nano pro 32</span>
-    <span class="n">OPT</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span> <span class="c1">#need to optimize for size probably</span>
+    <span class="n">OPT</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
 </pre></div>
 
     </div>
@@ -13499,7 +13499,7 @@ simpleserial-rsa-arm.c:370:1: warning: control reaches end of non-void function 
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
 <span class="n">fw_path</span> <span class="o">=</span> <span class="s2">&quot;../hardware/victims/firmware/simpleserial-rsa/simpleserial-rsa-</span><span class="si">{}</span><span class="s2">.hex&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
-<span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
+<span class="n">cw</span><span class="o">.</span><span class="n">program_target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
@@ -13552,25 +13552,16 @@ Verified flash OK, 21063 bytes
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;t</span><span class="se">\\</span><span class="s1">n&#39;</span>
-<span class="c1">#scope.glitch.repeat = 0</span>
+<span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-
-<span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-    <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-<span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;t</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+<span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
     
 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13623,17 +13614,13 @@ Verified flash OK, 21063 bytes
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;1</span><span class="se">\\</span><span class="s1">n&#39;</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
-<span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;2</span><span class="se">\\</span><span class="s1">n&#39;</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;2</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13739,8 +13726,8 @@ z00</code></pre>
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">binascii</span>
-<span class="n">sig</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">binascii</span> <span class="k">import</span> <span class="n">unhexlify</span><span class="p">,</span> <span class="n">hexlify</span>
+<span class="n">sig</span> <span class="o">=</span> <span class="n">unhexlify</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13776,7 +13763,7 @@ z00</code></pre>
 <span class="n">sig_check</span> <span class="o">=</span> <span class="n">signer</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">hash_object</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">sig_check</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">sig_check</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Failed to verify signature on device. Got: </span><span class="si">{newout}</span><span class="s2">&quot;</span>
+<span class="k">assert</span> <span class="n">sig_check</span><span class="p">,</span> <span class="s2">&quot;Failed to verify signature on device. Got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13940,58 +13927,45 @@ output      = clock_xor
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tnrange</span>
-<span class="kn">import</span> <span class="nn">binascii</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="mi">7000000</span><span class="p">,</span> <span class="mi">7100000</span><span class="p">):</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="n">i</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;t</span><span class="se">\\</span><span class="s1">n&#39;</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
-
-    <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-        <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;t</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
     
     <span class="c1"># Read back signature</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="k">if</span> <span class="s2">&quot;4F09799&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
         <span class="c1"># Something abnormal happened</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># Possible glitch!</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Possible glitch at offset </span><span class="si">{scope.glitch.ext_offset}</span><span class="se">\n</span><span class="s2">Output: </span><span class="si">{output}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Possible glitch at offset </span><span class="si">{}</span><span class="se">\n</span><span class="s2">Output: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span><span class="p">,</span> <span class="n">output</span><span class="p">))</span>
             
             <span class="c1"># Get rest of signature back</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;1</span><span class="se">\\</span><span class="s1">n&#39;</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-            <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
-            <span class="n">target</span><span class="o">.</span><span class="n">go_cmd</span> <span class="o">=</span> <span class="s1">&#39;2</span><span class="se">\\</span><span class="s1">n&#39;</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            
+            <span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;2</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
-            <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
             
             <span class="c1"># Strip out extra simpleserial stuff</span>
             <span class="n">newout</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">z00&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Full output: </span><span class="si">{newout}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Full output: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">newout</span><span class="p">))</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span> <span class="o">==</span> <span class="mi">256</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;r0001F&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Very likely glitch!&quot;</span><span class="p">)</span>
                 <span class="k">break</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Crash, reset and try again</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Probably crashed at </span><span class="si">{scope.glitch.ext_offset}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Probably crashed at </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span><span class="p">))</span>
             <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
@@ -14014,13 +13988,13 @@ output      = clock_xor
 
  
  
-<div id="b69f545e-2964-4a60-b144-fad6cde5c541"></div>
+<div id="49775501-29ea-4c29-a4c3-2accf22ae8c8"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#b69f545e-2964-4a60-b144-fad6cde5c541');
+var element = $('#49775501-29ea-4c29-a4c3-2accf22ae8c8');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "6536b31e00d54fe0a0a811739a02cc21"}
+{"version_major": 2, "version_minor": 0, "model_id": "e44f805c8e0a49bfae2fb46ad3a082b5"}
 </script>
 </div>
 
@@ -14063,7 +14037,7 @@ Very likely glitch!
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sig</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sig</span> <span class="o">=</span> <span class="n">unhexlify</span><span class="p">(</span><span class="n">newout</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
 </pre></div>
 
@@ -14140,10 +14114,10 @@ Very likely glitch!
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">Crypto.Hash</span> <span class="k">import</span> <span class="n">SHA256</span>
-<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">from</span> <span class="nn">binascii</span> <span class="k">import</span> <span class="n">hexlify</span>
 
 <span class="n">hash_object</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
-<span class="n">hashed_m</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">hash_object</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+<span class="n">hashed_m</span> <span class="o">=</span> <span class="n">hexlify</span><span class="p">(</span><span class="n">hash_object</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
 <span class="n">padded_m</span> <span class="o">=</span> <span class="n">build_message</span><span class="p">(</span><span class="n">hashed_m</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">hashed_m</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">padded_m</span><span class="p">)</span>
@@ -14194,13 +14168,13 @@ $$p = gcd(s'^e - m, N)$$<p>And we should get either p or q! These calculations c
     <span class="kn">import</span> <span class="nn">gmpy2</span>
     <span class="kn">from</span> <span class="nn">gmpy2</span> <span class="k">import</span> <span class="n">mpz</span>
     <span class="n">sig_int</span> <span class="o">=</span> <span class="n">mpz</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">))</span>
-    <span class="n">m_int</span> <span class="o">=</span> <span class="n">mpz</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">))</span>
+    <span class="n">m_int</span> <span class="o">=</span> <span class="n">mpz</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">))</span>
     <span class="n">p_test</span> <span class="o">=</span> <span class="n">gmpy2</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">sig_int</span><span class="o">**</span><span class="n">e</span> <span class="o">-</span> <span class="n">m_int</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
 <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="n">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gmpy2 not found, falling back to Python&quot;</span><span class="p">)</span>
     <span class="n">sig_int</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
-    <span class="n">padded_m_int</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span><span class="o">**</span><span class="n">e</span> <span class="o">-</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
+    <span class="n">padded_m_int</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span><span class="o">**</span><span class="n">e</span> <span class="o">-</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">padded_m</span><span class="p">),</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
     <span class="n">p_test</span> <span class="o">=</span> <span class="n">gcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
     
 <span class="nb">print</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">p_test</span><span class="p">))</span>
@@ -14409,6 +14383,19 @@ $$p = gcd(s'^e - m, N)$$<p>And we should get either p or q! These calculations c
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">real_d</span> <span class="o">=</span> <span class="s2">&quot;0x24bf6185468786fdd303083d25e64efc66ca472bc44d253102f8b4a9d3bfa75091386c0077937fe33fa3252d28855837ae1b484a8a9a45f7ee8c0c634f99e8cddf79c5ce07ee72c7f123142198164234cabb724cf78b8173b9f880fc86322407af1fedfdde2beb674ca15f3e81a1521e071513a1e85b5dfa031f21ecae91a34d&quot;</span>
 <span class="k">assert</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">==</span> <span class="n">real_d</span><span class="p">),</span> <span class="n">f</span><span class="s2">&quot;Failed to break private key d. Got {hex(d)}, expected </span><span class="si">{real_d}</span><span class="s2">&quot;</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>

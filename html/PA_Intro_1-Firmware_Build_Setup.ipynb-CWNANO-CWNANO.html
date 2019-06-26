@@ -13266,7 +13266,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash
-<span class="nb">cd</span> ../../hardware/victims/firmware/
+<span class="nb">cd</span> ../hardware/victims/firmware/
 mkdir -p simpleserial-base-lab1 <span class="o">&amp;&amp;</span> cp -r simpleserial-base/* <span class="nv">$_</span>
 <span class="nb">cd</span> simpleserial-base-lab1
 </pre></div>
@@ -13313,7 +13313,7 @@ mkdir -p simpleserial-base-lab1 <span class="o">&amp;&amp;</span> cp -r simplese
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/simpleserial-base-lab1
+<span class="nb">cd</span> ../hardware/victims/firmware/simpleserial-base-lab1
 make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span>
 </pre></div>
 
@@ -13450,7 +13450,7 @@ Size after:
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span>%%bash -s <span class="s2">&quot;</span><span class="nv">$PLATFORM</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$CRYPTO_TARGET</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> ../../hardware/victims/firmware/simpleserial-base-lab1
+<span class="nb">cd</span> ../hardware/victims/firmware/simpleserial-base-lab1
 make <span class="nv">PLATFORM</span><span class="o">=</span><span class="nv">$1</span> <span class="nv">CRYPTO_TARGET</span><span class="o">=</span><span class="nv">$2</span>
 </pre></div>
 
@@ -13582,7 +13582,7 @@ Size after:
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">cw</span><span class="p">)</span>
-<span class="n">help</span><span class="p">(</span><span class="n">cw</span><span class="o">.</span><span class="n">scopes</span><span class="p">)</span>
+<span class="n">help</span><span class="p">(</span><span class="n">cw</span><span class="o">.</span><span class="n">scopes</span><span class="o">.</span><span class="n">OpenADC</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13610,131 +13610,335 @@ DESCRIPTION
        :synopsis: Test
     
     .. moduleauthor:: NewAE
+    
+    Main module for ChipWhisperer.
 
 PACKAGE CONTENTS
     analyzer (package)
     capture (package)
     common (package)
     hardware (package)
-    tests (package)
 
 SUBMODULES
-    CWFirmwareUpdate
-    aes128leakage
-    cpa_algorithms
     key_text_patterns
     ktp
-    preprocessing
     programmers
     scopes
     targets
 
 FUNCTIONS
-    analyzerPlots(attack_results=None)
-        Create an object to get plot data for analyzer results
+    captureTrace(scope, target, plaintext, key=None)
+        Deprecated: Use capture_trace instead.
     
-    cpa(trace_source, leak_model=None, algorithm=&lt;class &#39;chipwhisperer.analyzer.attacks.cpa_algorithms.progressive.CPAProgressive&#39;&gt;)
-        Create a CPA attack object with sane defaults
+    capture_trace(scope, target, plaintext, key=None)
+        Capture a trace, sending plaintext and key
         
-        Create a CPA attack object with:
-        
-        * trace source = trace_source
-        * traces start at beginning
-        * uses all traces for attack
-        * 1 iteration
-        * Reporting Interval = 10
-        * Attack all keys
-        * Full point range
-        
-        leak_model must be set either by this function or by attack.setLeakModel() before running attack.
+        Does all individual steps needed to capture a trace (arming the scope
+        sending the key/plaintext, getting the trace data back, etc.)
         
         Args:
-        
-           trace_source (TraceManager): TraceManager or preprocessing object that holds traces, plaintext, etc.
-        
-           leak_model (AESLeakageHelper): Model describing information leaked from target. Must be set before running attack.
-        
-           algorithm (AlgorithmsBase): Algorithm to perform CPA loop. Default is almost always the right choice
+            scope (ScopeTemplate): Scope object to use for capture.
+            target (TargetTemplate): Target object to read/write text from.
+            plaintext (bytearray): Plaintext to send to the target. Should be
+                unencoded bytearray (will be converted to SimpleSerial when it&#39;s
+                sent). If None, don&#39;t send plaintext.
+            key (bytearray, optional): Key to send to target. Should be unencoded
+                bytearray. If None, don&#39;t send key. Defaults to None.
         
         Returns:
+            Tuple of scope_data (numpy.ndarray) and response (bytearray) or None
+            if capture timed out.
         
-           A CPA object. For more information, see documentation for CPA.
+        Raises:
+            Warning or OSError: Error during capture.
+        
+        Example:
+            Capturing a trace::
+        
+                import chipwhisperer as cw
+                scope = cw.scope()
+                scope.default_setup()
+                target = cw.target()
+                ktp = cw.ktp.Basic()
+                key, pt = ktp.new_pair()
+                trace, response = cw.capture_trace(scope, target, pt, key)
+        
+        .. versionadded:: 5.1
+            Added to simplify trace capture.
     
     createProject(filename, overwrite=False)
+        Deprecated: Use create_project instead.
+    
+    create_project(filename, overwrite=False)
         Create a new project with the path &lt;filename&gt;.
         
-        If &lt;overwrite&gt; is False, raise an IOError if this path already exists.
-    
-    getJupyterCallback(attack, head=6, fmt=&#39;{:02X}&lt;br&gt;{:.3f}&#39;)
-        Get callback for use in Jupyter
+        If &lt;overwrite&gt; is False, raise an OSError if this path already exists.
+        
+        Args:
+           filename (str): File path to create project file at. Must end with .cwp
+           overwrite (bool, optional): Whether or not to overwrite an existing
+               project with &lt;filename&gt;. Raises an OSError if path already exists
+               and this is false. Defaults to false.
+        
+        Returns:
+           A chipwhisperer project object.
+        
+        Raises:
+           OSError: filename exists and overwrite is False.
     
     openProject(filename)
+        Deprecated: Use open_project instead.
+    
+    open_project(filename)
         Load an existing project from disk.
         
-        Raise an IOError if no such project exists.
+        Raise an OSError if no such project exists.
+        
+        Args:
+           filename (str): Path to project file.
+        
+        Returns:
+           A chipwhisperer project object.
+        
+        Raises:
+           OSError: filename does not exist.
     
-    profiling(trace_source)
-        Not yet implemented, create/import manually
+    programTarget(scope, prog_type, fw_path)
+        Deprecated: Use program_target instead.
     
-    programTarget(scope, type, fw_path)
+    program_target(scope, prog_type, fw_path)
         Program the target using the programmer &lt;type&gt;
         
         Programmers can be found in the programmers submodule
+        
+        Args:
+           scope (ScopeTemplate): Connected scope object to use for programming
+           prog_type (Programmer): Programmer to use. See chipwhisperer.programmers
+               for available programmers
+           fw_path (str): Path to hex file to program
+        
+        .. versionadded:: 5.0.1
+        Simplified programming target
     
-    scope(type=&lt;class &#39;chipwhisperer.capture.scopes.OpenADC.OpenADC&#39;&gt;, sn=None)
+    scope(scope_type=&lt;class &#39;chipwhisperer.capture.scopes.OpenADC.OpenADC&#39;&gt;, sn=None)
         Create a scope object and connect to it.
         
         This function allows any type of scope to be created. By default, the scope
         is a ChipWhisperer OpenADC object, but this can be set to any valid scope
         class.
         
+        Scope Types:
+         * :class:`scopes.OpenADC` (Pro and Lite)
+         * :class:`scopes.CWNano` (Nano)
+        
         If multiple chipwhisperers are connected, the serial number of the one you
         want to connect to can be specified by passing sn=&lt;SERIAL_NUMBER&gt;
+        
+        Args:
+           scope_type (ScopeTemplate, optional): Scope type to connect to. Types
+               can be found in chipwhisperer.scopes. Defaults to scopes.OpenADC
+               (correct for CWLite and CWPro).
+           sn (str, optional): Serial number of ChipWhisperer that you want to
+               connect to. Required if more than one ChipWhisperer
+               of the same type is connected (i.e. two CWNano&#39;s or a CWLite and
+               CWPro). Defaults to None.
+        
+        Returns:
+           Connected scope object specified by scope_type
+        
+        Raises:
+           OSError: Can be raised for issues connecting to the chipwhisperer, such
+               as not having permission to access the USB device or no ChipWhisperer
+               being connected.
     
-    target(scope, type=&lt;class &#39;chipwhisperer.capture.targets.SimpleSerial.SimpleSerial&#39;&gt;, **kwargs)
+    target(scope, target_type=&lt;class &#39;chipwhisperer.capture.targets.SimpleSerial.SimpleSerial&#39;&gt;, **kwargs)
         Create a target object and connect to it.
         
-        This is SimpleSerial by default, but others are available in the targets subpackage
-
-DATA
-    current_trace_iteration = 0
-
-FILE
-    c:\users\user\code\term2\chipwhisperer\software\chipwhisperer\__init__.py
-
-
-Help on package chipwhisperer.capture.scopes in chipwhisperer.capture:
-
-NAME
-    chipwhisperer.capture.scopes - Package containing all of the scope types that the ChipWhisperer API can connect to:
-
-DESCRIPTION
-    Scopes:
-    
-       * OpenADC- CWLite and CWPro
-    
-       * CWNano - CWNano
-    
-       * PicoScope - PicoScope (old, untested)
-    
-       * VisaScope - VisaScope (requires Visa module, old, untested)
-
-PACKAGE CONTENTS
-    OpenADC
-    PicoScope
-    VisaScope
-    _OpenADCInterface
-    _qt
-    base
-    cwhardware (package)
-    cwnano
-    openadc_interface (package)
-    picoscope_interface (package)
-    visascope_interface (package)
+        Args:
+           scope (ScopeTemplate): Scope object that we&#39;re connecting to the target
+               through.
+           target_type (TargetTemplate, optional): Target type to connect to.
+               Defaults to targets.SimpleSerial. Types can be found in
+               chipwhisperer.targets.
+           **kwargs: Additional keyword arguments to pass to target setup. Rarely
+               needed.
+        
+        Returns:
+            Connected target object specified by target_type.
 
 FILE
-    c:\users\user\code\term2\chipwhisperer\software\chipwhisperer\capture\scopes\__init__.py
+    c:\users\user\code\term3\chipwhisperer\software\chipwhisperer\__init__.py
 
+
+Help on class OpenADC in module chipwhisperer.capture.scopes.OpenADC:
+
+class OpenADC(chipwhisperer.capture.scopes.base.ScopeTemplate, chipwhisperer.common.utils.pluginmanager.Plugin, chipwhisperer.common.utils.util.DisableNewAttr)
+ |  OpenADC scope object.
+ |  
+ |  This class contains the public API for the OpenADC hardware, including the
+ |  ChipWhisperer Lite/CW1200/Rev 2 boards. It includes specific settings for
+ |  each of these devices.
+ |  
+ |  To connect to one of these devices, the easiest method is::
+ |  
+ |      import chipwhisperer as cw
+ |      scope = cw.scope()
+ |  
+ |  Some sane default settings are available via::
+ |  
+ |      scope.default_setup()
+ |  
+ |  This code will automatically detect an attached ChipWhisperer device and
+ |  connect to it.
+ |  
+ |  For more help about scope settings, try help() on each of the ChipWhisperer
+ |  scope submodules (scope.gain, scope.adc, scope.clock, scope.io,
+ |  scope.trigger, and scope.glitch):
+ |  
+ |  Configuration:
+ |   * :attr:`scope.gain &lt;.gain&gt;`
+ |   * :attr:`scope.adc &lt;.adc&gt;`
+ |   * :attr:`scope.clock &lt;.clock&gt;`
+ |   * :attr:`scope.io &lt;.io&gt;`
+ |   * :attr:`scope.trigger &lt;.trigger&gt;`
+ |   * :attr:`scope.glitch &lt;.glitch&gt;`
+ |  
+ |  Functions:
+ |   * :meth:`scope.default_setup &lt;.default_setup&gt;`
+ |   * :meth:`scope.con &lt;.con&gt;`
+ |   * :meth:`scope.dis &lt;.dis&gt;`
+ |   * :meth:`scope.arm &lt;.arm&gt;`
+ |   * :meth:`scope.get_last_trace &lt;.get_last_trace&gt;`
+ |  
+ |  Method resolution order:
+ |      OpenADC
+ |      chipwhisperer.capture.scopes.base.ScopeTemplate
+ |      chipwhisperer.common.utils.parameter.Parameterized
+ |      chipwhisperer.common.utils.pluginmanager.Plugin
+ |      chipwhisperer.common.utils.util.DisableNewAttr
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self)
+ |      Initialize self.  See help(type(self)) for accurate signature.
+ |  
+ |  __repr__(self)
+ |      Return repr(self).
+ |  
+ |  __str__(self)
+ |      Return str(self).
+ |  
+ |  arm(self)
+ |      Setup scope to begin capture/glitching when triggered.
+ |      
+ |      The scope must be armed before capture or glitching (when set to
+ |      &#39;ext_single&#39;) can begin.
+ |      
+ |      Raises:
+ |         OSError: Scope isn&#39;t connected.
+ |         Exception: Error when arming. This method catches these and
+ |             disconnects before reraising them.
+ |  
+ |  capture(self)
+ |      Captures trace. Scope must be armed before capturing.
+ |      
+ |      Returns:
+ |         True if capture timed out, false if it didn&#39;t.
+ |      
+ |      Raises:
+ |         IOError: Unknown failure.
+ |  
+ |  dcmTimeout(self)
+ |  
+ |  default_setup(self)
+ |      Sets up sane capture defaults for this scope
+ |      
+ |      * 45dB gain
+ |      * 5000 capture samples
+ |      * 0 sample offset
+ |      * rising edge trigger
+ |      * 7.37MHz clock output on hs2
+ |      * 4*7.37MHz ADC clock
+ |      * tio1 = serial rx
+ |      * tio2 = serial tx
+ |      
+ |      .. versionadded:: 5.1
+ |      Made scope setup easier
+ |  
+ |  getCurrentScope(self)
+ |  
+ |  getLastTrace(self)
+ |      Deprecated: Use get_last_trace instead.
+ |  
+ |  get_last_trace(self)
+ |      Return the last trace captured with this scope.
+ |      
+ |      Returns:
+ |         Numpy array of the last capture trace.
+ |  
+ |  setCurrentScope(self, scope)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from chipwhisperer.capture.scopes.base.ScopeTemplate:
+ |  
+ |  con(self, sn=None)
+ |  
+ |  dis(self)
+ |  
+ |  getStatus(self)
+ |  
+ |  newDataReceived(self, channelNum, data=None, offset=0, sampleRate=0)
+ |  
+ |  setAutorefreshDCM(self, enabled)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes inherited from chipwhisperer.capture.scopes.base.ScopeTemplate:
+ |  
+ |  scope_disconnected_signal = &lt;chipwhisperer.common.utils.util.Signal ob...
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from chipwhisperer.common.utils.parameter.Parameterized:
+ |  
+ |  deleteParams(self)
+ |      Delete its parameters. Helps the GC in doing its work.
+ |  
+ |  findParam(self, nameOrPath)
+ |      Return the paramenter child with the given name/path.
+ |  
+ |  getName(self)
+ |      Return the final name (instance name).
+ |  
+ |  getParams(self)
+ |      Return a parameter for the object. Creates it in the first time it is executed.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Class methods inherited from chipwhisperer.common.utils.parameter.Parameterized:
+ |  
+ |  getClassName() from builtins.type
+ |      Return the original name (class name).
+ |  
+ |  getDescription() from builtins.type
+ |      Return the description of the parameterized class.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from chipwhisperer.common.utils.parameter.Parameterized:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from chipwhisperer.common.utils.util.DisableNewAttr:
+ |  
+ |  __setattr__(self, name, value)
+ |      Implement setattr(self, name, value).
+ |  
+ |  disable_newattr(self)
+ |  
+ |  enable_newattr(self)
 
 </pre>
 </div>
@@ -13769,17 +13973,132 @@ FILE
 </div>
 
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Help on ADCSettings in module chipwhisperer.capture.scopes.cwnano object:
+
+class ADCSettings(chipwhisperer.common.utils.util.DisableNewAttr)
+ |  ADCSettings(usb)
+ |  
+ |  Provides an ability to disable setting new attributes in a class, useful to prevent typos.
+ |  
+ |  Usage:
+ |  1. Make a class that inherits this class:
+ |  &gt;&gt;&gt; class MyClass(DisableNewAttr):
+ |  &gt;&gt;&gt;     # Your class definition here
+ |  
+ |  2. After setting up all attributes that your object needs, call disable_newattr():
+ |  &gt;&gt;&gt;     def __init__(self):
+ |  &gt;&gt;&gt;         self.my_attr = 123
+ |  &gt;&gt;&gt;         self.disable_newattr()
+ |  
+ |  3. Subclasses raise an AttributeError when trying to make a new attribute:
+ |  &gt;&gt;&gt; obj = MyClass()
+ |  &gt;&gt;&gt; #obj.my_new_attr = 456   &lt;-- Raises AttributeError
+ |  
+ |  Method resolution order:
+ |      ADCSettings
+ |      chipwhisperer.common.utils.util.DisableNewAttr
+ |      builtins.object
+ |  
+ |  Methods defined here:
+ |  
+ |  __init__(self, usb)
+ |      Initialize self.  See help(type(self)) for accurate signature.
+ |  
+ |  __repr__(self)
+ |      Return repr(self).
+ |  
+ |  __str__(self)
+ |      Return str(self).
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  clk_freq
+ |      Set the frequency for CLKOUT. Will be rounded to nearest possible values, check results to see
+ |      programmed value. Set to &#39;None&#39; for disabling (High-Z) output.
+ |      
+ |      Getter: Returns the actual frequency for CLKOUT
+ |      
+ |      Setter: Sets CLKOUT to the nearest possible value.
+ |  
+ |  clk_src
+ |      ADC Clock source.
+ |      
+ |      Getter: Returns &#39;int&#39; or &#39;ext&#39; based on the clock source.
+ |      
+ |      Setter: (str) Set the ADC clock source to either internal or external:
+ |          (&#39;int&#39; or &#39;ext&#39;)
+ |  
+ |  samples
+ |      Number of samples to store.
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes defined here:
+ |  
+ |  USB_ADCLK_SET = 40
+ |  
+ |  USB_SAMPLES = 42
+ |  
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from chipwhisperer.common.utils.util.DisableNewAttr:
+ |  
+ |  __setattr__(self, name, value)
+ |      Implement setattr(self, name, value).
+ |  
+ |  disable_newattr(self)
+ |  
+ |  enable_newattr(self)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from chipwhisperer.common.utils.util.DisableNewAttr:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We'll also need to setup the interface to the target (typically what we want to attack). Like with scopes, there's a few different interfaces we can use, which are available through <code>scope.targets.&lt;target_type&gt;</code>. The default, SimpleSerial communicates over UART and is almost always the correct choice.</p>
+<p>We'll also need to setup the interface to the target (typically what we want to attack). Like with scopes, there's a few different interfaces we can use, which are available through <code>scope.targets.&lt;target_type&gt;</code>. The default, SimpleSerial, communicates over UART and is almost always the correct choice.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">cw</span><span class="o">.</span><span class="n">targets</span><span class="o">.</span><span class="n">SimpleSerial</span><span class="p">)</span>
@@ -13801,12 +14120,12 @@ FILE
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># setup scope parameters</span>
 <span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
-    <span class="n">scope</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="mi">45</span>
+    <span class="n">scope</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="mi">45</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="mi">3000</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">1250</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">basic_mode</span> <span class="o">=</span> <span class="s2">&quot;rising_edge&quot;</span>
@@ -13831,6 +14150,27 @@ FILE
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Or, more simply:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">default_setup</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>Now that the clock and IO lines are setup, we can program the target. ChipWhisperer includes a generic programming function, <code>cw.programTarget(scope, type, fw_path)</code>. Here <code>type</code> is one of the programmers available in the cw.programmers submodule (<code>help(cw.programmers)</code> for more information). <code>fw_path</code> is the path to the hex file that you want to flash onto the device.</p>
 <p>The final part of the binary path should match your platform (<code>&lt;path&gt;/simpleserial-base-CWLITEARM.hex</code> for CWLITEARM)</p>
 
@@ -13839,7 +14179,7 @@ FILE
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="s2">&quot;STM&quot;</span> <span class="ow">in</span> <span class="n">PLATFORM</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEARM&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWNANO&quot;</span><span class="p">:</span>
@@ -13849,7 +14189,7 @@ FILE
 <span class="k">else</span><span class="p">:</span>
     <span class="n">prog</span> <span class="o">=</span> <span class="kc">None</span>
     
-<span class="n">fw_path</span> <span class="o">=</span> <span class="s1">&#39;../../hardware/victims/firmware/simpleserial-base-lab1/simpleserial-base-</span><span class="si">{}</span><span class="s1">.hex&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
+<span class="n">fw_path</span> <span class="o">=</span> <span class="s1">&#39;../hardware/victims/firmware/simpleserial-base-lab1/simpleserial-base-</span><span class="si">{}</span><span class="s1">.hex&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PLATFORM</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13867,10 +14207,10 @@ FILE
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">program_target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13887,7 +14227,7 @@ FILE
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Detected unknown STM32F ID: 0x445
+<pre>Detected unknown STM32F ID: 0x444
 Extended erase (0x44), this can take ten seconds or more
 Attempting to programming 4335 bytes at 0x8000000
 STM32F Programming flash...
@@ -13911,27 +14251,25 @@ Verified flash OK, 4335 bytes
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ktp</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">ktp</span><span class="o">.</span><span class="n">Basic</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span> <span class="c1"># object to generate fixed/random key and text (default fixed key, random text)</span>
-<span class="n">key</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">ktp</span><span class="o">.</span><span class="n">newPair</span><span class="p">()</span>  <span class="c1"># get our fixed key and random text</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ktp</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">ktp</span><span class="o">.</span><span class="n">Basic</span><span class="p">()</span> <span class="c1"># object to generate fixed/random key and text (default fixed key, random text)</span>
+<span class="n">key</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">ktp</span><span class="o">.</span><span class="n">new_pair</span><span class="p">()</span>  <span class="c1"># get our fixed key and random text</span>
 
-<span class="n">target</span><span class="o">.</span><span class="n">loadInput</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="n">target</span><span class="o">.</span><span class="n">simpleserial_write</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+<span class="n">target</span><span class="o">.</span><span class="n">simpleserial_wait_ack</span><span class="p">()</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">go</span><span class="p">()</span> <span class="c1">#send key/text to target</span>
-<span class="n">timeout</span> <span class="o">=</span> <span class="mi">50</span>
-<span class="c1"># wait for target to finish</span>
-<span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
-    <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-<span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">binascii</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">b2a_hex</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">))</span>
+<span class="n">target</span><span class="o">.</span><span class="n">simpleserial_write</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    
+<span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+<span class="n">trace</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">get_last_trace</span><span class="p">()</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">simpleserial_read</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">binascii</span> <span class="k">import</span> <span class="n">hexlify</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hexlify</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hexlify</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
 </pre></div>
 
     </div>
@@ -13948,8 +14286,52 @@ Verified flash OK, 4335 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>b&#39;6F9C198161B3395DC996E29400DBFE40&#39;
-b&#39;6F9C198161B3395DC996E29400DBFE40&#39;
+<pre>b&#39;dc67710809aca41e4797c1ceb0f81ebf&#39;
+b&#39;dc67710809aca41e4797c1ceb0f81ebf&#39;
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You can also just run:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ret</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">capture_trace</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+    <span class="n">trace</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">ret</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">hexlify</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">hexlify</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>b&#39;dc67710809aca41e4797c1ceb0f81ebf&#39;
+b&#39;dc67710809aca41e4797c1ceb0f81ebf&#39;
 </pre>
 </div>
 </div>
@@ -13968,7 +14350,7 @@ b&#39;6F9C198161B3395DC996E29400DBFE40&#39;
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">dis</span><span class="p">()</span>

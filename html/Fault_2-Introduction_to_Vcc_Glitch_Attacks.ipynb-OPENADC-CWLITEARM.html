@@ -13377,7 +13377,7 @@ Size after:
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">program_target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13430,10 +13430,9 @@ Verified flash OK, 6603 bytes
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-<span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">resp</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
 </pre></div>
 
@@ -13605,7 +13604,7 @@ adc =
     presamples = 0
     samples    = 5000
     decimate   = 1
-    trig_count = 136896322
+    trig_count = 139630530
 clock = 
     adc_src       = clkgen_x4
     adc_phase     = 0
@@ -13675,7 +13674,7 @@ glitch =
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>We start our attack off by flushing the ChipWhipserer's serial buffer:</p>
-<div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 </pre></div>
 <p>Next, we'll set our trigger source to be "ext_continuous". This differs from "ext_single" in that the ChipWhisperer doesn't need to be armed to insert a glitch, making our loop a little simpler:</p>
 <div class="highlight"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_continuous&quot;</span>
@@ -13683,15 +13682,13 @@ glitch =
 <p>A key part of parsing the serial data is to be able to read a line of data (data terminated with "\n"). We can do that by reading back data until we get a newline character ("\n"):</p>
 <div class="highlight"><pre><span></span><span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 </pre></div>
 <p>This needs to be repeated twice in our loop: once at the start to make sure we're on a newline (so we don't look at the wrong numbers for our glitch) and again to actually read the line. For the first read, we also need to make sure we keep any characters after the newline, as this will be the start of the actual line we parse. All together, this looks like:</p>
 <div class="highlight"><pre><span></span><span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="n">lines</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
     <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -13700,8 +13697,7 @@ glitch =
 
 <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
 </pre></div>
 <p>Now that we have our line of data we can parse it by splitting it up via spaces to get each number.</p>
 <p>After the loop ends, we'll need to set our trigger back to "ext_single" to stop the glitches from continuing.</p>
@@ -13717,7 +13713,7 @@ glitch =
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tnrange</span>
 <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-<span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_continuous&quot;</span>
@@ -13727,8 +13723,7 @@ glitch =
     
     <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-        <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-        <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -13737,8 +13732,7 @@ glitch =
     
     <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-        <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-        <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         
     <span class="k">if</span> <span class="s2">&quot;hello&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Target crashed&quot;</span><span class="p">)</span>
@@ -13772,13 +13766,13 @@ glitch =
 
  
  
-<div id="b220002f-b92b-421e-bd69-354303f18622"></div>
+<div id="8d725f02-ae62-4bcd-9b26-8219e2f80010"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#b220002f-b92b-421e-bd69-354303f18622');
+var element = $('#8d725f02-ae62-4bcd-9b26-8219e2f80010');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "e99979eafdad446ca28512182394058a"}
+{"version_major": 2, "version_minor": 0, "model_id": "e74ffa29a6804d2daafd84d29d396f73"}
 </script>
 </div>
 
@@ -13797,6 +13791,7 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 40000 200 200 6
 
 40000 200 200 8
+40000 200 200 9
 
 40000 200 200 11
 
@@ -13806,7 +13801,6 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 
 40000 200 200 17
 
-40000 200 200 19
 40000 200 200 20
 
 40000 200 200 22
@@ -13816,20 +13810,22 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 40000 200 200 26
 
 40000 200 200 28
+40000 200 200 29
 
-40000 200 200 30
+40000 200 200 31
 
 40000 200 200 33
 
 40000 200 200 35
 
 40000 200 200 37
+40000 200 200 38
 
-40000 200 200 39
+40000 200 200 40
 
-40000 200 200 41
+40000 200 200 42
 
-40000 200 200 43
+40000 200 200 44
 
 
 </pre>
@@ -13876,7 +13872,7 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 <span class="n">glitch_text</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="k">if</span> <span class="n">SCOPETYPE</span> <span class="o">==</span> <span class="s2">&quot;OPENADC&quot;</span><span class="p">:</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">trigger_src</span> <span class="o">=</span> <span class="s2">&quot;ext_continuous&quot;</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset_fine</span> <span class="o">=</span> <span class="mi">24</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
@@ -13893,13 +13889,13 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
                 <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
                 <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">in_waiting</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">num_char</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="n">glitch_off</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
                         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
                         <span class="n">glitch_on</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
                         <span class="k">break</span>
-                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
                 <span class="n">lines</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -13908,13 +13904,13 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 
                 <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">in_waiting</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">num_char</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="n">glitch_off</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
                         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
                         <span class="n">glitch_on</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
                         <span class="k">break</span>
-                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
                 <span class="n">nums</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="s2">&quot;hello&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
@@ -13953,10 +13949,10 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
                 <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
                 <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">in_waiting</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">num_char</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="k">pass</span>
-                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
                 <span class="n">lines</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -13965,16 +13961,14 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 
                 <span class="k">while</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
+                    <span class="n">num_char</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">in_waiting</span><span class="p">()</span>
                     <span class="k">if</span> <span class="n">num_char</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="k">break</span>
-                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_char</span><span class="p">)</span>
                 
                 <span class="n">nums</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="s2">&quot;hello&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                     <span class="n">crashes</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="c1">#print(&quot;Target crashed&quot;)</span>
-                <span class="c1">#print(line)</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
                         <span class="k">continue</span>
@@ -14008,13 +14002,13 @@ var element = $('#b220002f-b92b-421e-bd69-354303f18622');
 
  
  
-<div id="466fd18c-9ed3-464c-896c-00b1a6d45286"></div>
+<div id="2928b231-fc94-4822-8dd9-61d45641d944"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#466fd18c-9ed3-464c-896c-00b1a6d45286');
+var element = $('#2928b231-fc94-4822-8dd9-61d45641d944');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "7cf2fbcc50fb43c897489dc9660e7fa4"}
+{"version_major": 2, "version_minor": 0, "model_id": "a791e1083f98453dbef6bf38c5d84715"}
 </script>
 </div>
 
@@ -14030,13 +14024,13 @@ var element = $('#466fd18c-9ed3-464c-896c-00b1a6d45286');
 
  
  
-<div id="c62d3f60-ff6a-4cac-999d-5d5c3b1fce04"></div>
+<div id="550a5af7-2123-4fd4-a808-3cd59ace3a9a"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#c62d3f60-ff6a-4cac-999d-5d5c3b1fce04');
+var element = $('#550a5af7-2123-4fd4-a808-3cd59ace3a9a');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "8c8bf2a81f1a4df4be74448427ddee0f"}
+{"version_major": 2, "version_minor": 0, "model_id": "d8460291821a47b78fc6386dada83f4e"}
 </script>
 </div>
 
@@ -14052,13 +14046,13 @@ var element = $('#c62d3f60-ff6a-4cac-999d-5d5c3b1fce04');
 
  
  
-<div id="b65e16e9-df91-469a-a188-abe14335f5d7"></div>
+<div id="69458e95-a74f-4c3f-8b1a-2f4b87ee8d50"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#b65e16e9-df91-469a-a188-abe14335f5d7');
+var element = $('#69458e95-a74f-4c3f-8b1a-2f4b87ee8d50');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "fa090c613a8440978d6e4b922d392860"}
+{"version_major": 2, "version_minor": 0, "model_id": "44f8e44fbcbc4dd09b0ed66b8321dede"}
 </script>
 </div>
 
@@ -14070,7 +14064,7 @@ var element = $('#b65e16e9-df91-469a-a188-abe14335f5d7');
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[38.671875, -28.515625, 0.8, 0.0]
+<pre>[38.671875, -28.515625, 0.2, 0.0]
 </pre>
 </div>
 </div>
@@ -14085,13 +14079,13 @@ var element = $('#b65e16e9-df91-469a-a188-abe14335f5d7');
 
  
  
-<div id="b1373147-ea5d-49dc-b27b-52698f88c987"></div>
+<div id="ce838691-004a-4cef-a59c-7aebfa978c2e"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#b1373147-ea5d-49dc-b27b-52698f88c987');
+var element = $('#ce838691-004a-4cef-a59c-7aebfa978c2e');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "2eeffe8ca5b44b06a6cf0596a3c53a98"}
+{"version_major": 2, "version_minor": 0, "model_id": "c0e116d9d598419197bdd272c34b268b"}
 </script>
 </div>
 
@@ -14103,7 +14097,7 @@ var element = $('#b1373147-ea5d-49dc-b27b-52698f88c987');
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[39.0625, -28.515625, 1.0, 0.6]
+<pre>[39.0625, -28.515625, 0.8, 1.0]
 
 </pre>
 </div>
@@ -14148,8 +14142,8 @@ var element = $('#b1373147-ea5d-49dc-b27b-52698f88c987');
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[39.0625, -28.515625, 1.0, 0.6]
-[38.671875, -28.515625, 0.8, 0.0]
+<pre>[39.0625, -28.515625, 0.8, 1.0]
+[38.671875, -28.515625, 0.2, 0.0]
 </pre>
 </div>
 </div>
