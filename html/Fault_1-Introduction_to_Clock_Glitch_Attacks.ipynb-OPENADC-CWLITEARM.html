@@ -13477,7 +13477,7 @@ Size after:
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">program_target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13521,14 +13521,14 @@ Verified flash OK, 4247 bytes
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
 <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
 
 <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scope capture timed out&quot;</span><span class="p">)</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 
@@ -13547,7 +13547,6 @@ Verified flash OK, 4247 bytes
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre> hello
-A hello
 A
 </pre>
 </div>
@@ -13640,19 +13639,13 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |  readStatus(self)
  |      Read the status of the two glitch DCMs.
  |      
- |      Return a tuple with 4 elements:
- |      - phase1: The phase shift of DCM1
- |      - phase2: The phase shift of DCM2
- |      - lock1: Whether DCM1 is locked
- |      - lock2: Whether DCM2 is locked
- |      
  |      Returns:
- |         A tuple with 4 elements::
+ |          A tuple with 4 elements::
  |      
- |           (phase1: Phase shift of DCM1,
- |            phase2: Phase shift of DCM2,
- |            lock1: Whether DCM1 is locked,
- |            lock2: Whether DCM2 is locked)
+ |           * phase1: Phase shift of DCM1,
+ |           * phase2: Phase shift of DCM2,
+ |           * lock1: Whether DCM1 is locked,
+ |           * lock2: Whether DCM2 is locked
  |  
  |  resetDcms(self)
  |      Reset the two glitch DCMs.
@@ -13668,17 +13661,18 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      
  |      If the glitch module is in &#34;ext_single&#34; trigger mode, it must be armed
  |      when the scope is armed. There are two timings for this event:
- |      - &#34;before_scope&#34;: The glitch module is armed first.
- |      - &#34;after_scope&#34;: The scope is armed first. This is the default.
+ |      
+ |       * &#34;before_scope&#34;: The glitch module is armed first.
+ |       * &#34;after_scope&#34;: The scope is armed first. This is the default.
  |      
  |      This setting may be helpful if trigger events are happening very early.
  |      
  |      If the glitch module is not in external trigger single-shot mode, this
  |      setting has no effect.
  |      
- |      Getter: Return the current arm timing (&#34;before_scope&#34; or &#34;after_scope&#34;)
+ |      :Getter: Return the current arm timing (&#34;before_scope&#34; or &#34;after_scope&#34;)
  |      
- |      Setter: Change the arm timing
+ |      :Setter: Change the arm timing
  |      
  |      Raises:
  |         ValueError: if value not listed above
@@ -13687,13 +13681,13 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      The clock signal that the glitch DCM is using as input.
  |      
  |      This DCM can be clocked from two different sources:
- |      - &#34;target&#34;: The HS1 clock from the target device
- |      - &#34;clkgen&#34;: The CLKGEN DCM output
+ |       * &#34;target&#34;: The HS1 clock from the target device
+ |       * &#34;clkgen&#34;: The CLKGEN DCM output
  |      
- |      Getter:
+ |      :Getter:
  |         Return the clock signal currently in use
  |      
- |      Setter:
+ |      :Setter:
  |         Change the glitch clock source
  |      
  |      Raises:
@@ -13707,14 +13701,15 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      be inserted at a precise moment during the target&#39;s execution to glitch
  |      specific instructions.
  |      
- |      Tip: it is possible to get more precise offsets by clocking the glitch
- |      module faster than the target board.
+ |      .. note::
+ |          It is possible to get more precise offsets by clocking the
+ |          glitch module faster than the target board.
  |      
  |      This offset must be in the range [0, 2**32).
  |      
- |      Getter: Return the current external trigger offset.
+ |      :Getter: Return the current external trigger offset.
  |      
- |      Setter: Set the external trigger offset.
+ |      :Setter: Set the external trigger offset.
  |      
  |      Raises:
  |         TypeError: if offset not an integer
@@ -13727,10 +13722,10 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      A pulse may begin anywhere from -49.8% to 49.8% away from a rising
  |      edge, allowing glitches to be swept over the entire clock cycle.
  |      
- |      Getter: Return a float with the current glitch offset.
+ |      :Getter: Return a float with the current glitch offset.
  |      
- |      Setter: Set the glitch offset. The new value is rounded to the nearest
- |      possible offset.
+ |      :Setter: Set the glitch offset. The new value is rounded to the nearest
+ |          possible offset.
  |      
  |      Raises:
  |         TypeError: offset not an integer
@@ -13742,9 +13737,9 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      This is a dimensionless number that makes small adjustments to the
  |      glitch pulses&#39; offset. Valid range is [-255, 255].
  |      
- |      Getter: Return the current glitch fine offset
+ |      :Getter: Return the current glitch fine offset
  |      
- |      Setter: Update the glitch fine offset
+ |      :Setter: Update the glitch fine offset
  |      
  |      Raises:
  |         TypeError: if offset not an integer
@@ -13755,19 +13750,20 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      
  |      There are 5 ways that the glitch module can combine the clock with its
  |      glitch pulses:
- |      - &#34;clock_only&#34;: Output only the original input clock.
- |      - &#34;glitch_only&#34;: Output only the glitch pulses - do not use the clock.
- |      - &#34;clock_or&#34;: Output is high if either the clock or glitch are high.
- |      - &#34;clock_xor&#34;: Output is high if clock and glitch are different.
- |      - &#34;enable_only&#34;: Output is high for glitch.repeat cycles.
+ |      
+ |       * &#34;clock_only&#34;: Output only the original input clock.
+ |       * &#34;glitch_only&#34;: Output only the glitch pulses - do not use the clock.
+ |       * &#34;clock_or&#34;: Output is high if either the clock or glitch are high.
+ |       * &#34;clock_xor&#34;: Output is high if clock and glitch are different.
+ |       * &#34;enable_only&#34;: Output is high for glitch.repeat cycles.
  |      
  |      Some of these settings are only useful in certain scenarios:
- |      - Clock glitching: &#34;clock_or&#34; or &#34;clock_xor&#34;
- |      - Voltage glitching: &#34;glitch_only&#34; or &#34;enable_only&#34;
+ |       * Clock glitching: &#34;clock_or&#34; or &#34;clock_xor&#34;
+ |       * Voltage glitching: &#34;glitch_only&#34; or &#34;enable_only&#34;
  |      
- |      Getter: Return the current glitch output mode (one of above strings)
+ |      :Getter: Return the current glitch output mode (one of above strings)
  |      
- |      Setter: Change the glitch output mode.
+ |      :Setter: Change the glitch output mode.
  |      
  |      Raises:
  |         ValueError: if value not in above strings
@@ -13782,9 +13778,9 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      
  |      Repeat counter must be in the range [1, 255].
  |      
- |      Getter: Return the current repeat value (integer)
+ |      :Getter: Return the current repeat value (integer)
  |      
- |      Setter: Set the repeat counter
+ |      :Setter: Set the repeat counter
  |      
  |      Raises:
  |         TypeError: if value not an integer
@@ -13794,14 +13790,14 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      The trigger signal for the glitch pulses.
  |      
  |      The glitch module can use four different types of triggers:
- |      - &#34;continuous&#34;: Constantly trigger glitches
- |      - &#34;manual&#34;: Only trigger glitches through API calls/GUI actions
- |      - &#34;ext_single&#34;: Use the trigger module. One glitch per scope arm.
- |      - &#34;ext_continuous&#34;: Use the trigger module. Many glitches per arm.
+ |       * &#34;continuous&#34;: Constantly trigger glitches
+ |       * &#34;manual&#34;: Only trigger glitches through API calls/GUI actions
+ |       * &#34;ext_single&#34;: Use the trigger module. One glitch per scope arm.
+ |       * &#34;ext_continuous&#34;: Use the trigger module. Many glitches per arm.
  |      
- |      Getter: Return the current trigger source.
+ |      :Getter: Return the current trigger source.
  |      
- |      Setter: Change the trigger source.
+ |      :Setter: Change the trigger source.
  |      
  |      Raises:
  |         ValueError: value not listed above.
@@ -13810,14 +13806,14 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      The width of a single glitch pulse, as a percentage of one period.
  |      
  |      One pulse can range from -49.8% to roughly 49.8% of a period. The
- |      system may not be reliable at 0%. Note that negative widths are allowed
- |       - these act as if they are positive widths on the other half of the
+ |      system may not be reliable at 0%. Note that negative widths are allowed;
+ |      these act as if they are positive widths on the other half of the
  |      clock cycle.
  |      
- |      Getter: Return a float with the current glitch width.
+ |      :Getter: Return a float with the current glitch width.
  |      
- |      Setter: Update the glitch pulse width. The value will be adjusted to
- |      the closest possible glitch width.
+ |      :Setter: Update the glitch pulse width. The value will be adjusted to
+ |          the closest possible glitch width.
  |      
  |      Raises:
  |         UserWarning: Width outside of [-49.8, 49.8]. The value is rounded
@@ -13829,9 +13825,9 @@ class GlitchSettings(chipwhisperer.common.utils.util.DisableNewAttr)
  |      This is a dimensionless number that makes small adjustments to the
  |      glitch pulses&#39; width. Valid range is [-255, 255].
  |      
- |      Getter: Return the current glitch fine width
+ |      :Getter: Return the current glitch fine width
  |      
- |      Setter: Update the glitch fine width
+ |      :Setter: Update the glitch fine width
  |      
  |      Raises:
  |         TypeError: offset not an integer
@@ -13975,46 +13971,25 @@ output      = clock_xor
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tnrange</span>
 
 <span class="n">width_range</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">min</span>
-<span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
-
 <span class="n">attack1_data</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">&lt;</span> <span class="n">width_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">min</span>
     <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">&lt;</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
         <span class="n">successes</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sample_size</span><span class="p">):</span>
-            <span class="c1"># call before trace things here</span>
-
-            <span class="c1"># flush the garbage from the computer&#39;s target read buffer</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-            <span class="c1"># run aux stuff that should run before the scope arms here</span>
-
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tnrange</span><span class="p">(</span><span class="n">sample_size</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
             <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
             <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-
-            <span class="n">timeout</span> <span class="o">=</span> <span class="mi">50</span>
-            <span class="c1"># wait for target to finish</span>
-            <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
-                <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-
-            <span class="c1"># get the results from the scope</span>
-            <span class="c1"># read from the targets buffer</span>
-            <span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
+                
+            <span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 
             <span class="c1"># for table display purposes</span>
             <span class="n">success</span> <span class="o">=</span> <span class="s1">&#39;1234&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="c1"># check for glitch success (depends on targets active firmware)</span>
@@ -14025,7 +14000,6 @@ output      = clock_xor
         <span class="c1"># run aux stuff that should happen after trace here</span>
         <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">+=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">step</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">+=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">step</span>
-
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done glitching&quot;</span><span class="p">)</span>
 </pre></div>
 
@@ -14042,10 +14016,2837 @@ output      = clock_xor
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Done glitching
-</pre>
+
+
+
+ 
+ 
+<div id="f5ea2cee-5d65-475d-a84b-6acf91b1a9e8"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#f5ea2cee-5d65-475d-a84b-6acf91b1a9e8');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "25796f29f5c74f10a6b6eb031b51ae00"}
+</script>
 </div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="78f3ffcc-e988-423d-aa4b-502526d97a64"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#78f3ffcc-e988-423d-aa4b-502526d97a64');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f014c8efb9604522ad9645ed2d02dd25"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="897a877d-2b63-42a3-a4d2-d9f2eb1567f4"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#897a877d-2b63-42a3-a4d2-d9f2eb1567f4');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "06ee191a92c34ef5bedb37cf60263189"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="ffa09d71-a3b7-47b7-83a3-22c7f0cdeca9"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ffa09d71-a3b7-47b7-83a3-22c7f0cdeca9');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "177e371b40f54b1aa0ff9fcbdd712af3"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="3fa0d839-6e6d-4933-95b5-856734f73e14"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#3fa0d839-6e6d-4933-95b5-856734f73e14');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "305f113563b4462d81b902134cf60d57"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="85aa8d94-c711-477c-bf29-620564af7b05"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#85aa8d94-c711-477c-bf29-620564af7b05');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f01eea9a70c84a8385dc8cce553a546a"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="3fa97045-45b6-42b4-abbe-5c1b180107d7"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#3fa97045-45b6-42b4-abbe-5c1b180107d7');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "41975027bf5e46cc8d367637a32c06db"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="524883b0-de4e-4c05-8edc-748349c3a497"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#524883b0-de4e-4c05-8edc-748349c3a497');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "4b926c36ffed4e089b123a9f5d6cc67c"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="cf0fede0-0a8c-47e0-b2d5-a9b82960c69e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#cf0fede0-0a8c-47e0-b2d5-a9b82960c69e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "7e7c5fc2cfd14c95b46682b26c4c05c3"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="a1e56a84-22d3-4af7-b04d-2d993da1c833"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#a1e56a84-22d3-4af7-b04d-2d993da1c833');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "ea07fd267f2c437fa8c938ef83a82953"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="d6ee36e9-65d0-4ef8-861c-a0f5815c024d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d6ee36e9-65d0-4ef8-861c-a0f5815c024d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "a7f406bc25714ef9929a05249195281b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="8825c28c-0480-4a1b-bbd1-918d05730273"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#8825c28c-0480-4a1b-bbd1-918d05730273');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "07966b12aab8431f9d00da6ec67ffd6e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="37fb8668-d24f-437a-8d3a-a95c77c1a023"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#37fb8668-d24f-437a-8d3a-a95c77c1a023');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "bf45b5f405444c67b6f5e92bd4ffae53"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="64033445-1934-401c-82ee-05adacb89fbe"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#64033445-1934-401c-82ee-05adacb89fbe');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "cff43aeedbd7433baae4ab77a301a5ac"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="4c4ec08c-cf65-46fd-9050-7151eb6a2298"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#4c4ec08c-cf65-46fd-9050-7151eb6a2298');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6c02c8e8552d4cffa816616a4dde1529"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="54dc31af-cde9-4b38-b156-e0da427a55cc"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#54dc31af-cde9-4b38-b156-e0da427a55cc');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "587f5dde80444da784c9e2d0da6fb8b8"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="a40ceb31-fe6d-4d48-87b7-acf8756fe872"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#a40ceb31-fe6d-4d48-87b7-acf8756fe872');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "c18842ed93144678aa24bf383161a695"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="15175ca3-667f-4bbc-8ff9-d48d529eb465"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#15175ca3-667f-4bbc-8ff9-d48d529eb465');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "5738e751fa7348b88656251c4a83ab4e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="8f7e6df0-ddc4-4af0-86b2-f110f8f4a859"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#8f7e6df0-ddc4-4af0-86b2-f110f8f4a859');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "4a70015d0ff24c41880b26a7c3108c5c"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="7ff9d6d3-3e10-400a-ae82-a0d8e78a2dd4"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#7ff9d6d3-3e10-400a-ae82-a0d8e78a2dd4');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "93855548e0bd479b94b87c6e732de11b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="ddb7bb5c-4377-4ef4-a9e4-5292140df63f"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ddb7bb5c-4377-4ef4-a9e4-5292140df63f');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "47f8128abd5f4f38abe079716a9a4617"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="3675ecb8-8a3b-4c4c-97b6-4bdcd8b0a981"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#3675ecb8-8a3b-4c4c-97b6-4bdcd8b0a981');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "8d2fd3b54d1342269a63e50ee2b0b8fa"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="a47fc260-4c9e-4075-8c02-1b7a62f05ef0"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#a47fc260-4c9e-4075-8c02-1b7a62f05ef0');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "addd17add4ef47f7970636bc65be2420"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="53561cc5-d163-4ced-97cb-2f7d64794956"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#53561cc5-d163-4ced-97cb-2f7d64794956');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f853ab0d36ba46de9a6c701d018b1dc5"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="d4dd8f27-8763-460b-9141-476ee9c5934c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d4dd8f27-8763-460b-9141-476ee9c5934c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "7b62c07f4bb84830baea6b1d6e45b7a8"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="10016344-ff67-47e3-b76d-bc224e7c45d7"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#10016344-ff67-47e3-b76d-bc224e7c45d7');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "94e1a44b7f8940e7898f0191ed5a080a"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="4f89dbbf-4c1f-4166-a974-23d610e9d525"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#4f89dbbf-4c1f-4166-a974-23d610e9d525');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "5eaf20a0b5d64cb7bdd38a8ccb80b86e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="6ba98635-350a-4430-8240-11508c12f6da"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#6ba98635-350a-4430-8240-11508c12f6da');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "c7f68e96f10445738789478347d5fe5e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="f60f1797-2687-4fdd-b2c4-6c45f2c3d84b"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#f60f1797-2687-4fdd-b2c4-6c45f2c3d84b');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "c6114c7f028e49969da3872dd17c586f"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="bb253ecd-1cf6-4772-aa65-5d4ad65d0fe8"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#bb253ecd-1cf6-4772-aa65-5d4ad65d0fe8');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "5e3951ccfcb847e6aa23b05371ae8cfd"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="26fc4535-d1ec-4b8d-9209-af85c615ef4e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#26fc4535-d1ec-4b8d-9209-af85c615ef4e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "a36ba047fb6d49509260bc27b2a751ed"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="1d2bb1d8-47ce-4780-b27f-33b2409dc66d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#1d2bb1d8-47ce-4780-b27f-33b2409dc66d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "243ce340d5bf4fb7a9ffa40cc31b8428"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="54853f88-7f4b-4655-a7ee-6a63f63ff010"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#54853f88-7f4b-4655-a7ee-6a63f63ff010');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "1abf6033bb0b4b9cbca037668f993edb"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="4744c78b-29ef-4781-a897-2cc03a21d669"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#4744c78b-29ef-4781-a897-2cc03a21d669');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "528153dd95bb4e2eb7bd39d699d41ffb"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="e2ec2277-2e30-4a82-b494-9a3e87d1841d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#e2ec2277-2e30-4a82-b494-9a3e87d1841d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f3d352a81e66468bb12be2bdf550b2c6"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="e1bfd5c3-4717-42f4-a3c8-597c2b18aa53"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#e1bfd5c3-4717-42f4-a3c8-597c2b18aa53');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "25002f860b3440739b3af73a6b396527"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="2f33b876-0a14-4fcd-b49b-5e2ec8cce0f8"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#2f33b876-0a14-4fcd-b49b-5e2ec8cce0f8');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "9d84b764bd574cb8bbf139ae1bd8d803"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="79caa799-c4b4-4254-9408-d2266068f7af"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#79caa799-c4b4-4254-9408-d2266068f7af');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "1564c8a6f1584eb4b3c798996239fda0"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="8667eb15-8c58-40eb-8443-f04bc86347ea"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#8667eb15-8c58-40eb-8443-f04bc86347ea');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "ee51f85f98734a599fcbf9d602f0cb63"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="74aed5ab-2052-4caa-aa21-7586c61ffcf6"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#74aed5ab-2052-4caa-aa21-7586c61ffcf6');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f01dd117f251463c9e6b086d46e749f7"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="08a696da-b41a-4ba1-91f4-3a563687340f"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#08a696da-b41a-4ba1-91f4-3a563687340f');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "c22e00080d8d4f23bd0ff9725b0fe207"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="aa7b4052-bd0f-42ad-97f4-c0eb09aadb60"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#aa7b4052-bd0f-42ad-97f4-c0eb09aadb60');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "19dfddb626294467acf1dab2f73af0f5"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="cd0f1dc0-7b75-4f35-aa6e-0d272f32ae9c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#cd0f1dc0-7b75-4f35-aa6e-0d272f32ae9c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "698ef65a42834f41b576350ceebda9e0"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="d198fa97-1cd9-4fd8-97e3-a515ee7d550f"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d198fa97-1cd9-4fd8-97e3-a515ee7d550f');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "65317266cd6b4f8a8c804eeea46d7a8c"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="978f4893-954b-4275-bf37-6bb2821617a5"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#978f4893-954b-4275-bf37-6bb2821617a5');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "3d1ef09066f7431c88e225959b1844ab"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="4134d002-77d0-4210-bdcc-d4d764a1216d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#4134d002-77d0-4210-bdcc-d4d764a1216d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "1c159fc19b4647e4863dff2eb50336d7"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="c5a7ca7c-6656-4386-8171-586bb25aab63"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#c5a7ca7c-6656-4386-8171-586bb25aab63');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "47058b4857884cf7a0c346df12582243"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="22e17189-4849-4f6c-80de-b12883ab6121"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#22e17189-4849-4f6c-80de-b12883ab6121');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "74e7ad4cd07c4afd97f4321e0e976d7f"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="2d5f6e31-415b-4e28-be97-48ce548db64e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#2d5f6e31-415b-4e28-be97-48ce548db64e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "204205651a1c4c2db41c7ec2c5e26494"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="82a6c243-5ce1-4eee-9b0f-fdf51d510a24"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#82a6c243-5ce1-4eee-9b0f-fdf51d510a24');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "daffdaac873649eea3a969de49d5d181"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="b596ce3b-3cf2-4833-8a01-2d600cf62afb"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#b596ce3b-3cf2-4833-8a01-2d600cf62afb');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "bbdf75aada1e40deb6846e373c6e0b56"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="f692b66b-be5e-4f00-9f5f-9a04c1b935bc"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#f692b66b-be5e-4f00-9f5f-9a04c1b935bc');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "79095c8ce8754bf7bdce37de830e592b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="400ccdf5-dc69-42d4-8aac-0038af7161b3"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#400ccdf5-dc69-42d4-8aac-0038af7161b3');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "9b7db1bc30de4c5d8882be830ec917f9"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="94a860f7-5307-44f3-8516-da894c0a7324"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#94a860f7-5307-44f3-8516-da894c0a7324');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "200c04f5e5e246748256d91ed1ee7bb4"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="d9e9a511-b2b6-4a34-88df-927877b9c360"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d9e9a511-b2b6-4a34-88df-927877b9c360');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "4fdafc8f386d4728a29a3f3066d007a0"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="c26ee50e-d0b0-4d29-9c53-21b1e9ae5885"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#c26ee50e-d0b0-4d29-9c53-21b1e9ae5885');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "9a343362ceac4475b1c5ba9b5c06cdab"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="5519092c-d966-4904-954c-c83121803934"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#5519092c-d966-4904-954c-c83121803934');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f4725c109ec14a69abe0dfab2f13630e"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="0246869e-c12e-4f84-afe4-44565520cdb2"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#0246869e-c12e-4f84-afe4-44565520cdb2');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "60d12dbea921493e92e6bb5b9162385a"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="e04fe743-818d-4da4-8d21-003d9ddaf8dc"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#e04fe743-818d-4da4-8d21-003d9ddaf8dc');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "efea2632a6aa4d3e9260ee897f2c7bfd"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="650ea9b8-0a64-409c-8c43-6587655eb26b"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#650ea9b8-0a64-409c-8c43-6587655eb26b');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "37dc3cd2f69a4761bb0651b04852ebce"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="9cc7c37d-b37c-4489-93f7-3c3a056d7a8b"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#9cc7c37d-b37c-4489-93f7-3c3a056d7a8b');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "db3b026f086445a08eef3c26337d3b48"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="d7480b22-8855-469e-b679-6c77858e49ff"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d7480b22-8855-469e-b679-6c77858e49ff');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "2b67ecf376eb4e3abb050c612da84f79"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="3b699784-5112-4d7c-a679-0c8c9ecb512b"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#3b699784-5112-4d7c-a679-0c8c9ecb512b');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "3523f87004994ed9ad0e30f2a780165d"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="bca10f27-6704-4553-bf7b-9bcf9778674c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#bca10f27-6704-4553-bf7b-9bcf9778674c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "95cb5e7a0b4748efbf8d9511436a8cba"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="49e91285-9d27-4612-8b51-0b32de3e9726"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#49e91285-9d27-4612-8b51-0b32de3e9726');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "adedbfa873804258ab4329e611a07cff"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="4e632bca-e76d-49d8-b7bd-f6c66175e15c"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#4e632bca-e76d-49d8-b7bd-f6c66175e15c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "bcec698a4f8e41b2bc21f83a6d5fecd3"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="52998e23-8a36-45a4-9a09-d1e97ee5112e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#52998e23-8a36-45a4-9a09-d1e97ee5112e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "ca678f468ea04eecb0f156dfdc68300b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="0b35dc4a-9dc9-4640-ab5f-5d55233ec185"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#0b35dc4a-9dc9-4640-ab5f-5d55233ec185');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "dc38e5130b614445bc547b0ceb838348"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="e50ea8e5-a332-4c5a-8bd0-a46745269827"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#e50ea8e5-a332-4c5a-8bd0-a46745269827');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "452fa8dbbe9b4584955e2c721f4fd897"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="8d6a89dc-f9c1-4539-9f9e-2cd2e988bfee"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#8d6a89dc-f9c1-4539-9f9e-2cd2e988bfee');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "a3240bf0c98b4cec9d303ea680f48f51"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="776dbb77-6bcd-4c03-8e0e-f964be27948e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#776dbb77-6bcd-4c03-8e0e-f964be27948e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "23bc5e398005432089d97f711c07f52b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="f930b990-68bf-4d0d-b1b5-2dadf74f4e9d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#f930b990-68bf-4d0d-b1b5-2dadf74f4e9d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "d6a0bca5160a4edb8f1e6027dbd27092"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="b7a212ed-6913-47bc-8dbf-5309d253bd27"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#b7a212ed-6913-47bc-8dbf-5309d253bd27');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "2c9491d4f5cd4486a2d0d2fffee547dc"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="5f5b281a-6820-4650-972d-d97b71eec984"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#5f5b281a-6820-4650-972d-d97b71eec984');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "efab65ae10a64b35b8f63cdd8c0ad845"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="6c429840-ea33-4cd0-a998-7a0157525dec"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#6c429840-ea33-4cd0-a998-7a0157525dec');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "f2bcfd3a2ef94dbfa27ffbc2987d39f6"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="67ba9c2a-3b88-4e95-a474-f2dd9d1311be"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#67ba9c2a-3b88-4e95-a474-f2dd9d1311be');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "ba62b0e72410424291bca3882db61c3c"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="461eef4d-182e-48d4-96e1-3b101c42ef58"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#461eef4d-182e-48d4-96e1-3b101c42ef58');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "714326021dde407e9c3cd5114ef7edd5"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="23dd321c-e512-4f5d-adb1-0ea806425d44"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#23dd321c-e512-4f5d-adb1-0ea806425d44');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "84bd4610cd4844f3b83c3008c1c2b0b2"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="6da00d0e-ec28-424f-894e-c9a7e1f16a1d"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#6da00d0e-ec28-424f-894e-c9a7e1f16a1d');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "55613b4ff4524d20be75a373ed8ea7a8"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="9bbc6c0e-349a-4d69-8f9d-09368e46cf28"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#9bbc6c0e-349a-4d69-8f9d-09368e46cf28');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6f4cfa73dc76483d84711acb7ebddd41"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="ae7765b4-ff3c-470e-b19e-a27d9e14e03e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ae7765b4-ff3c-470e-b19e-a27d9e14e03e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "38bf918a20c2498c934226d9728b6372"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="a21bc537-e105-49f1-a9b1-71cff0c4ab06"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#a21bc537-e105-49f1-a9b1-71cff0c4ab06');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "5b8d8bef98294c0ca41bf55f52771f0b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="0953b681-5ceb-495b-b586-b2140b2ffd63"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#0953b681-5ceb-495b-b586-b2140b2ffd63');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "300fefcc70d54ef0abb9694d5d4c10dd"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="69796735-05ce-4260-b2df-6e0eb1f7941a"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#69796735-05ce-4260-b2df-6e0eb1f7941a');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "c6a47f8fb6364266a6af1bda27d420e4"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="20e7faeb-9346-433b-9448-50c3f167362b"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#20e7faeb-9346-433b-9448-50c3f167362b');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "99e3f789d0094e2fa7d9258f2aa0205c"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="a4e36b5e-82f4-4686-b6e2-f943e4c222a0"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#a4e36b5e-82f4-4686-b6e2-f943e4c222a0');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "ef6ddde8e2704c0293fd0002a69a70f7"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="ed5c0d51-e5f7-4429-9048-235d2722aa03"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ed5c0d51-e5f7-4429-9048-235d2722aa03');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "1ecfbe7f9cea4301b77e75737cbae3d3"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="eb9309a4-ccc4-49bd-9f62-7ac6db4eb9e6"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#eb9309a4-ccc4-49bd-9f62-7ac6db4eb9e6');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "95a7c1090a1644cca68f1c5959a9c59b"}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre></pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+
+ 
+ 
+<div id="71db4e37-4bfb-4ee1-a8fb-e2f0ddc5f44e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#71db4e37-4bfb-4ee1-a8fb-e2f0ddc5f44e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "0e04245365f54a4287c30bdd75085938"}
+</script>
+</div>
+
 </div>
 
 </div>
@@ -14086,11 +16887,11 @@ output      = clock_xor
 
 <div class="output_subarea output_stream output_stdout output_text">
 <pre>[-10.15625, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-10.15625, -37.109375, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
+[-10.15625, -37.109375, 0.8, &#34;&#39;\\x00hello\\nA&#39;&#34;]
 [-8.984375, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-8.984375, -37.109375, 0.6, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
+[-8.984375, -37.109375, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [-7.8125, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-7.8125, -37.109375, 0.4, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
+[-7.8125, -37.109375, 0.8, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [-6.640625, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [-6.640625, -37.109375, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [-5.46875, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
@@ -14100,18 +16901,11 @@ output      = clock_xor
 [-3.125, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [-3.125, -37.109375, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [-1.953125, -38.28125, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[-1.953125, -37.109375, 0.8, &#34;&#39;\\x00hello\\nA&#39;&#34;]
+[-1.953125, -37.109375, 1.0, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
 [0.390625, -45.3125, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[0.390625, -39.453125, 0.4, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[0.390625, -38.28125, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[0.390625, -31.25, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -48.828125, 0.4, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
-[1.5625, -46.484375, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -44.140625, 0.4, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -40.625, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -38.28125, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -35.9375, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
-[1.5625, -30.078125, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
+[0.390625, -31.25, 0.2, &#34;&#39;\\x00hello\\nA1234&#39;&#34;]
+[1.5625, -41.796875, 0.2, &#34;&#39;\\x00hello\\nA&#39;&#34;]
+[1.5625, -39.453125, 0.4, &#34;&#39;\\x00hello\\nA&#39;&#34;]
 </pre>
 </div>
 </div>
@@ -14276,7 +17070,7 @@ Size after:
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">programTarget</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cw</span><span class="o">.</span><span class="n">program_target</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">fw_path</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -14320,14 +17114,14 @@ Verified flash OK, 4407 bytes
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;touch</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
+<span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;touch</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scope capture timed out&quot;</span><span class="p">)</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 
@@ -14345,8 +17139,7 @@ Verified flash OK, 4407 bytes
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre> hello
-Password:Welcome
+<pre>Welcome
 Password:
 </pre>
 </div>
@@ -14369,14 +17162,14 @@ Password:
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-<span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;x</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
+<span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;x</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scope capture timed out&quot;</span><span class="p">)</span>
-<span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 
@@ -14433,7 +17226,6 @@ Password:
 <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">hs2</span> <span class="o">=</span> <span class="s2">&quot;glitch&quot;</span>
 
-<span class="n">target</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
 <span class="n">attack2_data</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">scope</span><span class="o">.</span><span class="n">adc</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="mf">0.1</span>
 <span class="k">if</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CW303&quot;</span> <span class="ow">or</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s2">&quot;CWLITEXMEGA&quot;</span><span class="p">:</span>
@@ -14448,40 +17240,21 @@ Password:
     <span class="k">while</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">&lt;</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">):</span>
             <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span> <span class="o">=</span> <span class="n">i</span>
-            <span class="c1"># call before trace things here</span>
-
-            <span class="c1"># flush the garbage from the computer&#39;s target read buffer</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-            <span class="c1"># run aux stuff that should run before the scope arms here</span>
-
+            <span class="n">target</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
             <span class="n">scope</span><span class="o">.</span><span class="n">arm</span><span class="p">()</span>
-            <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;x</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="n">timeout</span> <span class="o">=</span> <span class="mi">50</span>
-            <span class="c1"># wait for target to finish</span>
-            <span class="k">while</span> <span class="n">target</span><span class="o">.</span><span class="n">isDone</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">timeout</span><span class="p">:</span>
-                <span class="n">timeout</span> <span class="o">-=</span> <span class="mi">1</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
-                    <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;IOError: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-
-            <span class="c1"># get the results from the scope</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;x</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">scope</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Timeout happened during acquisition&#39;</span><span class="p">)</span>
+                <span class="n">reset_target</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                
             <span class="c1"># read from the targets buffer</span>
-            <span class="n">num_chars</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">inWaiting</span><span class="p">()</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">ser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">num_chars</span><span class="p">,</span> <span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">timeout</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 
             <span class="c1"># for table display purposes</span>
             <span class="n">success</span> <span class="o">=</span> <span class="s1">&#39;Welcome&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="c1"># check for glitch success (depends on targets active firmware)</span>
-            <span class="n">attack2_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)])</span> 
-
-            <span class="c1"># run aux stuff that should happen after trace here</span>
+            <span class="n">attack2_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">ext_offset</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">response</span><span class="p">)])</span>
         <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">offset</span> <span class="o">+=</span> <span class="n">offset_range</span><span class="o">.</span><span class="n">step</span>
     <span class="n">scope</span><span class="o">.</span><span class="n">glitch</span><span class="o">.</span><span class="n">width</span> <span class="o">+=</span> <span class="n">width_range</span><span class="o">.</span><span class="n">step</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done glitching&quot;</span><span class="p">)</span>
@@ -14494,6 +17267,29 @@ Password:
 <div class="output_wrapper">
 <div class="output">
 
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+WARNING:root:Timeout in OpenADC capture(), trigger FORCED
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Timeout happened during acquisition
+</pre>
+</div>
+</div>
 
 <div class="output_area">
 
