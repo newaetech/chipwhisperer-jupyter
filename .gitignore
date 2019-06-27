@@ -30,5 +30,6 @@ hardware/victims/firmware/simpleserial-aes-auth/simpleserial-aes-auth-CW*
 *.csv
 *py.bak
 *.cfg
+*.orig
 project/*
 html/*
