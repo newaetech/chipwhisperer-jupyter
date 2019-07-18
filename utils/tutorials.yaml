@@ -1,0 +1,87 @@
+tutorials:
+  PA_Intro_1-Firmware_Build_Setup.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_Intro_2-Instruction_Differences.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_Intro_3-Measuring_SNR_of_Target.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_SPA_1-Timing_Analysis_with_Power_for_Password_Bypass.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWNANO
+        firmware: TINYAES128C
+
+
+  PA_CPA_1-Using_CW-Analyzer_for_CPA_Attack.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWNANO
+        firmware: TINYAES128C
+    kwargs:
+      num_traces: 50
+      allowable_exceptions:
+        - AssertionError
+
+  PA_CPA_2-Manual_CPA_Attack.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWNANO
+        firmware: TINYAES128C
+    kwargs:
+      num_traces: 50
+      allowable_exceptions:
+        - AssertionError
+
+
+
+connected:
+  - scope: OPENADC
+    target: CWLITEXMEGA
