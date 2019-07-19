@@ -51,19 +51,11 @@ class cd:
         os.chdir(self.saved_path)
 
 
-def execute_and_export_notebook(nb_path, output_dir, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
+def execute_notebook(nb_path, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
-
-    Note:
-
-        Will not overwrite files if any errors occured.
     """
-
     notebook_dir, file_name = os.path.split(nb_path)
-    file_name_root, _ = os.path.splitext(file_name)
-    rst_path = os.path.join(output_dir, file_name_root + "-{}-{}".format(SCOPETYPE, PLATFORM) + ".rst")
-    rst_path = os.path.abspath(rst_path)
     real_path = Path(nb_path).absolute()
 
     with open(real_path) as nbfile:
@@ -84,16 +76,37 @@ def execute_and_export_notebook(nb_path, output_dir, allow_errors=True, SCOPETYP
                   for output in cell["outputs"] \
                   if output.output_type == "error"]
 
-        if not errors:
-            with open(rst_path, "w", encoding='utf-8') as rst_file:
-                rst_exporter = RSTExporter()
+        export_kwargs = {
+            'SCOPETYPE': SCOPETYPE,
+            'PLATFORM': PLATFORM
+        }
 
-                body, res = rst_exporter.from_notebook_node(new_nb)
+        return new_nb, errors, export_kwargs
 
-                rst_file.write(body)
-                print('Wrote to:', rst_path)
 
-        return nb, errors
+def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
+    """Takes a notebook node and exports it to ReST.
+
+    Args:
+        nb (notebook): The notebook returned by execute_notebook.
+        nb_path (str): Path to intput notebook file. Used to generate the
+            name of the output file.
+        output_dir (str): The output directory for the ReST file.
+        SCOPETYPE (str): Used to generate the output file name.
+        PLATFORM (str): Used to generate the output file name.
+    """
+    notebook_dir, file_name = os.path.split(nb_path)
+    file_name_root, _ = os.path.splitext(file_name)
+    rst_path = os.path.join(output_dir, file_name_root + "-{}-{}".format(SCOPETYPE, PLATFORM) + ".rst")
+    rst_path = os.path.abspath(rst_path)
+
+    with open(rst_path, "w", encoding='utf-8') as rst_file:
+        rst_exporter = RSTExporter()
+
+        body, res = rst_exporter.from_notebook_node(nb)
+
+        rst_file.write(body)
+        print('Wrote to:', rst_path)
 
 
 def _print_tracebacks(errors):
@@ -125,14 +138,16 @@ def _print_stdout(nb):
         print("[{}]:\n{}".format(out[0], out[1]['text']))
 
 
-def test_notebook(nb_path, output_dir, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
+def test_notebook(nb_path, output_dir, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, **kwargs):
     print()
     print("Testing: {}:...".format(os.path.abspath(nb_path)))
     print("with {}.".format(kwargs))
-    nb, errors = execute_and_export_notebook(nb_path, output_dir, allow_errors=allow_errors, **kwargs)
+    nb, errors, export_kwargs = execute_notebook(nb_path, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, **kwargs)
     if not errors:
         print("PASSED")
+        if export:
+            export_notebook(nb, nb_path, output_dir, **export_kwargs)
     else:
         if allowable_exceptions:
             error_is_acceptable = [error[1]['ename'] in allowable_exceptions for error in errors]
@@ -140,6 +155,8 @@ def test_notebook(nb_path, output_dir, allow_errors=True, print_first_traceback_
                 print("PASSED with expected errors")
                 for error in errors:
                     print(error[1]['ename'], ':', error[1]['evalue'])
+                if export:
+                    export_notebook(nb, nb_path, output_dir, **export_kwargs)
             else:
                 print("FAILED:")
                 if print_first_traceback_only:
