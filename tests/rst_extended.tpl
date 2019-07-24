@@ -20,7 +20,7 @@
 {% if text_len > 1 %}
 .. parsed-literal::
 
-{{ output.text | replace('*', '\*') | indent }}
+{{ output.text | replace('*', '\*') | replace('|', '\|') | indent }}
 {% endif %}
 {% endblock stream %}
 
