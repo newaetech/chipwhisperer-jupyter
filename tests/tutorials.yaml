@@ -29,7 +29,9 @@
 
 connected:
   - scope: OPENADC
-    target: CWLITEXMEGA
+    target: CWLITEARM
+    serial number:
+
 
 tutorials:
   PA_Intro_1-Firmware_Build_Setup.ipynb:

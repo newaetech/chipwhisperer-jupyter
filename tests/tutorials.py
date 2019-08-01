@@ -5,8 +5,11 @@ from pathlib import Path
 from os import listdir
 from os.path import isfile, join
 import yaml
+import re
+import sys
 
 import nbformat
+import nbconvert
 from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.exporters import NotebookExporter
 from nbconvert.preprocessors import ExecutePreprocessor
@@ -15,9 +18,9 @@ from nbparameterise import extract_parameters, parameter_values, replace_definit
 from nbconvert.nbconvertapp import NbConvertBase
 
 script_path = os.path.abspath(__file__)
-utils_dir, _ = os.path.split(script_path)
+tests_dir, _ = os.path.split(script_path)
 # set configuration options
-RSTExporter.template_path = [utils_dir]
+RSTExporter.template_path = [tests_dir]
 RSTExporter.template_file = 'rst_extended.tpl'
 NbConvertBase.display_data_priority = [
     'application/vnd.jupyter.widget-state+json',
@@ -51,7 +54,7 @@ class cd:
         os.chdir(self.saved_path)
 
 
-def execute_notebook(nb_path, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
+def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
@@ -65,6 +68,15 @@ def execute_notebook(nb_path, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='
         new_nb = replace_definitions(nb, params, execute=False)
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
+
+        replacements = {
+            r'cw.scope(\(\))': 'cw.scope(sn=\'{}\')'.format(serial_number),
+            r'chipwhisperer.scope()': 'chipwhisperer.scope(sn=\'{}\')'.format(serial_number)
+        }
+        rp = RegexReplacePreprocessor(replacements)
+
+        if serial_number:
+            rp.preprocess(new_nb, {})
 
         if notebook_dir:
             with cd(notebook_dir):
@@ -138,12 +150,16 @@ def _print_stdout(nb):
         print("[{}]:\n{}".format(out[0], out[1]['text']))
 
 
-def test_notebook(nb_path, output_dir, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
+def test_notebook(nb_path, output_dir, serial_number, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, **kwargs):
     print()
     print("Testing: {}:...".format(os.path.abspath(nb_path)))
     print("with {}.".format(kwargs))
-    nb, errors, export_kwargs = execute_notebook(nb_path, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, **kwargs)
+    if serial_number:
+        print('on device with serial number {}.'.format(serial_number))
+    else:
+        print('No serial number specified... only bad if more than one device attached.')
+    nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, **kwargs)
     if not errors:
         print("PASSED")
         if export:
@@ -220,7 +236,7 @@ def load_configuration(path):
     return tutorials, connected_hardware
 
 
-def configuration_connected(config, connected):
+def matching_connected_configuration(config, connected):
     """
     Args:
         config (dict): With at least keys: scope, and target.
@@ -229,8 +245,9 @@ def configuration_connected(config, connected):
             as keys.
 
     Returns:
-        (bool) True if the configuration can be found in the list of
-        connected configurations.
+        tuple: (bool, string) Whether a match was found, and second the serial number
+        of the hardware device connected matching the configuration. Returns False and
+        None if matching connected device was not found.
     """
     check_keys = [
         'scope',
@@ -240,13 +257,42 @@ def configuration_connected(config, connected):
     for connected_config in connected:
         check = [config[key] == connected_config[key] for key in check_keys]
         if all(check):
-            return True
+            sn = connected_config.get('serial number')
+            return True, sn
+    return False, None
 
-    return False
+
+class RegexReplacePreprocessor(nbconvert.preprocessors.Preprocessor):
+    """Preprocessor for replacing matched regex strings in nb cells
+
+    Each regex will be used and replaced by the replacement in the repl iterable.
+    Pairs of regex, and replacement strings are selected by index.
+
+    Args:
+        replacements (dict): A dictionary with regex strings as keys and replacement
+            strings as values.
+    Returns:
+        cell: The modified notebook cell with all replacements applied.
+    """
+
+    def __init__(self, replacements, **kw):
+        try:
+            self.replacement_pairs = [(re.compile(regex), repl) for regex, repl in replacements.items()]
+        except re.error as e:
+            print('One of the regex compile failed, invalid regex.')
+            sys.exit(0)
+        super().__init__(**kw)
+
+    def preprocess_cell(self, cell, resources, index):
+        if cell['cell_type'] == 'code':
+            for p, repl in self.replacement_pairs:
+                cell['source'] = re.sub(p, repl, cell['source'])
+        return cell, resources
 
 
 if __name__ == '__main__':
-    tutorials, connected_hardware = load_configuration('tutorials.yaml')
+    script, config_file_path = sys.argv
+    tutorials, connected_hardware = load_configuration(config_file_path)
 
     nb_dir = '..'
     output_dir = '../../tutorials/'
@@ -270,8 +316,10 @@ if __name__ == '__main__':
     # to the output directory.
     for nb in tutorials.keys():
         for test_config in tutorials[nb]['configurations']:
-            if configuration_connected(test_config, connected_hardware):
+            match, serial_number = matching_connected_configuration(test_config, connected_hardware)
+            if match:
                 path = os.path.join(nb_dir, nb)
+
                 kwargs = {
                     'SCOPETYPE': test_config['scope'],
                     'PLATFORM': test_config['target'],
@@ -282,7 +330,7 @@ if __name__ == '__main__':
                 if extra_kwargs:
                     kwargs.update(extra_kwargs)
 
-                test_notebook(nb_path=path, output_dir=output_dir, **kwargs)
+                test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number, **kwargs)
 
     # clean up the projects created by running the tutorial notebooks.
     try:
