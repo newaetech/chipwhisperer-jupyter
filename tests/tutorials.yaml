@@ -180,7 +180,7 @@ tutorials:
         target: CWLITEARM
         firmware: TINYAES128C
 
-  PA_Profiling_1_Template_Attacks_HW_Assumption.ipynb:
+  PA_Profiling_1-Template_Attacks_HW_Assumption.ipynb:
     configurations:
       - scope: OPENADC
         target: CWLITEXMEGA
