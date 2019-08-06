@@ -1,0 +1,2 @@
+* * * * * su cwtests -c "/home/cwtests/cw-run-jupyter-tests.sh /home/cwtests/tests.yaml > /dev/stdout 2> /dev/stderr"
+
