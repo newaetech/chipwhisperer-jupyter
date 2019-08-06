@@ -65,7 +65,7 @@ def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENA
         nb = nbformat.read(nbfile, as_version=4)
         orig_parameters = extract_parameters(nb)
         params = parameter_values(orig_parameters, SCOPETYPE=SCOPETYPE, PLATFORM=PLATFORM, **kwargs)
-        new_nb = replace_definitions(nb, params, execute=False)
+        nb = replace_definitions(nb, params, execute=False)
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
 
@@ -76,15 +76,15 @@ def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENA
         rp = RegexReplacePreprocessor(replacements)
 
         if serial_number:
-            rp.preprocess(new_nb, {})
+            nb, resources = rp.preprocess(nb, {})
 
         if notebook_dir:
             with cd(notebook_dir):
-                ep.preprocess(new_nb, {'metadata': {'path': './'}})
+                nb, resources = ep.preprocess(nb, {'metadata': {'path': './'}})
         else:
-            ep.preprocess(new_nb, {'metadata': {'path': './'}})
+            nb, resources = ep.preprocess(nb, {'metadata': {'path': './'}})
 
-        errors = [[i + 1, output] for i, cell in enumerate(new_nb.cells) if "outputs" in cell
+        errors = [[i + 1, output] for i, cell in enumerate(nb.cells) if "outputs" in cell
                   for output in cell["outputs"] \
                   if output.output_type == "error"]
 
@@ -93,7 +93,7 @@ def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENA
             'PLATFORM': PLATFORM
         }
 
-        return new_nb, errors, export_kwargs
+        return nb, errors, export_kwargs
 
 
 def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
