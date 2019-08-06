@@ -1,0 +1,249 @@
+# This is the build configuration file for the tutorials.py script.
+# All tutorials and their configurations here will be run exlcuding
+# configurations that are not included in **connected**.
+#
+# Expected Syntax:
+#
+# connected:
+#   scope: <VALID SCOPE NAME (OPENADC, CWNANO)>
+#   target: <VALID PLATFORM NAME (CWLITEARM, CWLITEXMEGA, CWNANO)>
+#   serial number: <device serial number (optional)>
+#
+# tutorials:
+#   <tutorial file name including extension>:
+#     configurations:
+#       - scope: <VALID SCOPE NAME>
+#         target: <VALID PLATFORM NAME>
+#         firmware: <VALID CRYPTO_TARGET NAME (TINYAES128C, AVRCYPTOLIB, MBEDTLS)>
+#       - ... any more configurations
+#     kwargs:  # extra keyword arguments to nbparameterise (optional)
+#       num_traces: <number of traces to capture>
+#       sample_size: <sample size>
+
+
+#######  Not yet included tutorials ######
+#
+#  PA_HW_CW305.ipynb
+#  PA_CPA_4-Hardware_Crypto_Attack.ipynb
+
+
+connected:
+  - scope: OPENADC
+    target: CWLITEARM
+    serial number: 442031204c5032433030373131313033
+  - scope: OPENADC
+    target: CWLITEXMEGA
+    serial number: 44203120473539413130343130323039
+
+
+tutorials:
+  PA_Intro_1-Firmware_Build_Setup.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_Intro_2-Instruction_Differences.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_Intro_3-Measuring_SNR_of_Target.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_SPA_1-Timing_Analysis_with_Power_for_Password_Bypass.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_DPA_1-Hamming_Weight_Measurement.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+    kwargs:
+      num_traces: 150
+
+  PA_DPA_2-Large_HW_Swings.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_DPA_3-AES_DPA_Attack.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_CPA_1-Using_CW-Analyzer_for_CPA_Attack.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+    kwargs:
+      num_traces: 100
+
+  PA_CPA_2-Manual_CPA_Attack.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+    kwargs:
+      num_traces: 100
+
+  PA_CPA_3-Resynchronizing_Data_Traces.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+    kwargs:
+      num_traces: 150
+
+  PA_CPA_5-32bit_AES.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  PA_Multi_1-Breaking_AES-256_Bootloader.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+
+  PA_Profiling_1_Template_Attacks_HW_Assumption.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+
+  PA_TVLA_1-Performing_TVLA_Testing_for_Crypto_Validation.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  Fault_1-Introduction_to_Clock_Glitch_Attacks.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+    kwargs:
+      sample_size: 5
+
+  Fault_2-Introduction_to_Vcc_Glitch_Attacks.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+      - scope: CWNANO
+        target: CWNANO
+        firmware: TINYAES128C
+
+  Fault_3-Glitch_Buffer_Attacks.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+
+  Fault_4-AES_Differential_Fault_Analysis_Attacks.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEXMEGA
+        firmware: AVRCRYPTOLIB
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
+
+  Fault_5-RSA_Fault_Attack.ipynb:
+    configurations:
+      - scope: OPENADC
+        target: CWLITEARM
+        firmware: TINYAES128C
