@@ -74,8 +74,13 @@ def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENA
             r'chipwhisperer.scope()': 'chipwhisperer.scope(sn=\'{}\')'.format(serial_number)
         }
         rp = RegexReplacePreprocessor(replacements)
+        ip = InLineCodePreprocessor(notebook_dir)
 
         if serial_number:
+            # inline all code before putting in serial
+            # numbers
+            nb, resources = ip.preprocess(nb, {})
+            # add serial number to the cw.scope calls
             nb, resources = rp.preprocess(nb, {})
 
         if notebook_dir:
@@ -287,6 +292,55 @@ class RegexReplacePreprocessor(nbconvert.preprocessors.Preprocessor):
         if cell['cell_type'] == 'code':
             for p, repl in self.replacement_pairs:
                 cell['source'] = re.sub(p, repl, cell['source'])
+        return cell, resources
+
+
+class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
+    """Preprocessor that in lines code instead of using %run in nb.
+
+    The %run command is not ideal for regex replacing code because
+    the notebooks are external and not accesible with a preprocessor.
+    This preprocessor takes any %run notebook.ipynb instance in a cell
+    exports the externel notebook to python code and in lines that code
+    into the cell before returning this cell.
+
+    This preprocessor should be run before the RegexReplacePreProcessor
+    so all instances in external notebooks that are now inline are also
+    processed.
+
+    Args:
+        notebook_dir (str): The path to the directory containing all the
+            notebooks. Used to resolve the relative paths used by the
+            %run command.
+
+    Returns:
+        notebook, resources: The modified notebook, and resources with all
+            instances of the %run command in lined.
+    """
+
+    def __init__(self, notebook_dir, **kwargs):
+        self.notebook_dir = nb_dir
+        super().__init__(**kwargs)
+
+    def preprocess_cell(self, cell, resources, index):
+        if cell['cell_type'] == 'code':
+            if '%run' in cell['source']:
+                # to deal with other notebooks being called from the source notebook
+                # find the notebooks and export to python code and replace
+                # the current cell source code with that python code before
+                # replacing instances of cw.scope()
+                p = re.compile(r"%run\s*[\"']?(.*\.ipynb)[\"']?")
+                python_code_list = []
+                external_notebooks = re.findall(p, cell['source'])
+                for ext_nb in external_notebooks:
+                    ext_nb_path = os.path.join(self.notebook_dir, ext_nb)
+                    ext_nb_node = nbformat.read(ext_nb_path, as_version=4)
+                    python_exporter = nbconvert.exporters.PythonExporter()
+                    python_code, _ = python_exporter.from_notebook_node(ext_nb_node)
+                    python_code_list.append(python_code)
+
+                cell['source'] = '\n'.join(python_code_list)
+
         return cell, resources
 
 
