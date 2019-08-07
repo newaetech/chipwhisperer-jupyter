@@ -18,7 +18,7 @@ docker run --privileged
     cw-testing-server
 ```
 
-The tests should be run as a cronjob every 4 hours starting at 6:00 until 18:00, and e-mail will be sent to all the emails specified after the tests are complete. Check your spam!
+The tests should be run as a cronjob every 4 hours starting at 6:00 until 18:00 (server time), and e-mail will be sent to all the emails specified after the tests are complete. Check your spam!
 
 ## Troubleshooting
 
