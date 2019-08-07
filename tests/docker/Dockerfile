@@ -20,11 +20,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/list/* /tmp/* /var/tmp/*
 
-# install the mail server
-RUN echo "postfix postfix/mailname string cw-testing-server.com" | debconf-set-selections && \
-    echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections && \
-    apt-get install -y mailutils 
-
 # install the correct version of GNU ARM toolchain
 RUN wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-dev_3.0.0.20180802-2_all.deb && \
     wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-arm-none-eabi_3.0.0.20180802-2_all.deb && \
@@ -36,6 +31,9 @@ RUN echo PATH=$PATH:/home/$CW_USER/.local/bin/ >> /etc/environment
 # upgrade pip and install setuptools
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install setuptools
+
+# Add sendgrid library for python for sending e-mail results
+RUN python3 -m pip install sendgrid
 
 # make a non-root user
 RUN useradd --create-home --shell /bin/bash $CW_USER && \
@@ -64,15 +62,6 @@ COPY tests.yaml /home/$CW_USER/tests.yaml
 COPY start-container.sh /home/$CW_USER/run.sh
 RUN chmod +x /home/$CW_USER/run.sh
 
-# allow $CW_USER to use mail
-RUN MAIL_DIR=/var/mail/$CW_USER && \
-    touch $MAIL_DIR && \
-    chown $CW_USER:mail $MAIL_DIR && \
-    chmod o-r $MAIL_DIR && \
-    chmod g+rw $MAIL_DIR
-
-# configure the postfix server
-COPY postfix.config /etc/postfix/main.cfg
 
 # make the cw-run-jupyter-tests.sh file executable and change the owner
 RUN chmod +x /home/$CW_USER/cw-run-jupyter-tests.sh && \
@@ -81,6 +70,9 @@ RUN chmod +x /home/$CW_USER/cw-run-jupyter-tests.sh && \
 # set the permissions for the cronjob
 RUN chmod 0644 /etc/cron.d/jupyter-tests-cron && \
     crontab /etc/cron.d/jupyter-tests-cron
+
+COPY send-mail.py /usr/local/bin/send-mail.py
+RUN chmod +x /usr/local/bin/send-mail.py
 
 CMD ["/home/cwtests/run.sh"]
 

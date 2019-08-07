@@ -1,18 +1,11 @@
 #!/bin/bash
 
-# start the mail server
-service postfix start
+# export environment for cron job
+# whitelist the environmental variables that carry over
+# and add double quotes for all key value pairs to avoid
+# spaces in value causing problem
+env | grep 'SENDGRID_API_KEY\|FROM_EMAIL\|TO_EMAILS' | sed 's/\(^.*\)=\(.*\)/export \1="\2"/' > /tmp/env.sh
 
-# create file for emails that cron can read
-# this is to get around the fact the env variables
-# are not accessible in cron
-TMP_FILE=/tmp/emails.txt
-echo "" > $TMP_FILE
-
-for email in $(echo $EMAILS | sed "s/,/ /g")
-do
-    echo $email >> $TMP_FILE
-done
-
+echo "Starting cron in the foreground...done"
 # start crontab in the foreground
 cron -l 2 -f
