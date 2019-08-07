@@ -8,7 +8,11 @@ from sendgrid.helpers.mail import Mail
 from sys import argv
 
 from_email = os.environ.get('FROM_EMAIL')
-to_emails = os.environ.get('TO_EMAILS')
+to_emails_env = os.environ.get('TO_EMAILS')
+
+# for creating a iterable from comma seperated list
+to_emails = [email.strip() for email in to_emails_env.strip().split(',') if email.strip()]
+
 
 script, subject, email_contents_file = argv
 
