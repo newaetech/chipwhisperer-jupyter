@@ -277,7 +277,7 @@ class RegexReplacePreprocessor(nbconvert.preprocessors.Preprocessor):
         replacements (dict): A dictionary with regex strings as keys and replacement
             strings as values.
     Returns:
-        cell: The modified notebook cell with all replacements applied.
+        notebook, resources: The modified notebook, and resources with all replacements applied.
     """
 
     def __init__(self, replacements, **kw):
