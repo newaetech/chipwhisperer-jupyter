@@ -3,7 +3,7 @@
 # access variables defined by docker created by
 # startup script
 
-CURRENTDATEPRETTY=$(date +"%%A, %b %d, %Y %H:%M:%S %Z")
+CURRENTDATEPRETTY=$(date +"%A, %b %d, %Y %H:%M:%S %Z")
 CURRENTDATELOG=$(date +"%Z_%m_%d_%Y__%H_%M")
 LOGFILE="/tmp/$CURRENTDATELOG-cw-tests.log"
 
