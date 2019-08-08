@@ -8,7 +8,7 @@ CURRENTDATELOG=$(date +"%Z_%m_%d_%Y__%H_%M")
 LOGFILE="/tmp/$CURRENTDATELOG-cw-tests.log"
 
 # clear logs and add date
-echo "$CURRENTDATELOG" > "$LOGFILE"
+echo "$CURRENTDATEPRETTY" > "$LOGFILE"
 
 # update the chipwhisperer repo
 cd /home/$USER/chipwhisperer && git pull --rebase && git submodule update --init jupyter >> "$LOGFILE"
