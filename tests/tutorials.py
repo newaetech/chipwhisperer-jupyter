@@ -127,12 +127,14 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
 
 
 def _print_tracebacks(errors):
+    # to escape ANSI sequences use regex
+    ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
     if errors == []:
         print("Passed all tests!")
     for error in errors:
         print("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
         for line in error[1]['traceback']:
-            print(line)
+            print(ansi_escape.sub('', line))
 
 
 def _get_outputs(nb):
