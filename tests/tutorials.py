@@ -17,6 +17,9 @@ from nbconvert import RSTExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions
 from nbconvert.nbconvertapp import NbConvertBase
 
+from functools import partial
+print = partial(print, flush=True)
+
 script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
 # set configuration options
