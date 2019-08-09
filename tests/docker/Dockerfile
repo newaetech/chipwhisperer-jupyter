@@ -2,8 +2,11 @@ FROM ubuntu:18.04
 
 ENV CW_USER="cwtests"
 
+# for timezone installation
+RUN ln -fs /usr/share/zoneinfo/America/Halifax /etc/localtime
+
 # install apt-get packages
-RUN apt-get update && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y --no-install-recommends \
     avr-libc=1:2.0.0+Atmel3.6.0-1 \
     cron \
@@ -16,9 +19,20 @@ RUN apt-get update && \
     pandoc \
     python3-dev \
     python3-pip \
+    tzdata \
     wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/list/* /tmp/* /var/tmp/*
+
+# set timezone
+RUN echo "America/Halifax" > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+# Add Tini
+ENV TINI_VERSION v0.18.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+ENTRYPOINT ["/tini", "--"]
 
 # install the correct version of GNU ARM toolchain
 RUN wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-dev_3.0.0.20180802-2_all.deb && \
@@ -54,28 +68,19 @@ USER root
 RUN usermod -aG plugdev $CW_USER && \
     usermod -aG plugdev root
 
-COPY jupyter-tests-cron /etc/cron.d/jupyter-tests-cron
-COPY cw-run-jupyter-tests.sh /home/$CW_USER/cw-run-jupyter-tests.sh
+# add to python scripts for testing server
+COPY testing_server.py /home/$CW_USER/testing_server.py
+COPY mail.py /home/$CW_USER/mail.py
+RUN chown $CW_USER:$CW_USER /home/$CW_USER/testing_server.py && \
+    chown $CW_USER:$CW_USER /home/$CW_USER/mail.py
+
+# add test configuration file
 COPY tests.yaml /home/$CW_USER/tests.yaml
+RUN chown $CW_USER:$CW_USER /home/$CW_USER
 
 # script that starts the container
 COPY start-container.sh /home/$CW_USER/run.sh
 RUN chmod +x /home/$CW_USER/run.sh
 
-
-# make the cw-run-jupyter-tests.sh file executable and change the owner
-RUN chmod +x /home/$CW_USER/cw-run-jupyter-tests.sh && \
-    chown $CW_USER /home/$CW_USER/cw-run-jupyter-tests.sh /home/$CW_USER/tests.yaml
-
-# set the permissions for the cronjob
-RUN chmod 0644 /etc/cron.d/jupyter-tests-cron && \
-    crontab /etc/cron.d/jupyter-tests-cron
-
-COPY send-mail.py /usr/local/bin/send-mail.py
-RUN chmod +x /usr/local/bin/send-mail.py
-
 CMD ["/home/cwtests/run.sh"]
-
-
-
 

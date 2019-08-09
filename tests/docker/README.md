@@ -10,7 +10,7 @@ First make sure the udevadm rules are changed on the host. Just follow the ChipW
 First create an api key on *newae* SendGrid account and give it *only* send mail permissions. **Delete the old key**. Use the new key when starting the container.
 
 ```
-docker run --privileged 
+docker run --privileged
     -v /dev:/dev \
     -e TO_EMAILS="email@example.com, another@email.com" \
     -e FROM_EMAIL="from@email.com" \
@@ -20,7 +20,7 @@ docker run --privileged
 
 **Warning: do not commit the docker container after it has been started, or somehow add the key to the VCS. If this happens (it should not), delete the key right away and recreate a new API key**
 
-The tests should be run as a cronjob every 4 hours starting at 6:00 until 18:00 (server time), and e-mail will be sent to all the emails specified after the tests are complete. Check your spam! 
+The tests should be run as a cronjob every 4 hours starting at 6:00 until 18:00 (server time), and e-mail will be sent to all the emails specified after the tests are complete. Check your spam!
 Note that the running container will not print anything to terminal other that when it starts cron in the foreground. That is expected behaviour as everything is logged instead.
 
 ## Troubleshooting
