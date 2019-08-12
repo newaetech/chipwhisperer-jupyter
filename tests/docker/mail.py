@@ -6,6 +6,7 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from sys import argv
+import logging
 
 
 def send_mail(from_email, to_emails, subject, email_contents):
@@ -19,7 +20,7 @@ def send_mail(from_email, to_emails, subject, email_contents):
         response = sg.send(message)
         logging.info('email with test results sent to: {}'.format(to_emails))
     except Exception as e:
-        print(e.message)
+        print(e)
 
 
 if __name__ == '__main__':

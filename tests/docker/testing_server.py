@@ -13,15 +13,15 @@ from mail import send_mail
 
 # fix logging inside docker container
 root = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)
 
-debug = os.environ.get('DEBUG', False)
-if debug == 'True':
+# check for debuging
+debug = os.environ.get('DEBUG')
+if debug:
     root.setLevel(logging.DEBUG)
 else:
     root.setLevel(logging.INFO)
 
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
@@ -178,7 +178,7 @@ def main(chipwhisperer_dir, config_file):
             email_contents = create_email_contents(time, commit, out)
             subject = 'ChipWhisperer Test Results {}'.format(time)
             send_mail(from_email, to_emails, subject, email_contents)
-        sleep(10)
+        sleep(100)
 
 
 if __name__ == '__main__':

@@ -7,11 +7,16 @@
 First make sure the udevadm rules are changed on the host. Just follow the ChipWhisperer installation where the *plugdev* group is created.
 
 ## Running
-First create an api key on *newae* SendGrid account and give it *only* send mail permissions. **Delete the old key**. Use the new key when starting the container.
+First create an api key on *newae* SendGrid account and give it *only* send mail permissions. **Delete the old key**. Use the new key when starting the container. Before starting the container create a folder to share with the container for the tutorial output.
+
+```mkdir $HOME/tutorials && chmod 777 $HOME/tutorials```
+
+Then start the container:
 
 ```
-docker run --privileged
+docker run -it --privileged
     -v /dev:/dev \
+    -v $HOME/tutorials/:/home/cwtests/chipwhisperer/tutorials \
     -e TO_EMAILS="email@example.com, another@email.com" \
     -e FROM_EMAIL="from@email.com" \
     -e SENDGRID_API_KEY="the sendgrid api key" \
@@ -20,8 +25,11 @@ docker run --privileged
 
 **Warning: do not commit the docker container after it has been started, or somehow add the key to the VCS. If this happens (it should not), delete the key right away and recreate a new API key**
 
-The tests should be run as a cronjob every 4 hours starting at 6:00 until 18:00 (server time), and e-mail will be sent to all the emails specified after the tests are complete. Check your spam!
-Note that the running container will not print anything to terminal other that when it starts cron in the foreground. That is expected behaviour as everything is logged instead.
+The running container will log to console. On startup it will log the server time. After if the current hour is in the *HOURS* env variable given it will check if there are any changes to the repository. If there are it will test them. If not it will just continue checking.
+
+## Future Enhancements
+
+Allow the debug varaible to 
 
 ## Troubleshooting
 
@@ -33,8 +41,16 @@ Attach to the container using:
 
 ```docker exec -it <container id> /bin/bash```
 
-Check the log files that are used:
+Then play detective. If you are okay with restarting the container and testing this way you can restart with *DEBUG* set to anything that evaluates to True in python.
 
-  * */var/log/cw-cron.log* This log file contains the stdout and stderr of the cron job
-  * */tmp/<date time>_cw-test.log* Multiple files containing the output of the cw-run-jupyter-tests.sh file for each time the cronjob is executed.
-  * */tmp/env.sh* contains the environment variables passed to the cw-run-jupyter-tests.sh script by the start-container.sh script at container startup.
+```docker run ...
+    -e DEBUG=True \
+    ...
+    ...
+```
+
+## Docker
+
+To clean up docker containers, and dangling images use:
+
+```docker system prune```
