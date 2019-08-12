@@ -13,7 +13,7 @@ import nbconvert
 from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.exporters import NotebookExporter
 from nbconvert.preprocessors import ExecutePreprocessor
-from nbconvert import RSTExporter
+from nbconvert import RSTExporter, HTMLExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions
 from nbconvert.nbconvertapp import NbConvertBase
 
@@ -105,20 +105,21 @@ def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENA
 
 
 def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
-    """Takes a notebook node and exports it to ReST.
+    """Takes a notebook node and exports it to ReST and HTML
 
     Args:
         nb (notebook): The notebook returned by execute_notebook.
         nb_path (str): Path to intput notebook file. Used to generate the
             name of the output file.
-        output_dir (str): The output directory for the ReST file.
+        output_dir (str): The output directory for the ReST and HTML file.
         SCOPETYPE (str): Used to generate the output file name.
         PLATFORM (str): Used to generate the output file name.
     """
     notebook_dir, file_name = os.path.split(nb_path)
     file_name_root, _ = os.path.splitext(file_name)
-    rst_path = os.path.join(output_dir, file_name_root + "-{}-{}".format(SCOPETYPE, PLATFORM) + ".rst")
-    rst_path = os.path.abspath(rst_path)
+    base_path = os.path.join(output_dir, file_name_root + "-{}-{}".format(SCOPETYPE, PLATFORM))
+    rst_path = os.path.abspath(base_path + ".rst")
+    html_path = os.path.abspath(base_path + ".html")
 
     with open(rst_path, "w", encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
@@ -126,7 +127,15 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
         body, res = rst_exporter.from_notebook_node(nb)
 
         rst_file.write(body)
-        print('Wrote to:', rst_path)
+        print('Wrote to: ', rst_path)
+
+    with open(html_path, 'w', encoding='utf-8') as html_file:
+        html_exporter = HTMLExporter()
+
+        body, res = html_exporter.from_notebook_node(nb)
+
+        html_file.write(body)
+        print('Wrote to: ', html_path)
 
 
 def _print_tracebacks(errors):
