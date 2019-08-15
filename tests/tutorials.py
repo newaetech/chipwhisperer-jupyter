@@ -57,7 +57,7 @@ class cd:
         os.chdir(self.saved_path)
 
 
-def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
+def execute_notebook(nb_path, serial_number=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
@@ -72,14 +72,13 @@ def execute_notebook(nb_path, serial_number, allow_errors=True, SCOPETYPE='OPENA
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
 
-        replacements = {
-            r'cw.scope(\(\))': 'cw.scope(sn=\'{}\')'.format(serial_number),
-            r'chipwhisperer.scope()': 'chipwhisperer.scope(sn=\'{}\')'.format(serial_number)
-        }
-        rp = RegexReplacePreprocessor(replacements)
-        ip = InLineCodePreprocessor(notebook_dir)
-
         if serial_number:
+            replacements = {
+                r'cw.scope(\(\))': 'cw.scope(sn=\'{}\')'.format(serial_number),
+                r'chipwhisperer.scope()': 'chipwhisperer.scope(sn=\'{}\')'.format(serial_number)
+            }
+            rp = RegexReplacePreprocessor(replacements)
+            ip = InLineCodePreprocessor(notebook_dir)
             # inline all code before putting in serial
             # numbers
             nb, resources = ip.preprocess(nb, {})
@@ -169,7 +168,7 @@ def _print_stdout(nb):
         print("[{}]:\n{}".format(out[0], out[1]['text']))
 
 
-def test_notebook(nb_path, output_dir, serial_number, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
+def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, **kwargs):
     print()
     print("Testing: {}:...".format(os.path.abspath(nb_path)))
@@ -333,7 +332,7 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
     """
 
     def __init__(self, notebook_dir, **kwargs):
-        self.notebook_dir = nb_dir
+        self.notebook_dir = notebook_dir
         super().__init__(**kwargs)
 
     def preprocess_cell(self, cell, resources, index):
