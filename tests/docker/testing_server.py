@@ -27,7 +27,7 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 
 
-ACTIVATE_VENV = '/home/cwtests/.virtualenvs/tests/bin/activate'
+ACTIVATE_VENV = 'source /home/cwtests/.virtualenvs/tests/bin/activate'
 
 
 def execute_command(command, directory, shell=False):
