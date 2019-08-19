@@ -410,16 +410,16 @@ if __name__ == '__main__':
                     kwargs.update(extra_kwargs)
 
                 passed = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number, **kwargs)
-                if not summary.get(test_config['scope']):
-                    summary[test_config['scope']] = {}
-                    summary[test_config['scope']]['failed'] = 0
-                    summary[test_config['scope']]['run'] = 0
+                if not summary.get(test_config['target']):
+                    summary[test_config['target']] = {}
+                    summary[test_config['target']]['failed'] = 0
+                    summary[test_config['target']]['run'] = 0
 
                 if not passed:
-                    summary[test_config['scope']]['failed'] += 1
+                    summary[test_config['target']]['failed'] += 1
                     summary['all']['failed'] += 1
 
-                summary[test_config['scope']]['run'] += 1
+                summary[test_config['target']]['run'] += 1
                 summary['all']['run'] += 1
 
     print('SUMMARY')
