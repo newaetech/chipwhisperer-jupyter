@@ -155,6 +155,7 @@ class Tester:
                         summary_started = True
                     if summary_started:
                         summary.append(line)
+                summary = '\n'.join(summary)
         else:
             pass
 
