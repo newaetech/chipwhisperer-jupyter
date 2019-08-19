@@ -389,6 +389,7 @@ if __name__ == '__main__':
     # Run each on of the tutorials with each supported hardware
     # configuration for that tutorial and export the output
     # to the output directory.
+    summary = {}
     summary['all'] = {}
     summary['all']['failed'] = 0
     summary['all']['run'] = 0
