@@ -46,6 +46,9 @@ RUN echo PATH=$PATH:/home/$CW_USER/.local/bin/ >> /etc/environment
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install setuptools
 
+# install virtualenvwrapper for testing dependencies
+RUN python3 -m pip install virtualenv
+
 # Add sendgrid library for python for sending e-mail results
 RUN python3 -m pip install sendgrid
 
@@ -61,6 +64,9 @@ RUN cd /home/$CW_USER && \
     git submodule update --init jupyter && \
     python3 -m pip install -e . --user --no-warn-script-location && \
     python3 -m pip install --user -r jupyter/requirements.txt --no-warn-script-location
+
+RUN mkdir -p /home/$CW_USER/.virtualenvs && \
+    virtualenv --python=/usr/bin/python3 /home/$CW_USER/.virtualenvs/tests
 
 USER root
 
