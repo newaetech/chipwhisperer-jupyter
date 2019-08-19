@@ -410,7 +410,7 @@ if __name__ == '__main__':
                     kwargs.update(extra_kwargs)
 
                 passed = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number, **kwargs)
-                if not summary[test_config['scope']]:
+                if not summary.get(test_config['scope']):
                     summary[test_config['scope']] = {}
                     summary[test_config['scope']]['failed'] = 0
                     summary[test_config['scope']]['run'] = 0
