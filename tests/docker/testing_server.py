@@ -27,6 +27,9 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 
 
+ACTIVATE_VENV = '/home/cwtests/.virtualenvs/tests/bin/activate'
+
+
 def execute_command(command, directory, shell=False):
     logging.debug('executing "{}" in "{}" with shell={}'.format(command, directory, shell))
     if shell:
@@ -83,10 +86,20 @@ def checked_out_commit(directory):
 def run_tests(cw_dir, config_file):
     jupyter_test_dir = os.path.join(cw_dir, 'jupyter', 'tests')
     test_script = os.path.join(jupyter_test_dir, 'tutorials.py')
-    out1, err1 = execute_command('python3 -m pip install .', cw_dir)
-    out2, err2 = execute_command('python3 -m pip install -r requirements.txt', jupyter_test_dir)
-    out3, err3 = execute_command('python3 {} {}'.format(test_script, config_file), jupyter_test_dir)
-    return '\n\n'.join([out1, out2, out3]), '\n\n'.join([err1, err2, err3])
+
+    # wipe virtual environment
+    cmd = '{} && pip freeze | xargs pip uninstall -y'.format(ACTIVATE_VENV)
+    out1, err1 = execute_command(cmd, cw_dir, shell=True)
+
+    install_cw = '{} && python -m pip install .'.format(ACTIVATE_VENV)
+    out2, err2 = execute_command(install_cw, cw_dir, shell=True)
+
+    install_jupyter = '{} && python -m pip install -r requirements.txt'.format(ACTIVATE_VENV)
+    out3, err3 = execute_command(install_jupyter, jupyter_test_dir, shell=True)
+
+    run_tests = '{} && python {} {}'.format(ACTIVATE_VENV, test_script, config_file)
+    out4, err4 = execute_command(run_tests, jupyter_test_dir, shell=True)
+    return '\n\n'.join([out1, out2, out3, out4]), '\n\n'.join([err1, err2, err3, err4])
 
 
 def server_time():
