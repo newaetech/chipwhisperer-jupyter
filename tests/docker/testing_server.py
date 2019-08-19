@@ -83,8 +83,10 @@ def checked_out_commit(directory):
 def run_tests(cw_dir, config_file):
     jupyter_test_dir = os.path.join(cw_dir, 'jupyter', 'tests')
     test_script = os.path.join(jupyter_test_dir, 'tutorials.py')
-    out, err = execute_command('python3 {} {}'.format(test_script, config_file), jupyter_test_dir)
-    return out, err
+    out1, err1 = execute_command('python3 -m pip install .', cw_dir)
+    out2, err2 = execute_command('python3 -m pip install -r requirements.txt', jupyter_test_dir)
+    out3, err3 = execute_command('python3 {} {}'.format(test_script, config_file), jupyter_test_dir)
+    return '\n\n'.join([out1, out2, out3]), '\n\n'.join([err1, err2, err3])
 
 
 def server_time():
