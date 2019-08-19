@@ -7,6 +7,7 @@ from os.path import isfile, join
 import yaml
 import re
 import sys
+from pprint import pprint
 
 import nbformat
 import nbconvert
@@ -170,6 +171,7 @@ def _print_stdout(nb):
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, **kwargs):
+    passed = False
     print()
     print("Testing: {}:...".format(os.path.abspath(nb_path)))
     print("with {}.".format(kwargs))
@@ -180,6 +182,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, **kwargs)
     if not errors:
         print("PASSED")
+        passed = True
         if export:
             export_notebook(nb, nb_path, output_dir, **export_kwargs)
     else:
@@ -187,18 +190,21 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
             error_is_acceptable = [error[1]['ename'] in allowable_exceptions for error in errors]
             if all(error_is_acceptable):
                 print("PASSED with expected errors")
+                passed = True
                 for error in errors:
                     print(error[1]['ename'], ':', error[1]['evalue'])
                 if export:
                     export_notebook(nb, nb_path, output_dir, **export_kwargs)
             else:
                 print("FAILED:")
+                passed = False
                 if print_first_traceback_only:
                     _print_tracebacks([error for i, error in enumerate(errors) if i == 0])
                 else:
                     _print_tracebacks(errors)
         else:
             print("FAILED:")
+            passed = False
             if print_first_traceback_only:
                 _print_tracebacks([error for i, error in enumerate(errors) if i == 0])
             else:
@@ -207,6 +213,8 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
         _print_stdout(nb)
     if print_stderr:
         _print_stderr(nb)
+
+    return passed
 
 
 def clear_notebook(path):
@@ -381,6 +389,9 @@ if __name__ == '__main__':
     # Run each on of the tutorials with each supported hardware
     # configuration for that tutorial and export the output
     # to the output directory.
+    summary['all'] = {}
+    summary['all']['failed'] = 0
+    summary['all']['run'] = 0
     for nb in tutorials.keys():
         for test_config in tutorials[nb]['configurations']:
             match, serial_number = matching_connected_configuration(test_config, connected_hardware)
@@ -397,7 +408,21 @@ if __name__ == '__main__':
                 if extra_kwargs:
                     kwargs.update(extra_kwargs)
 
-                test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number, **kwargs)
+                passed = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number, **kwargs)
+                if not summary[test_config['scope']]:
+                    summary[test_config['scope']] = {}
+                    summary[test_config['scope']]['failed'] = 0
+                    summary[test_config['scope']]['run'] = 0
+
+                if not passed:
+                    summary[test_config['scope']]['failed'] += 1
+                    summary['all']['failed'] += 1
+
+                summary[test_config['scope']]['run'] += 1
+                summary['all']['run'] += 1
+
+    print('SUMMARY')
+    pprint(summary)
 
     # clean up the projects created by running the tutorial notebooks.
     try:

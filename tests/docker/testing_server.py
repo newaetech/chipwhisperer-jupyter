@@ -84,7 +84,8 @@ def checked_out_commit(directory):
 
 
 def run_tests(cw_dir, config_file):
-    jupyter_test_dir = os.path.join(cw_dir, 'jupyter', 'tests')
+    jupyter_dir = os.path.join(cw_dir, 'jupyter')
+    jupyter_test_dir = os.path.join(jupyter_dir, 'tests')
     test_script = os.path.join(jupyter_test_dir, 'tutorials.py')
 
     # wipe virtual environment
@@ -95,7 +96,7 @@ def run_tests(cw_dir, config_file):
     out2, err2 = execute_command(install_cw, cw_dir, shell=True)
 
     install_jupyter = '{} && python -m pip install -r requirements.txt'.format(ACTIVATE_VENV)
-    out3, err3 = execute_command(install_jupyter, jupyter_test_dir, shell=True)
+    out3, err3 = execute_command(install_jupyter, jupyter_dir, shell=True)
 
     run_tests = '{} && python {} {}'.format(ACTIVATE_VENV, test_script, config_file)
     out4, err4 = execute_command(run_tests, jupyter_test_dir, shell=True)
@@ -111,8 +112,8 @@ def local_time():
     return datetime.now()
 
 
-def create_email_contents(date, commit, test_output):
-    contents = '{}\n\nChecked out commit {}\n\n{}'.format(date, commit, test_output)
+def create_email_contents(date, commit, summary, test_output):
+    contents = '{}\n\nChecked out commit {}\n\n{}\n\n{}'.format(date, commit, summary, test_output)
     return contents
 
 
@@ -145,6 +146,15 @@ class Tester:
                 self.last_test_time_pretty = server_time()
                 results, err = run_tests(cw_dir, self.config_file)
                 self.hours_tested_today.append(self.last_test_start_time.day)
+
+                # get the summary from the results
+                summary = []
+                summary_started = False
+                for line in results.split('\n'):
+                    if 'SUMMARY' in line:
+                        summary_started = True
+                    if summary_started:
+                        summary.append(line)
         else:
             pass
 
@@ -155,7 +165,7 @@ class Tester:
                 self.hours_tested_today = list()
 
         if results:
-            return self.last_test_time_pretty, commit, results, err
+            return self.last_test_time_pretty, commit, summary, results, err
         else:
             return None
 
@@ -189,8 +199,8 @@ def main(chipwhisperer_dir, config_file):
     while True:
         test_results = tester.run()
         if test_results:
-            time, commit, out, err = test_results
-            email_contents = create_email_contents(time, commit, out)
+            time, commit, summary, out, err = test_results
+            email_contents = create_email_contents(time, commit, summary, out)
             subject = 'ChipWhisperer Test Results {}'.format(time)
             send_mail(from_email, to_emails, subject, email_contents)
         sleep(100)
