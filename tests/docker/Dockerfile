@@ -77,8 +77,10 @@ RUN usermod -aG plugdev $CW_USER && \
 # add to python scripts for testing server
 COPY testing_server.py /home/$CW_USER/testing_server.py
 COPY mail.py /home/$CW_USER/mail.py
+COPY mail/* /home/$CW_USER/mail/
 RUN chown $CW_USER:$CW_USER /home/$CW_USER/testing_server.py && \
-    chown $CW_USER:$CW_USER /home/$CW_USER/mail.py
+    chown $CW_USER:$CW_USER /home/$CW_USER/mail.py && \
+    chown $CW_USER:$CW_USER /home/$CW_USER/mail/*
 
 # add test configuration file
 COPY tests.yaml /home/$CW_USER/tests.yaml

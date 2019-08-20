@@ -105,11 +105,17 @@ def run_tests(cw_dir, config_file):
         exec(f.read(), dict(__file__=ACTIVATE_VENV_PYTHON))
 
     # make sure the tutorials.run_tests function is available
-    spec = util.spec_from_file_location("tutorials", os.path.join(jupyter_test_dir, 'tutorials.py'))
+    path = os.path.join(jupyter_test_dir, 'tutorials.py')
+    spec = util.spec_from_file_location("tutorials", os.path.join(jupyter_test_dir, path))
     tutorials = util.module_from_spec(spec)
     spec.loader.exec_module(tutorials)
 
-    summary, tests = eval('tutorials.run_tests("tutorials.yaml")', {'run_tests': run_tests, '__name__': '__main__'})
+    config_path = os.path.abspath(os.path.join(cw_dir, '..', 'tests.yaml'))
+
+    cwd = os.getcwd()
+    os.chdir(jupyter_test_dir)
+    summary, tests = eval('tutorials.run_tests("{}")'.format(config_path), {'tutorials': tutorials, '__name__': '__main__'})
+    os.chdir(cwd)
 
     tests[cmd] = 'Stdout:\n{}\nStderr:{}\n'.format(out1, err1)
     tests[install_cw] = 'Stdout:\n{}\nStderr:{}\n'.format(out2, err2)
@@ -176,7 +182,7 @@ def create_summaries(summary, tests):
     summaries = []
     title = ''
 
-    for key, value in summary:
+    for key, value in summary.items():
         failed = value['failed']
         run = value['run']
         passed = run - failed
@@ -187,6 +193,24 @@ def create_summaries(summary, tests):
             summaries.append('{}: {} Failed, {} Passed, {} Run'.format(key, failed, passed, run))
 
     return title, summaries, tests
+
+
+def sort_by_failed(tests):
+    failed = {}
+    passed = {}
+    build = {}
+    for key in tests.keys():
+        if key.startswith('PASSED'):
+            passed[key] = tests[key]
+        elif key.startswith('FAILED'):
+            failed[key] = tests[key]
+        else:
+            build[key] = tests[key]
+    result = {}
+    result.update(failed)
+    result.update(passed)
+    result.update(build)
+    return result
 
 
 def main(chipwhisperer_dir, config_file):
@@ -221,10 +245,13 @@ def main(chipwhisperer_dir, config_file):
             time, commit, summary, tests = test_results
             title, summaries, tests = create_summaries(summary, tests)
 
+            tests = sort_by_failed(tests)
+
             jinja_context = {
                 'title': title,
-                'tests': tests,
+                'commit': commit,
                 'summaries': summaries,
+                'tests': tests,
             }
 
             email_contents = create_email_contents(jinja_context)
