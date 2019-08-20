@@ -7,8 +7,9 @@ import os
 import logging
 from datetime import datetime
 from time import sleep
+from importlib import util
 
-from mail import send_mail
+from mail import send_mail, create_email_contents
 
 
 # fix logging inside docker container
@@ -28,6 +29,7 @@ root.addHandler(handler)
 
 
 ACTIVATE_VENV = '. /home/cwtests/.virtualenvs/tests/bin/activate'
+ACTIVATE_VENV_PYTHON = '/home/cwtests/.virtualenvs/tests/bin/activate_this.py'
 
 
 def execute_command(command, directory, shell=False):
@@ -98,9 +100,22 @@ def run_tests(cw_dir, config_file):
     install_jupyter = '{} && python -m pip install -r requirements.txt'.format(ACTIVATE_VENV)
     out3, err3 = execute_command(install_jupyter, jupyter_dir, shell=True)
 
-    run_tests = '{} && python {} {}'.format(ACTIVATE_VENV, test_script, config_file)
-    out4, err4 = execute_command(run_tests, jupyter_test_dir, shell=True)
-    return '\n\n'.join([out1, out2, out3, out4]), '\n\n'.join([err1, err2, err3, err4])
+    # activate virtualenvironment
+    with open(ACTIVATE_VENV_PYTHON, 'r') as f:
+        exec(f.read(), dict(__file__=ACTIVATE_VENV_PYTHON))
+
+    # make sure the tutorials.run_tests function is available
+    spec = util.spec_from_file_location("tutorials", os.path.join(jupyter_test_dir, 'tutorials.py'))
+    tutorials = util.module_from_spec(spec)
+    spec.loader.exec_module(tutorials)
+
+    summary, tests = eval('tutorials.run_tests("tutorials.yaml")', {'run_tests': run_tests, '__name__': '__main__'})
+
+    tests[cmd] = 'Stdout:\n{}\nStderr:{}\n'.format(out1, err1)
+    tests[install_cw] = 'Stdout:\n{}\nStderr:{}\n'.format(out2, err2)
+    tests[install_jupyter] = 'Stdout:\n{}\nStderr:{}\n'.format(out3, err3)
+
+    return summary, tests
 
 
 def server_time():
@@ -110,11 +125,6 @@ def server_time():
 
 def local_time():
     return datetime.now()
-
-
-def create_email_contents(date, commit, summary, test_output):
-    contents = '{}\n\nChecked out commit {}\n\n{}\n\n{}'.format(date, commit, summary, test_output)
-    return contents
 
 
 class Tester:
@@ -134,7 +144,8 @@ class Tester:
             return False
 
     def run(self):
-        results = ''
+        summary = None
+        tests = None
         if self.should_check_repo():
             # check for update from remote
             changes_pulled = update_from_remote(self.cw_dir)
@@ -144,18 +155,8 @@ class Tester:
                 logging.info('running tests at {}'.format(local_time()))
                 self.last_test_start_time = local_time()
                 self.last_test_time_pretty = server_time()
-                results, err = run_tests(cw_dir, self.config_file)
+                summary, tests = run_tests(cw_dir, self.config_file)
                 self.hours_tested_today.append(self.last_test_start_time.day)
-
-                # get the summary from the results
-                summary = []
-                summary_started = False
-                for line in results.split('\n'):
-                    if 'SUMMARY' in line:
-                        summary_started = True
-                    if summary_started:
-                        summary.append(line)
-                summary = '\n'.join(summary)
         else:
             pass
 
@@ -165,10 +166,27 @@ class Tester:
             if day_finished > day_started:
                 self.hours_tested_today = list()
 
-        if results:
-            return self.last_test_time_pretty, commit, summary, results, err
+        if summary and tests:
+            return self.last_test_time_pretty, commit, summary, tests
         else:
             return None
+
+
+def create_summaries(summary, tests):
+    summaries = []
+    title = ''
+
+    for key, value in summary:
+        failed = value['failed']
+        run = value['run']
+        passed = run - failed
+
+        if key == 'all':
+            title = '{} Failed, {} Passed, {} Run'.format(failed, passed, run)
+        else:
+            summaries.append('{}: {} Failed, {} Passed, {} Run'.format(key, failed, passed, run))
+
+    return title, summaries, tests
 
 
 def main(chipwhisperer_dir, config_file):
@@ -200,8 +218,16 @@ def main(chipwhisperer_dir, config_file):
     while True:
         test_results = tester.run()
         if test_results:
-            time, commit, summary, out, err = test_results
-            email_contents = create_email_contents(time, commit, summary, out)
+            time, commit, summary, tests = test_results
+            title, summaries, tests = create_summaries(summary, tests)
+
+            jinja_context = {
+                'title': title,
+                'tests': tests,
+                'summaries': summaries,
+            }
+
+            email_contents = create_email_contents(jinja_context)
             subject = 'ChipWhisperer Test Results {}'.format(time)
             send_mail(from_email, to_emails, subject, email_contents)
         sleep(100)
