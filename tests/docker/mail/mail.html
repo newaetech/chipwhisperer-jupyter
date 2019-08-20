@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{%- block title -%}
+{{ title }}
+{%- endblock -%}
+
+{%- block commit -%}
+Commit checked out: {{ commit }}
+{%- endblock -%}
+
+{%- block summary -%}
+{%- for summary in summaries -%}
+  <h3>{{ summary }}</h3>
+{%- endfor -%}
+{%- endblock -%}
+
+
+{%- block body -%}
+{%- for test, output in tests.items() -%}
+  <button class="collapsible">{{ test }}</button>
+  <div class="content">
+    <pre>{{ output }}</pre>
+  </div>
+{% endfor -%}
+{%- endblock -%}

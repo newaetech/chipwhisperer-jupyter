@@ -41,6 +41,15 @@ NbConvertBase.display_data_priority = [
 ]
 
 
+output = []
+
+
+def print(msg='', *args, **kwargs):
+    """Overwrite print to allow recording of output."""
+    __builtins__['print'](msg, *args, **kwargs)
+    output.append(msg)
+
+
 class cd:
     """Context manager for changing current working directory.
 
@@ -171,6 +180,8 @@ def _print_stdout(nb):
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, **kwargs):
+    # reset output for next test
+    output[:] = list()
     passed = False
     print()
     print("Testing: {}:...".format(os.path.abspath(nb_path)))
@@ -214,7 +225,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     if print_stderr:
         _print_stderr(nb)
 
-    return passed
+    return passed, '\n'.join(output)
 
 
 def clear_notebook(path):
@@ -365,9 +376,8 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
         return cell, resources
 
 
-if __name__ == '__main__':
-    script, config_file_path = sys.argv
-    tutorials, connected_hardware = load_configuration(config_file_path)
+def run_tests(config):
+    tutorials, connected_hardware = load_configuration(config)
 
     nb_dir = '..'
     output_dir = '../../tutorials/'
@@ -389,6 +399,11 @@ if __name__ == '__main__':
     # Run each on of the tutorials with each supported hardware
     # configuration for that tutorial and export the output
     # to the output directory.
+
+    # to keep track of test name and output for email
+    tests = {}
+
+    # to keep track of number of fails/run
     summary = {}
     summary['all'] = {}
     summary['all']['failed'] = 0
@@ -409,7 +424,8 @@ if __name__ == '__main__':
                 if extra_kwargs:
                     kwargs.update(extra_kwargs)
 
-                passed = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number, **kwargs)
+                passed, output = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number,
+                                               **kwargs)
                 if not summary.get(test_config['target']):
                     summary[test_config['target']] = {}
                     summary[test_config['target']]['failed'] = 0
@@ -422,11 +438,17 @@ if __name__ == '__main__':
                 summary[test_config['target']]['run'] += 1
                 summary['all']['run'] += 1
 
-    print('SUMMARY')
-    pprint(summary)
+                if passed:
+                    header = 'PASSED: {} using {}'.format(nb, test_config['target'])
+                else:
+                    header = 'FAILED: {} using {}'.format(nb, test_config['target'])
+                tests[header] = output
 
     # clean up the projects created by running the tutorial notebooks.
     try:
         shutil.rmtree('projects')
     except FileNotFoundError:
         pass
+
+    return summary, tests
+
