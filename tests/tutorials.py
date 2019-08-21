@@ -26,7 +26,7 @@ tests_dir, _ = os.path.split(script_path)
 # set configuration options
 RSTExporter.template_path = [tests_dir]
 RSTExporter.template_file = 'rst_extended.tpl'
-NbConvertBase.display_data_priority = [
+NbConvertBase.display_data_priorityList = [
     'application/vnd.jupyter.widget-state+json',
     'application/vnd.jupyter.widget-view+json',
     'application/javascript',
