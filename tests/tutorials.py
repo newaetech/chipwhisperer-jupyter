@@ -19,7 +19,7 @@ from nbparameterise import extract_parameters, parameter_values, replace_definit
 from nbconvert.nbconvertapp import NbConvertBase
 
 from functools import partial
-print = partial(print, flush=True)
+import builtins
 
 script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
@@ -46,7 +46,7 @@ output = []
 
 def print(msg='', *args, **kwargs):
     """Overwrite print to allow recording of output."""
-    __builtins__['print'](msg, *args, **kwargs)
+    builtins.print(msg, *args, flush=True, **kwargs)
     output.append(msg)
 
 
