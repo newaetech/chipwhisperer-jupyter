@@ -126,3 +126,16 @@ To clean up docker containers, and dangling images use:
 .. code::
 
     docker system prune
+
+
+Running Jupyter Notebook Interactively
+======================================
+
+Sometimes what you need is to use the jupyter notebook instance inside the container interactively. This can be done by using the **run_interactively.sh** script:
+
+.. code:: bash
+
+    chmod +x run_interactively.sh
+    ./run_interactively.sh
+
+Then navigate to *localhost:8888* in your browser.
