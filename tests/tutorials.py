@@ -448,3 +448,7 @@ def run_tests(config):
 
     return summary, tests
 
+
+if __name__ == '__main__':
+    script, config_file_path = sys.argv
+    run_tests(config_file_path)
