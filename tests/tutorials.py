@@ -361,18 +361,14 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
                 # find the notebooks and export to python code and replace
                 # the current cell source code with that python code before
                 # replacing instances of cw.scope()
-                p = re.compile(r"%run\s*[\"']?(.*\.ipynb)[\"']?")
-                python_code_list = []
+                p = re.compile(r"(%run\s*[\"']?(.*\.ipynb)[\"']?)")
                 external_notebooks = re.findall(p, cell['source'])
-                for ext_nb in external_notebooks:
+                for full_match, ext_nb in external_notebooks:
                     ext_nb_path = os.path.join(self.notebook_dir, ext_nb)
                     ext_nb_node = nbformat.read(ext_nb_path, as_version=4)
                     python_exporter = nbconvert.exporters.PythonExporter()
                     python_code, _ = python_exporter.from_notebook_node(ext_nb_node)
-                    python_code_list.append(python_code)
-
-                cell['source'] = '\n'.join(python_code_list)
-
+                    cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
         return cell, resources
 
 
