@@ -44,10 +44,10 @@ NbConvertBase.display_data_priority = [
 output = []
 
 
-def print(msg='', *args, **kwargs):
+def print(*args, **kwargs):
     """Overwrite print to allow recording of output."""
-    builtins.print(msg, *args, flush=True, **kwargs)
-    output.append(msg)
+    builtins.print(*args, flush=True, **kwargs)
+    output.append(' '.join(args))
 
 
 class cd:
