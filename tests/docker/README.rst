@@ -251,3 +251,11 @@ script:
     ./run_interactively.sh
 
 Then navigate to *localhost:8888* in your browser.
+
+If the server is on your local network instead of on the same computer you can
+use the same script in you ssh session. This will start the jupyter notebook and
+print the token to you terminal screen. Then navigate to the servers IP address
+and port 8888 in your browser. You should then be asked for your token/password.
+Copy the token from your ssh session into your browser and use it to sign on.
+Ctrl+C in your ssh session will terminate the notebook server.
+
