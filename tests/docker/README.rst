@@ -56,7 +56,9 @@ You will need a few packages installed:
   * libusb-dev
 
 .. warning:: Do not install the docker package through apt. You need to install
-    the Docker-CE using the instructions on the docker website.
+    the Docker-CE using the `instructions`_ on the docker website.
+
+.. _instructions: https://docs.docker.com/install/linux/docker-ce/ubuntu/
 
 You also need to clone the chipwhisperer repository and pull the jupyter
 submodule:
@@ -100,6 +102,7 @@ the docker cli.
 
 .. code::
 
+    cd chipwhisperer/jupyter/tests/docker
     docker build . -t cw-testing-server
 
 
@@ -119,13 +122,39 @@ Then start the container:
 
 .. code::
 
-    docker run -it --privileged
+    docker run -d --privileged \
         -v /dev:/dev \
         -v $HOME/tutorials/:/home/cwtests/chipwhisperer/tutorials \
         -e TO_EMAILS="email@example.com, another@email.com" \
-        -e FROM_EMAIL="from@email.com" \
+        -e FROM_EMAIL="testing-server@chipwhisperer.com" \
         -e SENDGRID_API_KEY="the sendgrid api key" \
+        -e HOURS="6, 10, 14, 18" \
         cw-testing-server
+
+The -d runs the container in the background, so you can sign out of your session
+without the container stopping. If you want to see what the container prints
+to the screen and want to test if it starts properly run it with *-it* instead
+of *-d*. This will run it in the foreground with STDIN open and a pseudo tty
+connection. If it runs using this method you can then press *Ctrl+C* to stop it
+and restart it in detached mode.
+
+The *--privileged* starts the docker container with all system privileges. Since
+this is a testing server for private use this is fine. We are using the docker
+cotnainer not for isolation but envrionment reproducibility. The *-v* option
+allows mounting of the host files system to the docker container. The whole
+*/dev* directory is mounted because the container needs access to the host
+hardware. The tutorials directory is mounted to allow looking at the tutorials
+output by the testing server during its testing sessions. It is for ease of
+accessing those files mostly.
+
+The *-e* option allows setting of environment variables inside the docker
+container. The *TO_EMAILS* is a comma seperated string of emails to send the
+test output to. The *FROM_EMAIL* is the email that will appear as the sender
+when you look at the sent e-mail. This can be anything but I have chosen
+*testing-server@chipwhisperer.com*. The *SENDGRID_API_KEY* is the api key you
+created on the *newae* sendgrid account. The *HOURS* are the hours during which
+the testing server checks for changes to the repository. This should be enough
+to get the container running.
 
 The tutorials will be written in both html and ReST to the *$HOME/tutorials*
 directory. The is useful for checking specifics of why tests failed.
@@ -134,10 +163,28 @@ directory. The is useful for checking specifics of why tests failed.
     somehow add the key to the VCS. If this happens (it should not), delete the
     key right away and recreate a new API key
 
-The running container will log to console. On startup it will log the server
-time. After if the current hour is in the *HOURS* env variable given it will
-check if there are any changes to the repository. If there are it will test
-them. If not it will just continue checking.
+The running container will log to console, unless started in detached mode. If
+started in detached mode you can see the output by using:
+
+.. code::
+
+    docker ps
+
+This will show the running containers an allow you to find out the docker id.
+You can then run:
+
+.. code::
+
+    docker logs <container id>
+
+You usually only have to type as much of the id as is necessary to make it
+not match more than one container. So the first two characters are usually
+enough.
+
+The test server will continue checking for changes to the repository every 100
+seconds by doing a pull and submodule update from the chipwhisperer repository
+during the *HOURS* given. If there are changes it will run all the tests in the
+*tests.yaml* files using the configuration specified.
 
 
 Future Enhancements
@@ -168,7 +215,7 @@ python.
 .. code::
 
     docker run ...
-        -e DEBUG=True \
+        -e DEBUG="True" \
         ...
         ...
 
@@ -199,6 +246,7 @@ script:
 
 .. code:: bash
 
+    cd chipwhisperer/jupyter/tests/docker
     chmod +x run_interactively.sh
     ./run_interactively.sh
 
