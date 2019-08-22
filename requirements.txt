@@ -14,3 +14,5 @@ tqdm==4.28.1
 PyCryptoDome>=3.7.0
 terminaltables==3.1.0
 phoenixAES==0.0.2
+ipywidgets==7.5.1
+
