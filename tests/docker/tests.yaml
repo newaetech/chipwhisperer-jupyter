@@ -1,5 +1,5 @@
 # This is the build configuration file for the tutorials.py script.
-# All tutorials and their configurations here will be run exlcuding
+# All tutorials and their configurations here will be run excluding
 # configurations that are not included in **connected**.
 #
 # Expected Syntax:
