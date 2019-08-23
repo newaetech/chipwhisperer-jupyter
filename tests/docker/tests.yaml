@@ -31,10 +31,13 @@ connected:
   - scope: OPENADC
     target: CWLITEARM
     serial number: 442031204c5032433030373131313033
+    kwargs:
+      baud: 38400
   - scope: OPENADC
     target: CWLITEXMEGA
     serial number: 44203120473539413130343130323039
-
+    kwargs:
+      baud: 38400
 
 tutorials:
   PA_Intro_1-Firmware_Build_Setup.ipynb:
