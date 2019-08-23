@@ -418,7 +418,7 @@ def run_tests(config):
             match, matched_config = matching_connected_configuration(test_config, connected_hardware)
             serial_number = None
             if match:
-                serial_number = matched_config.get('serial_number')
+                serial_number = matched_config.get('serial number')
                 path = os.path.join(nb_dir, nb)
 
                 kwargs = {
