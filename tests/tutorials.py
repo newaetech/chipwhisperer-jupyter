@@ -67,7 +67,7 @@ class cd:
         os.chdir(self.saved_path)
 
 
-def execute_notebook(nb_path, serial_number=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
+def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
@@ -82,17 +82,27 @@ def execute_notebook(nb_path, serial_number=None, allow_errors=True, SCOPETYPE='
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
 
+        if serial_number or baud:
+            ip = InLineCodePreprocessor(notebook_dir)
+            # inline all code before doing any replacements
+            nb, resources = ip.preprocess(nb, {})
+
+        replacements = {}
+
         if serial_number:
-            replacements = {
+            replacements.update({
                 r'cw.scope(\(\))': 'cw.scope(sn=\'{}\')'.format(serial_number),
                 r'chipwhisperer.scope()': 'chipwhisperer.scope(sn=\'{}\')'.format(serial_number)
-            }
+            })
+
+        if baud:
+            replacements.update({
+                r'program_target\(((?:[\w=\+/*\s]+\s*,\s*)*[\w=+/*]+)': r"program_target(\g<1>, baud=38400"
+            })
+
+        # complete all regex subtitutions
+        if replacements:
             rp = RegexReplacePreprocessor(replacements)
-            ip = InLineCodePreprocessor(notebook_dir)
-            # inline all code before putting in serial
-            # numbers
-            nb, resources = ip.preprocess(nb, {})
-            # add serial number to the cw.scope calls
             nb, resources = rp.preprocess(nb, {})
 
         if notebook_dir:
@@ -179,7 +189,7 @@ def _print_stdout(nb):
 
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
-                  allowable_exceptions=None, **kwargs):
+                  allowable_exceptions=None, baud=None, **kwargs):
     # reset output for next test
     output[:] = list()
     passed = False
@@ -190,7 +200,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
         print('on device with serial number {}.'.format(serial_number))
     else:
         print('No serial number specified... only bad if more than one device attached.')
-    nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, **kwargs)
+    nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, baud=baud, **kwargs)
     if not errors:
         print("PASSED")
         passed = True
@@ -282,9 +292,8 @@ def matching_connected_configuration(config, connected):
             as keys.
 
     Returns:
-        tuple: (bool, string) Whether a match was found, and second the serial number
-        of the hardware device connected matching the configuration. Returns False and
-        None if matching connected device was not found.
+        tuple: (bool, dict) Whether a match was found, and second the matching attached
+         configuration. Returns False and None if matching connected device was not found.
     """
     check_keys = [
         'scope',
@@ -294,8 +303,8 @@ def matching_connected_configuration(config, connected):
     for connected_config in connected:
         check = [config[key] == connected_config[key] for key in check_keys]
         if all(check):
-            sn = connected_config.get('serial number')
-            return True, sn
+            connected = connected_config
+            return True, connected
     return False, None
 
 
@@ -406,8 +415,10 @@ def run_tests(config):
     summary['all']['run'] = 0
     for nb in tutorials.keys():
         for test_config in tutorials[nb]['configurations']:
-            match, serial_number = matching_connected_configuration(test_config, connected_hardware)
+            match, matched_config = matching_connected_configuration(test_config, connected_hardware)
+            serial_number = None
             if match:
+                serial_number = matched_config.get('serial_number')
                 path = os.path.join(nb_dir, nb)
 
                 kwargs = {
@@ -416,9 +427,17 @@ def run_tests(config):
                     'CRYPTO_TARGET': test_config['firmware'],
                 }
 
-                extra_kwargs = tutorials[nb].get('kwargs')
-                if extra_kwargs:
-                    kwargs.update(extra_kwargs)
+                tutorial_specific_kwargs = tutorials[nb].get('kwargs')
+                connected_config_kwargs = matched_config.get('kwargs')
+
+                # The connected configuration kwargs can be overwritten by
+                # tutorial specific_kwargs
+                if connected_config_kwargs:
+                    kwargs.update(connected_config_kwargs)
+
+                if tutorial_specific_kwargs:
+                    kwargs.update(tutorial_specific_kwargs)
+
 
                 passed, output = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number,
                                                **kwargs)
