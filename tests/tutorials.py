@@ -256,8 +256,7 @@ def clear_notebook(path):
 
 
 def clear_outputs_in_dir(dirpath):
-    filter_list = ["Test_Notebook.ipynb", "PA_TVLA_1-Performing_TVLA_Testing_for_Crypto_Validation.ipynb",
-                   "PA_Profiling_1_Template_Attacks_HW_Assumption.ipynb", "PA_Intro_3-Measuring_SNR_of_Target.ipynb",
+    filter_list = ["Test_Notebook.ipynb",
                    "PA_HW_CW305.ipynb", "PA_CPA_4-Hardware_Crypto_Attack.ipynb", "Helpful_Code_Blocks.ipynb",
                    "!!Suggested_Completion_Order!!.ipynb", "Fault_4-AES_Differential_Fault_Analysis_Attacks.ipynb"]
     notebook_files = [f for f in listdir("./") if
