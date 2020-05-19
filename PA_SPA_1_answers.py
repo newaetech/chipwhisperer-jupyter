@@ -8,7 +8,7 @@ def find_offset_SAD(ref, target_trace, threshold):
         if calc_SAD(ref, target_trace[offset:offset+len(ref)]) < threshold:
             return offset
         
-def guess_password_SAD(cap_pass_trace, ref, original_offset, target):
+def guess_password_SAD(cap_pass_trace, find_offset, ref, original_offset, threshold, target):
     trylist = "abcdefghijklmnopqrstuvwxyz0123456789"
     password = ""
     for i in range(5):
@@ -21,7 +21,7 @@ def guess_password_SAD(cap_pass_trace, ref, original_offset, target):
                 print("Access granted: password = ", next_pass)
                 done = 1
                 return next_pass
-            offset = find_offset_SAD(ref, trace, 10)
+            offset = find_offset(ref, trace, threshold)
             if offset is None:
                 print("Threshold likely too low")
                 return None
