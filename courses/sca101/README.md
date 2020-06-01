@@ -15,5 +15,5 @@ This group of labs can be completed with one of three possible sets of hardware:
 | **3.3:** DPA on Firmware Implementation of AES   |  <p align="center"> ✅ </p>       |        <p align="center"> ✅ </p>       |        <p align="center"> ✅ </p>      |
 | CPA attack against a simple AES-128 Implementation | <p align="center"> ✅ </p>       |        <p align="center"> ✅ </p>        |        <p align="center"> ✅ </p>      |
 | Manual CPA Attack                            |  <p align="center"> ✅ </p>      |        <p align="center"> ✅ </p>       |         <p align="center"> ✅ </p>      |
-| Jittery Triggering on UART                   |  <p align="center">❌ </p>      |       <p align="center"> ✅ </p>        |         <p align="center"> ✅ </p>     |
+| Jittery Triggering on UART                   |  <p align="center">❌ </p>      |       <p align="center"> ❌ </p>        |         <p align="center"> ✅ </p>     |
 
