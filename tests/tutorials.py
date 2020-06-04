@@ -74,7 +74,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
     notebook_dir, file_name = os.path.split(nb_path)
     real_path = Path(nb_path).absolute()
 
-    with open(real_path) as nbfile:
+    with open(real_path, encoding='utf-8') as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
         orig_parameters = extract_parameters(nb)
         params = parameter_values(orig_parameters, SCOPETYPE=SCOPETYPE, PLATFORM=PLATFORM, **kwargs)
