@@ -43,7 +43,7 @@ NbConvertBase.display_data_priority = [
 
 output = []
 
-
+_builtin_print = print
 def print(*args, **kwargs):
     """Overwrite print to allow recording of output."""
     builtins.print(*args, flush=True, **kwargs)
@@ -238,14 +238,22 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     return passed, '\n'.join(output)
 
 
-def clear_notebook(path):
+def clear_notebook(path, kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
     real_path = Path(path)
     body = ""
     with open(real_path, "r", encoding="utf-8") as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
-        orig_parameters = extract_parameters(nb)
-        params = parameter_values(orig_parameters, SCOPETYPE="OPENADC", PLATFORM="CWLITEARM")
-        new_nb = replace_definitions(nb, params, execute=False)
+
+        # special case: if the top block isn't a parameter block, nbparameterise will:
+        #   * error out if invalid python syntax
+        #   * replace code with a parameter block (whatever we passed in with kwargs, including an empty block)
+        # so if no parameters being changed, don't run nbparameterise
+        if len(kwargs) > 0:
+            orig_parameters = extract_parameters(nb)
+            params = parameter_values(orig_parameters, **kwargs)
+            new_nb = replace_definitions(nb, params, execute=False)
+        else:
+            new_nb = nb
         co = ClearOutputPreprocessor()
 
         exporter = NotebookExporter()
@@ -255,15 +263,15 @@ def clear_notebook(path):
         nbfile.write(body)
 
 
-def clear_outputs_in_dir(dirpath):
-    filter_list = ["Test_Notebook.ipynb",
-                   "PA_HW_CW305.ipynb", "PA_CPA_4-Hardware_Crypto_Attack.ipynb", "Helpful_Code_Blocks.ipynb",
-                   "!!Suggested_Completion_Order!!.ipynb", "Fault_4-AES_Differential_Fault_Analysis_Attacks.ipynb"]
-    notebook_files = [f for f in listdir("./") if
-                      (isfile(join("./", f)) and f.endswith(".ipynb") and f not in filter_list)]
+def clear_outputs_in_dir(dirpath, default_list=r".*\.ipynb$", blacklist=r"^Lab.*", kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
+
+    notebook_files = [dirpath + "/" + f for f in listdir(dirpath) if isfile(dirpath + "/" + f) and re.search(default_list, f) and not re.search(blacklist, f)]
+
     for file in notebook_files:
-        print("Clearing {}".format(file))
-        clear_notebook(file)
+        _builtin_print("Clearing {}".format(file))
+        clear_notebook(file, kwargs)
+
+    
 
 
 def load_configuration(path):
