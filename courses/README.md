@@ -9,8 +9,8 @@ fault: Fault Injection (Glitching) courses
 ### Numbering
 
 1xx: Fundamentals. A 101 course is a prerequisite for all higher course.
-2xx: Advanced topics. Interdependancies noted in the labs/courses themselves.
-3xx: Applications. May or may not require any 2xx courses.
+2xx: Advanced topics. Dependencies noted in the labs/courses themselves.
+appx: Applications. Dependencies noted in the labs/courses themselves.
 
 ### Getting Started
 
