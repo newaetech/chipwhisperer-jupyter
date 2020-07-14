@@ -1,6 +1,6 @@
 ## Side Channel Analysis 101 (SCA101) Labs
 
-This group of labs can be completed with one of three possible sets of hardware:
+This group of labs can be completed with the following hardware (see table below for lab/hardware compatability): 
 
 * **Group A HW**: CW-Lite (XMEGA or ARM), SCAPACK-L1, SCAPACK-L2, CW1200 ($250 - $3800)
 * **CW-Nano**: ChipWhisperer-Nano ($50)
