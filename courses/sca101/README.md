@@ -20,3 +20,7 @@ The lab numbers follow slide sets from the ChipWhisperer.io training.
 | **4.1:** CPA attack using ChipWhisperer-Analyzer             |  <p align="center"> ✅ </p>      |        <p align="center"> ✅ </p>       |         <p align="center"> ✅ </p>      |
 | **6.4:** Jittery Triggering on UART          |  <p align="center">❌ </p>      |       <p align="center"> ❌ </p>        |         <p align="center"> ✅ </p>     |
 
+Prerequisites:
+* (Optional) Root directory labs
+    * 0 - Introduction to Jupyter Notebooks
+    * 1 - Connecting to Hardware
