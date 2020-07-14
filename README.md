@@ -12,11 +12,11 @@ This repository serves multiple purposes:
    
    * See [ChipWhisperer.io](https://www.ChipWhisperer.io) for more details.
 
-* Experiments (see `experiments`) showcasing various things you can do with the ChipWhisperer platform. These notebooks may have less background, and often require certain hardware to perform the experiments.
+* Experiments (see `experiments`) showcasing various things you can do with the ChipWhisperer platform. These notebooks may have less background, often require certain hardware to perform the experiments, and may be a work in progress.
 
 * Demos (see `demos`) of various features and targets, such as ChipWhisperer-Pro streaming mode being used to capture long power traces, or hardware AES running on the CW305 FPGA board.
 
-* Many notebooks have been overhauled and renamed - if you're looking for the previous version, see the `old` directory (preserved here to keep links less broken on the internet).
+* Many notebooks have been overhauled and renamed - if you're looking for the previous version, see the `archive` directory (preserved here to keep links less broken on the internet).
 
 ## Getting Started
 
