@@ -12,17 +12,21 @@ This repository serves multiple purposes:
    
    * See [ChipWhisperer.io](https://www.ChipWhisperer.io) for more details.
 
-* Experiments (see `experiments`) showcasing various things you can do with the ChipWhisperer platform. These notebooks may have less background, often require certain hardware to perform the experiments, and may be a work in progress.
+* Experiments (see `experiments`) showcasing various things you can do with the ChipWhisperer platform. These notebooks may have less background, often require certain hardware to perform the experiments, and may be in a work in progress state.
 
 * Demos (see `demos`) of various features and targets, such as ChipWhisperer-Pro streaming mode being used to capture long power traces, or hardware AES running on the CW305 FPGA board.
 
 * Many notebooks have been overhauled and renamed - if you're looking for the previous version, see the `archive` directory (preserved here to keep links less broken on the internet).
 
 ## Getting Started
-
 What do you want to do now? If you're just getting to know ChipWhisperer, check out the following:
 
-* TODO
+## Getting Started
+First time using ChipWhisperer? Check out these links:
+* [Getting Started](https://wiki.newae.com/V5:Getting_Started) if you have no idea where to start
+* [CW5 Information](https://wiki.newae.com/CW5) for information about ChipWhisperer 5 and Jupyter.
+* [Installing ChipWhisperer](https://chipwhisperer.readthedocs.io/en/latest/installing.html) if you're trying to set up this software package
+* `0 - Introduction to Jupyter Notebooks.ipynb` and `1 - Connecting to Hardware.ipynb` also serve as introductions to interacting with Jupyter Notebooks and the ChipWhisperer hardware.
 
 ## Getting Support
 
