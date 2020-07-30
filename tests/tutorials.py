@@ -141,17 +141,26 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
     """
     notebook_dir, file_name = os.path.split(nb_path)
     file_name_root, _ = os.path.splitext(file_name)
-    base_path = os.path.join(output_dir, file_name_root + "-{}-{}".format(SCOPETYPE, PLATFORM))
-    rst_path = os.path.abspath(base_path + ".rst")
-    html_path = os.path.abspath(base_path + ".html")
+    base_path = os.path.join(output_dir, file_name_root + '-{}-{}'.format(SCOPETYPE, PLATFORM))
+    rst_path = os.path.abspath(base_path + '.rst')
+    html_path = os.path.abspath(base_path + '.html')
 
-    with open(rst_path, "w", encoding='utf-8') as rst_file:
+    with open(rst_path, 'w', encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
 
-        body, res = rst_exporter.from_notebook_node(nb)
+        body, res = rst_exporter.from_notebook_node(nb, resources={'unique_key': os.path.join('img','{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', ''))})
+        file_names = res['outputs'].keys()
+        for name in file_names:
+            with open(os.path.join(output_dir, name), 'wb') as f:
+                f.write(res['outputs'][name])
+                print('writing to ', name)
+            #print(res['outputs'][name])
+
 
         rst_file.write(body)
         print('Wrote to: ', rst_path)
+
+        ## need resources
 
     with open(html_path, 'w', encoding='utf-8') as html_file:
         html_exporter = HTMLExporter()
