@@ -76,6 +76,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
 
     with open(real_path, encoding='utf-8') as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
+
         orig_parameters = extract_parameters(nb)
         params = parameter_values(orig_parameters, SCOPETYPE=SCOPETYPE, PLATFORM=PLATFORM, **kwargs)
         nb = replace_definitions(nb, params, execute=False)
@@ -99,6 +100,10 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
             replacements.update({
                 r'program_target\(((?:[\w=\+/*\s]+\s*,\s*)*[\w=+/*]+)': r"program_target(\g<1>, baud=38400"
             })
+
+        # %matplotlib notebook won't show up in blank plots
+        # so replace with %matplotlib inline for now
+        replacements.update({'%matplotlib notebook' : '%matplotlib inline'})
 
         # complete all regex subtitutions
         if replacements:
