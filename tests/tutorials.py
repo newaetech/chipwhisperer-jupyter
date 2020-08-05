@@ -149,10 +149,18 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
     rst_path = os.path.abspath(base_path + '.rst')
     html_path = os.path.abspath(base_path + '.html')
 
+
+
+    #   class EscapeBacktickPreprocessor(nbconvert.preprocessors.Preprocessor):
+
+    ebp = EscapeBacktickPreprocessor()
+
+    rst_ready_nb, _ = ebp.preprocess(nb, {})
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
 
-        body, res = rst_exporter.from_notebook_node(nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
+
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
         file_names = res['outputs'].keys()
         for name in file_names:
             with open(os.path.join(output_dir, name), 'wb') as f:
@@ -332,6 +340,19 @@ def matching_connected_configuration(config, connected):
             return True, connected
     return False, None
 
+class EscapeBacktickPreprocessor(nbconvert.preprocessors.Preprocessor):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+
+    def preprocess_cell(self, cell, resources, index):
+        if cell['cell_type'] == 'code':
+            outputs = cell['outputs']
+            for output in outputs:
+                if 'name' in output:
+                    output['text'] = output['text'].replace('`', '\\`')
+                    output['text'] = output['text'].replace('_', '\\_')
+                    #output['text'] = output['text'].replace(':', '\\:')
+        return cell, resources
 
 class RegexReplacePreprocessor(nbconvert.preprocessors.Preprocessor):
     """Preprocessor for replacing matched regex strings in nb cells
