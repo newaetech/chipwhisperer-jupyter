@@ -43,7 +43,7 @@ NbConvertBase.display_data_priority = [
 
 output = []
 
-
+_builtin_print = print
 def print(*args, **kwargs):
     """Overwrite print to allow recording of output."""
     builtins.print(*args, flush=True, **kwargs)
@@ -74,8 +74,9 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
     notebook_dir, file_name = os.path.split(nb_path)
     real_path = Path(nb_path).absolute()
 
-    with open(real_path) as nbfile:
+    with open(real_path, encoding='utf-8') as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
+
         orig_parameters = extract_parameters(nb)
         params = parameter_values(orig_parameters, SCOPETYPE=SCOPETYPE, PLATFORM=PLATFORM, **kwargs)
         nb = replace_definitions(nb, params, execute=False)
@@ -99,6 +100,10 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
             replacements.update({
                 r'program_target\(((?:[\w=\+/*\s]+\s*,\s*)*[\w=+/*]+)': r"program_target(\g<1>, baud=38400"
             })
+
+        # %matplotlib notebook won't show up in blank plots
+        # so replace with %matplotlib inline for now
+        replacements.update({'%matplotlib notebook' : '%matplotlib inline'})
 
         # complete all regex subtitutions
         if replacements:
@@ -134,19 +139,40 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
         SCOPETYPE (str): Used to generate the output file name.
         PLATFORM (str): Used to generate the output file name.
     """
-    notebook_dir, file_name = os.path.split(nb_path)
-    file_name_root, _ = os.path.splitext(file_name)
-    base_path = os.path.join(output_dir, file_name_root + "-{}-{}".format(SCOPETYPE, PLATFORM))
-    rst_path = os.path.abspath(base_path + ".rst")
-    html_path = os.path.abspath(base_path + ".html")
 
-    with open(rst_path, "w", encoding='utf-8') as rst_file:
+    notebook_dir, file_name = os.path.split(nb_path)
+
+    #need to make sure course is in rst file name
+    notebook_dir = notebook_dir.replace(r'\\', '_').replace('/', '_')
+    file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
+    base_path = os.path.join(output_dir, file_name_root + '-{}-{}'.format(SCOPETYPE, PLATFORM))
+    rst_path = os.path.abspath(base_path + '.rst')
+    html_path = os.path.abspath(base_path + '.html')
+
+
+
+    #   class EscapeBacktickPreprocessor(nbconvert.preprocessors.Preprocessor):
+
+    ebp = EscapeBacktickPreprocessor()
+
+    rst_ready_nb, _ = ebp.preprocess(nb, {})
+    with open(rst_path, 'w', encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
 
-        body, res = rst_exporter.from_notebook_node(nb)
+
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
+        file_names = res['outputs'].keys()
+        for name in file_names:
+            with open(os.path.join(output_dir, name), 'wb') as f:
+                f.write(res['outputs'][name])
+                print('writing to ', name)
+            #print(res['outputs'][name])
+
 
         rst_file.write(body)
         print('Wrote to: ', rst_path)
+
+        ## need resources
 
     with open(html_path, 'w', encoding='utf-8') as html_file:
         html_exporter = HTMLExporter()
@@ -238,14 +264,22 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     return passed, '\n'.join(output)
 
 
-def clear_notebook(path):
+def clear_notebook(path, kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
     real_path = Path(path)
     body = ""
     with open(real_path, "r", encoding="utf-8") as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
-        orig_parameters = extract_parameters(nb)
-        params = parameter_values(orig_parameters, SCOPETYPE="OPENADC", PLATFORM="CWLITEARM")
-        new_nb = replace_definitions(nb, params, execute=False)
+
+        # special case: if the top block isn't a parameter block, nbparameterise will:
+        #   * error out if invalid python syntax
+        #   * replace code with a parameter block (whatever we passed in with kwargs, including an empty block)
+        # so if no parameters being changed, don't run nbparameterise
+        if len(kwargs) > 0:
+            orig_parameters = extract_parameters(nb)
+            params = parameter_values(orig_parameters, **kwargs)
+            new_nb = replace_definitions(nb, params, execute=False)
+        else:
+            new_nb = nb
         co = ClearOutputPreprocessor()
 
         exporter = NotebookExporter()
@@ -255,15 +289,15 @@ def clear_notebook(path):
         nbfile.write(body)
 
 
-def clear_outputs_in_dir(dirpath):
-    filter_list = ["Test_Notebook.ipynb",
-                   "PA_HW_CW305.ipynb", "PA_CPA_4-Hardware_Crypto_Attack.ipynb", "Helpful_Code_Blocks.ipynb",
-                   "!!Suggested_Completion_Order!!.ipynb", "Fault_4-AES_Differential_Fault_Analysis_Attacks.ipynb"]
-    notebook_files = [f for f in listdir("./") if
-                      (isfile(join("./", f)) and f.endswith(".ipynb") and f not in filter_list)]
+def clear_outputs_in_dir(dirpath, default_list=r".*\.ipynb$", blacklist=r"^Lab.*", kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
+
+    notebook_files = [dirpath + "/" + f for f in listdir(dirpath) if isfile(dirpath + "/" + f) and re.search(default_list, f) and not re.search(blacklist, f)]
+
     for file in notebook_files:
-        print("Clearing {}".format(file))
-        clear_notebook(file)
+        _builtin_print("Clearing {}".format(file))
+        clear_notebook(file, kwargs)
+
+    
 
 
 def load_configuration(path):
@@ -306,6 +340,19 @@ def matching_connected_configuration(config, connected):
             return True, connected
     return False, None
 
+class EscapeBacktickPreprocessor(nbconvert.preprocessors.Preprocessor):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+
+    def preprocess_cell(self, cell, resources, index):
+        if cell['cell_type'] == 'code':
+            outputs = cell['outputs']
+            for output in outputs:
+                if 'name' in output:
+                    output['text'] = output['text'].replace('`', '\\`')
+                    output['text'] = output['text'].replace('_', '\\_')
+                    #output['text'] = output['text'].replace(':', '\\:')
+        return cell, resources
 
 class RegexReplacePreprocessor(nbconvert.preprocessors.Preprocessor):
     """Preprocessor for replacing matched regex strings in nb cells

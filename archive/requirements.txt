@@ -8,6 +8,7 @@ nbparameterise
 pandas==0.23.4
 holoviews==1.12.3
 matplotlib==3.0.3
+six==1.11.0
 PyYAML>=4.2b1
 tqdm==4.28.1
 PyCryptoDome>=3.7.0
