@@ -15,7 +15,7 @@ from nbconvert.preprocessors import ClearOutputPreprocessor
 from nbconvert.exporters import NotebookExporter
 from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert import RSTExporter, HTMLExporter
-from nbparameterise import extract_parameters, parameter_values, replace_definitions
+from nbparameterise import extract_parameters, parameter_values, replace_definitions, Parameter
 from nbconvert.nbconvertapp import NbConvertBase
 
 from functools import partial
@@ -66,6 +66,15 @@ class cd:
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.saved_path)
 
+def put_all_kwargs_in_notebook(params, **kwargs):
+    for kwarg in kwargs:
+        in_params = False
+        for p in params:
+            if p.name == kwarg:
+                in_params = True
+        if in_params == False:
+            print(f"Inserting {kwarg}")
+            params.append(Parameter(kwarg, str, kwargs[kwarg]))
 
 def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
     """Execute a notebook via nbconvert and collect output.
@@ -79,6 +88,9 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
 
         orig_parameters = extract_parameters(nb)
         params = parameter_values(orig_parameters, SCOPETYPE=SCOPETYPE, PLATFORM=PLATFORM, **kwargs)
+        kwargs['SCOPETYPE'] = SCOPETYPE
+        kwargs['PLATFORM'] = PLATFORM
+        put_all_kwargs_in_notebook(params, **kwargs)
         nb = replace_definitions(nb, params, execute=False)
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
