@@ -1,5 +1,5 @@
 [Trace Management]
-tracefile0 = 32bit_AES_data\traces\config_2020.10.08-19.35.41_0.cfg
+tracefile0 = 32bit_AES_data\traces\config_2020.11.05-16.24.24_0.cfg
 enabled0 = True
 [ChipWhisperer]
 [[General Settings]]
