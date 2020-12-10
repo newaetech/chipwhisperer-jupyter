@@ -1,3 +1,5 @@
+# ARCHIVED: USE AT OWN RISK
+
 This folder contains all of the CW5 jupyter files. If you'd like to try them
 out and have jupyter installed, you can run `jupyter notebook` (or `jupyter
 labs`) in this directory.
