@@ -5,7 +5,7 @@ jupyter_client>=5.2.4
 jupyter==1.0.0
 jupyter_contrib_nbextensions==0.5.0
 nbparameterise
-pandas==0.23.4
+pandas==0.25.3
 holoviews==1.12.3
 matplotlib==3.0.3
 PyYAML>=4.2b1
