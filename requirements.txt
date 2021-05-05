@@ -14,4 +14,4 @@ PyCryptoDome
 terminaltables
 phoenixAES
 ipywidgets
-
+nbconvert>=5.6.1
