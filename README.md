@@ -31,7 +31,7 @@ First time using ChipWhisperer? Check out these links:
 
 Having trouble? Here are some quick ways to get help:
 
-* If you have a general question or problem, please head over to [forum.newae.com](https://fourm.newae.com) which is our primary support method.
+* If you have a general question or problem, please head over to [forum.newae.com](https://forum.newae.com) which is our primary support method.
 * If you've found a specific bug, please raise a GITHub issue.
 * If you want more hands-on help, part of our training offerings on [ChipWhisperer.io](https://ChipWhisperer.io) offer more interactive help (including a private forum section).
 
