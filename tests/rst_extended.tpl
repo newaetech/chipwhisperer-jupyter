@@ -1,4 +1,4 @@
-{%- extends 'rst.tpl' -%}
+{%- extends 'index.rst.j2' -%}
 
 {% block in_prompt %}
 {% if cell.execution_count is defined %}
