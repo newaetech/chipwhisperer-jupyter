@@ -3,6 +3,7 @@ import os
 from glob import glob
 from pathlib import Path
 from os import listdir
+import os
 from os.path import isfile, join
 import yaml
 import re
@@ -24,7 +25,8 @@ import builtins
 script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
 # set configuration options
-RSTExporter.template_path = [tests_dir]
+RSTExporter.template_paths = ['.', tests_dir]
+# RSTExporter.extra_template_basedirs = [tests_dir, tests_dir+'/rst_extended']
 RSTExporter.template_file = 'rst_extended.tpl'
 NbConvertBase.display_data_priority = [
     'application/vnd.jupyter.widget-state+json',
