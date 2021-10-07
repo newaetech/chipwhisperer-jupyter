@@ -9,7 +9,7 @@ from datetime import datetime
 from time import sleep
 from importlib import util
 
-from mail import send_mail, create_email_contents
+#from mail import send_mail, create_email_contents
 
 
 # fix logging inside docker container
@@ -68,6 +68,8 @@ def update_from_remote(directory):
     if 'Already up to date.' not in out:
         updated = True
 
+    updated = True
+
     # Always update the jupyter submodule
     out, err = execute_command('git submodule update --init jupyter', directory)
 
@@ -90,19 +92,19 @@ def run_tests(cw_dir, config_file):
     jupyter_test_dir = os.path.join(jupyter_dir, 'tests')
     test_script = os.path.join(jupyter_test_dir, 'tutorials.py')
 
-    # wipe virtual environment
+    # # wipe virtual environment
     cmd = '{} && pip freeze | xargs pip uninstall -y'.format(ACTIVATE_VENV)
-    out1, err1 = execute_command(cmd, cw_dir, shell=True)
+    # out1, err1 = execute_command(cmd, cw_dir, shell=True)
 
     install_cw = '{} && python -m pip install .'.format(ACTIVATE_VENV)
-    out2, err2 = execute_command(install_cw, cw_dir, shell=True)
+    # out2, err2 = execute_command(install_cw, cw_dir, shell=True)
 
     install_jupyter = '{} && python -m pip install -r requirements.txt'.format(ACTIVATE_VENV)
-    out3, err3 = execute_command(install_jupyter, jupyter_dir, shell=True)
+    # out3, err3 = execute_command(install_jupyter, jupyter_dir, shell=True)
 
-    # activate virtualenvironment
-    with open(ACTIVATE_VENV_PYTHON, 'r') as f:
-        exec(f.read(), dict(__file__=ACTIVATE_VENV_PYTHON))
+    # # activate virtualenvironment
+    # with open(ACTIVATE_VENV_PYTHON, 'r') as f:
+    #     exec(f.read(), dict(__file__=ACTIVATE_VENV_PYTHON))
 
     # make sure the tutorials.run_tests function is available
     path = os.path.join(jupyter_test_dir, 'tutorials.py')
@@ -117,9 +119,9 @@ def run_tests(cw_dir, config_file):
     summary, tests = eval('tutorials.run_tests("{}")'.format(config_path), {'tutorials': tutorials, '__name__': '__main__'})
     os.chdir(cwd)
 
-    tests[cmd] = 'Stdout:\n{}\nStderr:{}\n'.format(out1, err1)
-    tests[install_cw] = 'Stdout:\n{}\nStderr:{}\n'.format(out2, err2)
-    tests[install_jupyter] = 'Stdout:\n{}\nStderr:{}\n'.format(out3, err3)
+    #tests[cmd] = 'Stdout:\n{}\nStderr:{}\n'.format(out1, err1)
+    #tests[install_cw] = 'Stdout:\n{}\nStderr:{}\n'.format(out2, err2)
+    #tests[install_jupyter] = 'Stdout:\n{}\nStderr:{}\n'.format(out3, err3)
 
     return summary, tests
 
@@ -254,9 +256,9 @@ def main(chipwhisperer_dir, config_file):
                 'tests': tests,
             }
 
-            email_contents = create_email_contents(jinja_context)
+            #email_contents = create_email_contents(jinja_context)
             subject = 'ChipWhisperer Test Results {}'.format(time)
-            send_mail(from_email, to_emails, subject, email_contents)
+            #send_mail(from_email, to_emails, subject, email_contents)
         sleep(100)
 
 

@@ -73,14 +73,12 @@ submodule:
     cd jupyter
     git checkout master
 
-You will need to copy the *99-newae.rules* files into */etc/udev/rules.d*
+You will need to copy the *50-newae.rules* files into */etc/udev/rules.d*
 and apply the changes:
 
 .. code::
 
-    sudo cp chipwhisperer/hardware/99-newae.rules /etc/udev/rules.d/
-
-    sudo usermod -a -G plugdev YOUR-USERNAME
+    sudo cp chipwhisperer/hardware/50-newae.rules /etc/udev/rules.d/
 
     sudo udevadm control --reload-rules
 
