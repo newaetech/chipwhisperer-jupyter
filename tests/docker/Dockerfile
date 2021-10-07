@@ -16,14 +16,19 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     git \
     libusb-dev \
     make \
+    curl \
     pandoc \
-    python3-dev \
-    python3-pip \
     tzdata \
+    ca-certificates \
+    openssl \
+    usbutils \
+    make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/list/* /tmp/* /var/tmp/*
 
+    # python3-dev \
+    # python3-pip \
 # set timezone
 RUN echo "America/Halifax" > /etc/timezone && \
     dpkg-reconfigure -f noninteractive tzdata
@@ -35,26 +40,44 @@ RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
 # install the correct version of GNU ARM toolchain
-RUN wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-dev_3.0.0.20180802-2_all.deb && \
-    wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-arm-none-eabi_3.0.0.20180802-2_all.deb && \
-    dpkg -i libnewlib-arm-none-eabi_3.0.0.20180802-2_all.deb libnewlib-dev_3.0.0.20180802-2_all.deb
-
-# add local --user install directory to path
-RUN echo PATH=$PATH:/home/$CW_USER/.local/bin/ >> /etc/environment
-
-# upgrade pip and install setuptools
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install setuptools
-
-# install virtualenvwrapper for testing dependencies
-RUN python3 -m pip install virtualenv
-
-# Add sendgrid library for python for sending e-mail results
-RUN python3 -m pip install sendgrid
-
+# RUN wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-dev_3.0.0.20180802-2_all.deb && \
+#     wget https://mirrors.kernel.org/ubuntu/pool/universe/n/newlib/libnewlib-arm-none-eabi_3.0.0.20180802-2_all.deb && \
+#     dpkg -i libnewlib-arm-none-eabi_3.0.0.20180802-2_all.deb libnewlib-dev_3.0.0.20180802-2_all.deb
 # make a non-root user
 RUN useradd --create-home --shell /bin/bash $CW_USER && \
     chown -R $CW_USER /home/$CW_USER
+
+RUN echo $HOME
+
+# add local --user install directory to path
+# RUN update-ca-certificates
+RUN curl https://pyenv.run | bash
+RUN cp -r $HOME/.pyenv /home/$CW_USER/
+RUN echo PATH=/home/$CW_USER/.pyenv/bin:/home/$CW_USER/.pyenv/shims:$PATH:/home/$CW_USER/.local/bin/ >> /etc/environment
+ENV PATH=/home/$CW_USER/.pyenv/bin:/home/$CW_USER/.pyenv/shims:${PATH}:/home/$CW_USER/.local/bin
+RUN ls /home/$CW_USER/.pyenv -a
+RUN echo $PATH
+# run echo 'eval "$(pyenv init -)" >> $HOME/.bashrc'
+# run echo 'eval "$(pyenv virtualenv-init -)" >> $HOME/.bashrc'
+# RUN eval "$(pyenv init -)"
+# RUN eval "$(pyenv virtualenv-init -)"
+ENV PYENV_ROOT /home/$CW_USER/.pyenv
+# ENV PYENV_ROOT /home/$CW_USER/.pyenv
+RUN pyenv install 3.9.5
+RUN pyenv global 3.9.5
+RUN pyenv rehash
+# RUN pyenv activate cw
+
+# upgrade pip and install setuptools
+RUN python -m pip install --upgrade pip && \
+    python -m pip install setuptools
+
+# install virtualenvwrapper for testing dependencies
+RUN python -m pip install virtualenv
+
+# Add sendgrid library for python for sending e-mail results
+RUN python -m pip install sendgrid
+
 
 USER $CW_USER
 # install chipwhisperer
@@ -62,17 +85,18 @@ RUN cd /home/$CW_USER && \
     git clone https://github.com/newaetech/chipwhisperer.git && \
     cd chipwhisperer && \
     git submodule update --init jupyter && \
-    python3 -m pip install -e . --user --no-warn-script-location && \
-    python3 -m pip install --user -r jupyter/requirements.txt --no-warn-script-location
+    python -m pip install -e . --user --no-warn-script-location && \
+    python -m pip install --user -r jupyter/requirements.txt --no-warn-script-location && \
+    python -m pip install pyyaml
 
-RUN mkdir -p /home/$CW_USER/.virtualenvs && \
-    virtualenv --python=/usr/bin/python3 /home/$CW_USER/.virtualenvs/tests
+# RUN mkdir -p /home/$CW_USER/.virtualenvs && \
+#     virtualenv --python=/home/$CW_USER/.pyenv/shims/python /home/$CW_USER/.virtualenvs/tests
 
 USER root
 
-# add user to plugdev group used by host
-RUN usermod -aG plugdev $CW_USER && \
-    usermod -aG plugdev root
+# # add user to plugdev group used by host
+# RUN usermod -aG plugdev $CW_USER && \
+#     usermod -aG plugdev root
 
 # add to python scripts for testing server
 COPY testing_server.py /home/$CW_USER/testing_server.py

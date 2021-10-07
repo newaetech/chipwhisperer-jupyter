@@ -409,6 +409,9 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
     so all instances in external notebooks that are now inline are also
     processed.
 
+
+    TODO: This needs to handle nested run blocks and indented run blocks
+
     Args:
         notebook_dir (str): The path to the directory containing all the
             notebooks. Used to resolve the relative paths used by the
@@ -425,19 +428,81 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
 
     def preprocess_cell(self, cell, resources, index):
         if cell['cell_type'] == 'code':
-            if '%run' in cell['source']:
+            while '%run' in cell['source']:
                 # to deal with other notebooks being called from the source notebook
                 # find the notebooks and export to python code and replace
                 # the current cell source code with that python code before
                 # replacing instances of cw.scope()
                 p = re.compile(r"(%run\s*[\"']?(.*\.ipynb)[\"']?)")
-                external_notebooks = re.findall(p, cell['source'])
-                for full_match, ext_nb in external_notebooks:
+                # external_notebooks = re.findall(p, cell['source'])
+
+
+                run_line = re.search(p, cell['source'])
+                run_position = run_line.start()
+                num_tabs = 0
+                num_spaces = 0
+                x = cell['source']
+                while True:
+                    if cell['source'][run_position-1] == '\t':
+                        num_tabs += 1
+                    elif cell['source'][run_position-1] == " ":
+                        num_spaces += 1
+                    else:
+                        break
+
+                    run_position -= 1
+
+                # for full_match, ext_nb in external_notebooks:
+                full_match = run_line.group()
+                ext_nb = run_line.group(2)
+                # print(run_line.group(1))
+                # print(run_line.group(2))
+                ext_nb_path = os.path.join(self.notebook_dir, ext_nb)
+                ext_nb_node = nbformat.read(ext_nb_path, as_version=4)
+                python_exporter = nbconvert.exporters.PythonExporter()
+                python_code, _ = python_exporter.from_notebook_node(ext_nb_node)
+                python_code = " " * num_spaces + "\t" * num_tabs + python_code.replace("\n", "\n{}{}".format(" " * num_spaces, "\t" * num_tabs))
+                # print(str(num_spaces), str(num_tabs))
+                cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
+
+                while "run_line_magic('run'" in cell['source']:
+                    # to deal with other notebooks being called from the source notebook
+                    # find the notebooks and export to python code and replace
+                    # the current cell source code with that python code before
+                    # replacing instances of cw.scope()
+                    # p = re.compile(r"(%run\s*[\"']?(.*\.ipynb)[\"']?)")
+                    p = re.compile(r"(get_ipython\(\)\.run_line_magic\('run'\, \'\"(.*\.ipynb)\"\'\))")
+                    # external_notebooks = re.findall(p, cell['source'])
+
+
+                    run_line = re.search(p, cell['source'])
+                    run_position = run_line.start()
+                    num_tabs = 0
+                    num_spaces = 0
+                    x = cell['source']
+                    while True:
+                        if cell['source'][run_position-1] == '\t':
+                            num_tabs += 1
+                        elif cell['source'][run_position-1] == " ":
+                            num_spaces += 1
+                        else:
+                            break
+
+                        run_position -= 1
+
+                    # for full_match, ext_nb in external_notebooks:
+                    full_match = run_line.group()
+                    ext_nb = run_line.group(2)
+                    # print(run_line.group(1))
+                    # print(run_line.group(2))
                     ext_nb_path = os.path.join(self.notebook_dir, ext_nb)
                     ext_nb_node = nbformat.read(ext_nb_path, as_version=4)
                     python_exporter = nbconvert.exporters.PythonExporter()
                     python_code, _ = python_exporter.from_notebook_node(ext_nb_node)
+                    python_code = " " * num_spaces + "\t" * num_tabs + python_code.replace("\n", "\n{}{}".format(" " * num_spaces, "\t" * num_tabs))
+                    # print(str(num_spaces), str(num_tabs))
                     cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
+
         return cell, resources
 
 
@@ -485,6 +550,7 @@ def run_tests(config):
                     'SCOPETYPE': test_config['scope'],
                     'PLATFORM': test_config['target'],
                     'CRYPTO_TARGET': test_config['firmware'],
+                    'SS_VER': test_config['ssver'],
                 }
 
                 tutorial_specific_kwargs = tutorials[nb].get('kwargs')
