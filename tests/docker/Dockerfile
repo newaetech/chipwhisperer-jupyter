@@ -8,12 +8,13 @@ RUN ln -fs /usr/share/zoneinfo/America/Halifax /etc/localtime
 # install apt-get packages
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y --no-install-recommends \
-    avr-libc=1:2.0.0+Atmel3.6.0-1 \
     cron \
     gcc=4:7.4.0-1ubuntu2.3 \
-    gcc-avr=1:5.4.0+Atmel3.6.0-1build1 \
-    gcc-arm-none-eabi=15:6.3.1+svn253039-1build1 \
+    gcc-avr \
+    avr-libc \
+    gcc-arm-none-eabi \
     git \
+    libnewlib-arm-none-eabi \
     libusb-dev \
     make \
     curl \
@@ -70,7 +71,8 @@ RUN pyenv rehash
 
 # upgrade pip and install setuptools
 RUN python -m pip install --upgrade pip && \
-    python -m pip install setuptools
+    python -m pip install setuptools && \
+    python -m pip install wheel
 
 # install virtualenvwrapper for testing dependencies
 RUN python -m pip install virtualenv
