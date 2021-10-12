@@ -111,8 +111,11 @@ def execute_notebook(nb_path, serial_number=None, baud=None, allow_errors=True, 
             })
 
         if baud:
+            # replacements.update({
+            #     r'program_target\(((?:[\w=\+/*\s]+\s*,\s*)*[\w=+/*]+)': r"program_target(\g<1>, baud=38400"
+            # })
             replacements.update({
-                r'program_target\(((?:[\w=\+/*\s]+\s*,\s*)*[\w=+/*]+)': r"program_target(\g<1>, baud=38400"
+                r'(program_target\(.*)\)': r'\g<1>, baud={})'.format(baud)
             })
 
         # %matplotlib notebook won't show up in blank plots
@@ -157,7 +160,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
     notebook_dir, file_name = os.path.split(nb_path)
 
     #need to make sure course is in rst file name
-    notebook_dir = notebook_dir.replace(r'\\', '_').replace('/', '_')
+    notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
     file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
     base_path = os.path.join(output_dir, file_name_root + '-{}-{}'.format(SCOPETYPE, PLATFORM))
     rst_path = os.path.abspath(base_path + '.rst')
@@ -257,7 +260,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
                 if export:
                     export_notebook(nb, nb_path, output_dir, **export_kwargs)
             else:
-                print("FAILED:")
+                print("FAILED {} config {}:".format(nb_path, kwargs))
                 passed = False
                 if print_first_traceback_only:
                     _print_tracebacks([error for i, error in enumerate(errors) if i == 0])
@@ -410,7 +413,7 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
     processed.
 
 
-    TODO: This needs to handle nested run blocks and indented run blocks
+    TODO: This needs to handle nested run blocks and indented run blocks - DONE
 
     Args:
         notebook_dir (str): The path to the directory containing all the
@@ -428,54 +431,18 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
 
     def preprocess_cell(self, cell, resources, index):
         if cell['cell_type'] == 'code':
-            while '%run' in cell['source']:
+            while ('%run' in cell['source']) or ("run_line_magic('run'" in cell['source']):
                 # to deal with other notebooks being called from the source notebook
                 # find the notebooks and export to python code and replace
                 # the current cell source code with that python code before
                 # replacing instances of cw.scope()
-                p = re.compile(r"(%run\s*[\"']?(.*\.ipynb)[\"']?)")
-                # external_notebooks = re.findall(p, cell['source'])
-
-
-                run_line = re.search(p, cell['source'])
-                run_position = run_line.start()
-                num_tabs = 0
-                num_spaces = 0
-                x = cell['source']
-                while True:
-                    if cell['source'][run_position-1] == '\t':
-                        num_tabs += 1
-                    elif cell['source'][run_position-1] == " ":
-                        num_spaces += 1
-                    else:
-                        break
-
-                    run_position -= 1
-
-                # for full_match, ext_nb in external_notebooks:
-                full_match = run_line.group()
-                ext_nb = run_line.group(2)
-                # print(run_line.group(1))
-                # print(run_line.group(2))
-                ext_nb_path = os.path.join(self.notebook_dir, ext_nb)
-                ext_nb_node = nbformat.read(ext_nb_path, as_version=4)
-                python_exporter = nbconvert.exporters.PythonExporter()
-                python_code, _ = python_exporter.from_notebook_node(ext_nb_node)
-                python_code = " " * num_spaces + "\t" * num_tabs + python_code.replace("\n", "\n{}{}".format(" " * num_spaces, "\t" * num_tabs))
-                # print(str(num_spaces), str(num_tabs))
-                cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
-
-                while "run_line_magic('run'" in cell['source']:
-                    # to deal with other notebooks being called from the source notebook
-                    # find the notebooks and export to python code and replace
-                    # the current cell source code with that python code before
-                    # replacing instances of cw.scope()
-                    # p = re.compile(r"(%run\s*[\"']?(.*\.ipynb)[\"']?)")
-                    p = re.compile(r"(get_ipython\(\)\.run_line_magic\('run'\, \'\"(.*\.ipynb)\"\'\))")
+                def regex_replace(p):
                     # external_notebooks = re.findall(p, cell['source'])
 
 
                     run_line = re.search(p, cell['source'])
+                    if not run_line:
+                        return
                     run_position = run_line.start()
                     num_tabs = 0
                     num_spaces = 0
@@ -502,12 +469,98 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
                     python_code = " " * num_spaces + "\t" * num_tabs + python_code.replace("\n", "\n{}{}".format(" " * num_spaces, "\t" * num_tabs))
                     # print(str(num_spaces), str(num_tabs))
                     cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
+                p = re.compile(r"(%run\s*[\"']?(.*\.ipynb)[\"']?)")
+                regex_replace(p)
+                p = re.compile(r"(get_ipython\(\)\.run_line_magic\('run'\, \'\"(.*\.ipynb)\"\'\))")
+                regex_replace(p)
+
+            p2 = re.compile(r"(get_ipython\(\)\.run_cell_magic\('bash', '.*?', '(.*?)'\))", flags=re.DOTALL)
+            run_line = re.finditer(p2, cell['source'])
+            # print(run_line)
+            for match in run_line:
+                # print(match.start())
+                run_position = match.start()
+                num_tabs = 0
+                num_spaces = 0
+                x = cell['source']
+                while True:
+                    if cell['source'][run_position-1] == '\t':
+                        num_tabs += 1
+                    elif cell['source'][run_position-1] == " ":
+                        num_spaces += 1
+                    else:
+                        break
+
+                    run_position -= 1
+
+                # for full_match, ext_nb in external_notebooks:
+                full_match = match.group(1)
+                shell_cmd = match.group(2)
+                # print(run_line.group(1))
+                # print(run_line.group(2))
+                space_tab = " " * num_spaces + "\t" * num_tabs
+                a = cell['source'].replace(full_match, f'try:\n{space_tab}    {full_match}\n{space_tab}except:\n{space_tab}    x=open("/tmp/tmp.txt").read(); print(x); raise OSError(x)\n')
+                a = a.replace(shell_cmd, shell_cmd + " &> /tmp/tmp.txt")
+                cell['source'] = a
+                # print(a)
+                # python_code = " " * num_spaces + "\t" * num_tabs + python_code.replace("\n", "\n{}{}".format(" " * num_spaces, "\t" * num_tabs))
+                # print(str(num_spaces), str(num_tabs))
+                # cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
 
         return cell, resources
 
+#need to separate into separate functions to multiprocess
+def run_test_hw_config(id, config):
+    tutorials, connected_hardware = load_configuration(config)
+    summary = {'failed': 0, 'run': 0}
+    hw_settings = connected_hardware[id]
+    output_dir = '../../tutorials/'
+    nb_dir = '..'
+    tests = {}
+
+    # TODO: grab HW configuration settings
+
+    for nb in tutorials.keys():
+        for test_config in tutorials[nb]['configurations']:
+            # run the test
+            if id in test_config['ids']:
+                kwargs = {
+                    'SCOPETYPE': hw_settings['scope'],
+                    'PLATFORM': hw_settings['target'],
+                    'CRYPTO_TARGET': hw_settings['firmware'],
+                    'serial_number': hw_settings.get('serial number'),
+                    'VERSION': hw_settings['tutorial type'],
+                    'SS_VER': test_config['ssver']
+
+                }
+
+                path = os.path.join(nb_dir, nb)
+                hw_kwargs = hw_settings.get('kwargs')
+                print("HW kwargs: {}".format(hw_kwargs))
+                if hw_kwargs:
+                    kwargs.update(hw_kwargs)
+
+                tutorial_kwargs = test_config.get('kwargs')
+                if tutorial_kwargs:
+                    kwargs.update(tutorial_kwargs)
+
+                print("Testing {} with {} ({})".format(nb, id, kwargs))
+                passed, output = test_notebook(nb_path=path, output_dir=output_dir, **kwargs)
+                if not passed:
+                    summary['failed'] += 1
+                summary['run'] += 1
+                header = "{} {} with config {}\n".format("Passed" if passed else "Failed", nb, id)
+                tests[header] = output
+            else:
+                pass # we don't need to test this hardware on this tutorial
+
+    return summary, tests
 
 def run_tests(config):
+    from multiprocessing.pool import Pool
     tutorials, connected_hardware = load_configuration(config)
+
+    num_hardware = len(connected_hardware)
 
     nb_dir = '..'
     output_dir = '../../tutorials/'
@@ -538,52 +591,79 @@ def run_tests(config):
     summary['all'] = {}
     summary['all']['failed'] = 0
     summary['all']['run'] = 0
-    for nb in tutorials.keys():
-        for test_config in tutorials[nb]['configurations']:
-            match, matched_config = matching_connected_configuration(test_config, connected_hardware)
-            serial_number = None
-            if match:
-                serial_number = matched_config.get('serial number')
-                path = os.path.join(nb_dir, nb)
+    results = []
+    with Pool(num_hardware) as nb_pool:
+        for i in range(num_hardware):
+            results.append(nb_pool.apply_async(run_test_hw_config, args=(i, config)))
 
-                kwargs = {
-                    'SCOPETYPE': test_config['scope'],
-                    'PLATFORM': test_config['target'],
-                    'CRYPTO_TARGET': test_config['firmware'],
-                    'SS_VER': test_config['ssver'],
-                }
+        try:
+            for index, result in enumerate(results):
+                hw_summary, hw_tests = result.get()
+                summary['all']['failed'] += hw_summary['failed']
+                summary['all']['run'] += hw_summary['run']
+                summary[str(index)] = {'failed': hw_summary['failed'], 'run': hw_summary['run']}
+                # summary[str(index)]['failed'] += hw_summary['failed']
+                # summary[str(index)]['run'] += hw_summary['run']
+                tests.update(hw_tests)
 
-                tutorial_specific_kwargs = tutorials[nb].get('kwargs')
-                connected_config_kwargs = matched_config.get('kwargs')
+                with open("config_{}_log.txt".format(index), 'w') as f:
+                    for header in hw_tests:
+                        f.write("Test {}, output:\n{}".format(header, hw_tests[header]))
+        except:
+            nb_pool.terminate()
 
-                # The connected configuration kwargs can be overwritten by
-                # tutorial specific_kwargs
-                if connected_config_kwargs:
-                    kwargs.update(connected_config_kwargs)
+    try:
+        shutil.rmtree('projects')
+    except FileNotFoundError:
+        pass
 
-                if tutorial_specific_kwargs:
-                    kwargs.update(tutorial_specific_kwargs)
+    return summary, tests
+    # for nb in tutorials.keys():
+    #     for test_config in tutorials[nb]['configurations']:
+    #         match, matched_config = matching_connected_configuration(test_config, connected_hardware)
+    #         serial_number = None
+    #         if match:
+    #             serial_number = matched_config.get('serial number')
+    #             path = os.path.join(nb_dir, nb)
+
+    #             kwargs = {
+    #                 'SCOPETYPE': test_config['scope'],
+    #                 'PLATFORM': test_config['target'],
+    #                 'CRYPTO_TARGET': test_config['firmware'],
+    #                 'SS_VER': test_config['ssver'],
+    #             }
+
+    #             tutorial_specific_kwargs = tutorials[nb].get('kwargs')
+    #             connected_config_kwargs = matched_config.get('kwargs')
+
+    #             # The connected configuration kwargs can be overwritten by
+    #             # tutorial specific_kwargs
+    #             if connected_config_kwargs:
+    #                 kwargs.update(connected_config_kwargs)
+
+    #             if tutorial_specific_kwargs:
+    #                 kwargs.update(tutorial_specific_kwargs)
 
 
-                passed, output = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number,
-                                               **kwargs)
-                if not summary.get(test_config['target']):
-                    summary[test_config['target']] = {}
-                    summary[test_config['target']]['failed'] = 0
-                    summary[test_config['target']]['run'] = 0
+    #             passed, output = test_notebook(nb_path=path, output_dir=output_dir, serial_number=serial_number,
+    #                                            **kwargs)
+    #             if not summary.get(test_config['target']):
+    #                 summary[test_config['target']] = {}
+    #                 summary[test_config['target']]['failed'] = 0
+    #                 summary[test_config['target']]['run'] = 0
 
-                if not passed:
-                    summary[test_config['target']]['failed'] += 1
-                    summary['all']['failed'] += 1
+    #             if not passed:
+    #                 summary[test_config['target']]['failed'] += 1
+    #                 summary['all']['failed'] += 1
 
-                summary[test_config['target']]['run'] += 1
-                summary['all']['run'] += 1
+    #             summary[test_config['target']]['run'] += 1
+    #             summary['all']['run'] += 1
 
-                if passed:
-                    header = 'PASSED: {} using {}'.format(nb, test_config['target'])
-                else:
-                    header = 'FAILED: {} using {}'.format(nb, test_config['target'])
-                tests[header] = output
+    #             if passed:
+    #                 header = 'PASSED: {} using {}'.format(nb, test_config['target'])
+    #             else:
+    #                 header = 'FAILED: {} using {}'.format(nb, test_config['target'])
+    #             tests[header] = output
 
     # clean up the projects created by running the tutorial notebooks.
     try:
