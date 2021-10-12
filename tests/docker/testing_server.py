@@ -154,7 +154,8 @@ class Tester:
     def run(self):
         summary = None
         tests = None
-        if self.should_check_repo():
+        #if self.should_check_repo():
+        if True:
             # check for update from remote
             changes_pulled = update_from_remote(self.cw_dir)
             commit = checked_out_commit(self.cw_dir)
