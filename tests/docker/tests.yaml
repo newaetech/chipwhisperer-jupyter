@@ -20,7 +20,6 @@
 #       num_traces: <number of traces to capture>
 #       sample_size: <sample size>
 
-
 #######  Not yet included tutorials ######
 #
 #  PA_HW_CW305.ipynb
@@ -28,29 +27,62 @@
 
 
 connected:
-  - scope: OPENADC
+  - id: 0
+    scope: OPENADC
     target: CWLITEARM
     serial number: 50203120324136503230352030313034
-    kwargs:
-      baud: 38400
-  - scope: OPENADC
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+  - id: 1
+    scope: OPENADC
     target: CWLITEXMEGA
     serial number: 4420312046304a383230352033313037
+    firmware: AVRCRYPTOLIB
+    tutorial type: HARDWARE
+  - id: 2
+    scope: CWNANO
+    target: CWNANO
+    firmware: TINYAES128C
+    serial number: 53373100383248323030323034333038
+    tutorial type: HARDWARE
+  - id: 3
+    scope: NONE
+    target: NONE
+    firmware: NONE
+    tutorial type: SIMULATED
 
 tutorials:
   courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
     configurations:
-      - scope: OPENADC
-        target: CWLITEARM
-        firmware: TINYAES128C
-        ssver: SS_VER_2_1
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 3_1 - Large Hamming Weight Swings.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [3]
+  courses/sca101/SOLN_Lab 4_1 - Power and Hamming Weight Relationship.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 4_2 - CPA on Firmware Implementation of AES.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+      # - scope: OPENADC
+      #   target: CWLITEARM
+      #   firmware: TINYAES128C
+      #   ssver: SS_VER_2_1
 
-      - scope: OPENADC
-        target: CWLITEXMEGA
-        firmware: AVRCRYPTOLIB
-        ssver: SS_VER_2_1
+      # - scope: OPENADC
+      #   target: CWLITEXMEGA
+      #   firmware: AVRCRYPTOLIB
+      #   ssver: SS_VER_2_1
 
-      - scope: CWNANO
-        target: CWNANO
-        firmware: TINYAES128C
-        ssver: SS_VER_2_1
+      # - scope: CWNANO
+      #   target: CWNANO
+      #   firmware: TINYAES128C
+      #   ssver: SS_VER_2_1
