@@ -33,23 +33,27 @@ connected:
     serial number: 50203120324136503230352030313034
     firmware: TINYAES128C
     tutorial type: HARDWARE
+    enabled: True
   - id: 1
     scope: OPENADC
     target: CWLITEXMEGA
     serial number: 4420312046304a383230352033313037
     firmware: AVRCRYPTOLIB
     tutorial type: HARDWARE
+    enabled: True
   - id: 2
     scope: CWNANO
     target: CWNANO
     firmware: TINYAES128C
     serial number: 53373100383248323030323034333038
     tutorial type: HARDWARE
+    enabled: True
   - id: 3
     scope: NONE
     target: NONE
     firmware: NONE
     tutorial type: SIMULATED
+    enabled: True
 
 tutorials:
   courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
