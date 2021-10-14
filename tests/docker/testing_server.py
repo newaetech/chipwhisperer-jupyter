@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 from time import sleep
 from importlib import util
+import usb1
 
 #from mail import send_mail, create_email_contents
 
@@ -112,11 +113,15 @@ def run_tests(cw_dir, config_file):
     tutorials = util.module_from_spec(spec)
     spec.loader.exec_module(tutorials)
 
-    config_path = os.path.abspath(os.path.join(cw_dir, '..', 'tests.yaml'))
+    if not config_file:
+        config_path = os.path.abspath(os.path.join(cw_dir, '..', 'tests.yaml'))
+    else:
+        config_path = config_file
 
     cwd = os.getcwd()
     os.chdir(jupyter_test_dir)
-    summary, tests = eval('tutorials.run_tests("{}")'.format(config_path), {'tutorials': tutorials, '__name__': '__main__'})
+    sys.modules['tutorials'] = tutorials
+    summary, tests = eval('tutorials.run_tests("{}", "{}")'.format(cw_dir, config_path), {'tutorials': tutorials, '__name__': '__main__'})
     os.chdir(cwd)
 
     #tests[cmd] = 'Stdout:\n{}\nStderr:{}\n'.format(out1, err1)
@@ -162,6 +167,7 @@ class Tester:
             if changes_pulled:
                 # run the tests on newest changes
                 logging.info('running tests at {}'.format(local_time()))
+                #reset_usb()
                 self.last_test_start_time = local_time()
                 self.last_test_time_pretty = server_time()
                 summary, tests = run_tests(cw_dir, self.config_file)
@@ -256,12 +262,24 @@ def main(chipwhisperer_dir, config_file):
                 'summaries': summaries,
                 'tests': tests,
             }
-
             #email_contents = create_email_contents(jinja_context)
             subject = 'ChipWhisperer Test Results {}'.format(time)
             #send_mail(from_email, to_emails, subject, email_contents)
         sleep(100)
 
+
+def reset_usb():
+    ## linux only
+    with usb1.USBContext() as ctx:
+        cw_list = [dev for dev in ctx.getDeviceIterator() if dev.getVendorID() == 0x2b3e]
+        for dev in cw_list:
+            subprocess.run(["./usbreset", "/dev/bus/usb/{:03d}/{:03d}".format(dev.getBusNumber(), dev.getDeviceAddress())])
+
+    sleep(5)
+
+
+
+        
 
 if __name__ == '__main__':
     logging.info('server time is {}'.format(server_time()))

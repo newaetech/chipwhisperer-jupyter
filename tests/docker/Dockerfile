@@ -114,6 +114,7 @@ RUN chown $CW_USER:$CW_USER /home/$CW_USER
 
 # script that starts the container
 COPY start-container.sh /home/$CW_USER/run.sh
+COPY usbreset /home/$CW_USER/chipwhisperer/jupyter/tests/docker
 RUN chmod +x /home/$CW_USER/run.sh
 
 CMD ["/home/cwtests/run.sh"]
