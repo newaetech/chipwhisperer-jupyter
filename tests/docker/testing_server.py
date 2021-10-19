@@ -150,7 +150,7 @@ class Tester:
         self.config_file = config_file
 
     def should_check_repo(self):
-        return True
+        #return True
         h = local_time().hour
         if h in self.testing_hours and h not in self.hours_tested_today:
             return True
