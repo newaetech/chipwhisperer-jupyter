@@ -60,30 +60,30 @@ tutorials:
   #   configurations:
   #     - ssver: SS_VER_2_1
   #       ids: [0, 1, 2, 3]
-  # courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
-  #   configurations:
-  #     - ssver: SS_VER_2_1
-  #       ids: [0, 1, 2, 3]
-  # courses/sca101/SOLN_Lab 3_1 - Large Hamming Weight Swings.ipynb:
-  #   configurations:
-  #     - ssver: SS_VER_2_1
-  #       ids: [0, 1, 2, 3]
-  # courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
-  #   configurations:
-  #     - ssver: SS_VER_2_1
-  #       ids: [3]
-  # courses/sca101/SOLN_Lab 4_1 - Power and Hamming Weight Relationship.ipynb:
-  #   configurations:
-  #     - ssver: SS_VER_2_1
-  #       ids: [0, 1, 2, 3]
-  # courses/sca101/SOLN_Lab 4_2 - CPA on Firmware Implementation of AES.ipynb:
-  #   configurations:
-  #     - ssver: SS_VER_2_1
-  #       ids: [0, 1, 2, 3]
-  courses/sca201/SOLN_Lab 1_1A - Resynchronizing Traces with Sum of Absolute Difference.ipynb:
+  courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
     configurations:
       - ssver: SS_VER_2_1
         ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 3_1 - Large Hamming Weight Swings.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [3]
+  courses/sca101/SOLN_Lab 4_1 - Power and Hamming Weight Relationship.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 4_2 - CPA on Firmware Implementation of AES.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  # courses/sca201/SOLN_Lab 1_1A - Resynchronizing Traces with Sum of Absolute Difference.ipynb:
+  #   configurations:
+  #     - ssver: SS_VER_2_1
+  #       ids: [0, 1, 2, 3]
       # - scope: OPENADC
       #   target: CWLITEARM
       #   firmware: TINYAES128C
