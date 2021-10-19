@@ -150,6 +150,7 @@ class Tester:
         self.config_file = config_file
 
     def should_check_repo(self):
+        return True
         h = local_time().hour
         if h in self.testing_hours and h not in self.hours_tested_today:
             return True
@@ -159,8 +160,7 @@ class Tester:
     def run(self):
         summary = None
         tests = None
-        #if self.should_check_repo():
-        if True:
+        if self.should_check_repo():
             # check for update from remote
             changes_pulled = update_from_remote(self.cw_dir)
             commit = checked_out_commit(self.cw_dir)
