@@ -67,6 +67,7 @@ ENV PYENV_ROOT /home/$CW_USER/.pyenv
 RUN pyenv install 3.9.5
 RUN pyenv global 3.9.5
 RUN pyenv rehash
+RUN mkdir -p /home/$CW_USER/results
 # RUN pyenv activate cw
 
 # upgrade pip and install setuptools

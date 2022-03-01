@@ -151,6 +151,8 @@ class Tester:
 
     def should_check_repo(self):
         #return True
+        if self.testing_hours == "always":
+            return True
         h = local_time().hour
         if h in self.testing_hours and h not in self.hours_tested_today:
             return True
@@ -223,28 +225,31 @@ def sort_by_failed(tests):
 
 
 def main(chipwhisperer_dir, config_file):
-    required_env_variables = [
-        'TO_EMAILS',
-        'FROM_EMAIL',
-        'SENDGRID_API_KEY',
-        'HOURS',
-    ]
+    #   required_env_variables = [
+    #       'TO_EMAILS',
+    #       'FROM_EMAIL',
+    #       'SENDGRID_API_KEY',
+    #       'HOURS',
+    #   ]
 
-    env_vars = os.environ.keys()
+    #   env_vars = os.environ.keys()
 
-    env_var_exists = [var in env_vars for var in required_env_variables]
+    #   env_var_exists = [var in env_vars for var in required_env_variables]
 
-    if not all(env_var_exists):
-        logging.error('not all required environment variables were given: {}'.format(required_env_variables))
-        sys.exit()
+    #   if not all(env_var_exists):
+    #       logging.error('not all required environment variables were given: {}'.format(required_env_variables))
+    #       sys.exit()
 
     # process the environmental variables
     # some come in as command seperated lists
-    to_emails_env = os.environ.get('TO_EMAILS')
-    to_emails = [email.strip() for email in to_emails_env.strip().split(',') if email.strip()]
-    from_email = os.environ.get('FROM_EMAIL').strip()
+    #   to_emails_env = os.environ.get('TO_EMAILS')
+    #   to_emails = [email.strip() for email in to_emails_env.strip().split(',') if email.strip()]
+    #   from_email = os.environ.get('FROM_EMAIL').strip()
     hours_env = os.environ.get('HOURS')
-    hours = [int(h.strip()) for h in hours_env.strip().split(',') if h.strip()]
+    if hours_env == "always":
+        hours = "always"
+    else:
+        hours = [int(h.strip()) for h in hours_env.strip().split(',') if h.strip()]
 
     tester = Tester(chipwhisperer_dir, config_file, hours)
 
@@ -262,6 +267,10 @@ def main(chipwhisperer_dir, config_file):
                 'summaries': summaries,
                 'tests': tests,
             }
+            HOME = os.environ.get('HOME')
+            with open(HOME + "/results/results.txt", "w") as f:
+                f.write(str(jinja_context))
+
             #email_contents = create_email_contents(jinja_context)
             subject = 'ChipWhisperer Test Results {}'.format(time)
             #send_mail(from_email, to_emails, subject, email_contents)
