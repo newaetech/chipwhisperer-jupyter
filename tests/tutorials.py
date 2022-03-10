@@ -22,11 +22,17 @@ from nbconvert import RSTExporter, HTMLExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions, Parameter
 from nbconvert.nbconvertapp import NbConvertBase
 
+# results_path = os.environ.get('CW_TEST_RESULT_PATH')
+# if not results_path:
+#     results_path = "./"
+
 from functools import partial
 import builtins
 
+#test_handler = logging.FileHandler(results_path + "test_log.txt")
 test_logger = logging.getLogger("ChipWhisperer Test")
-test_logger.setLevel(logging.INFO)
+test_logger.setLevel(logging.DEBUG)
+#test_logger.addHandler(test_handler)
 
 script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
@@ -160,7 +166,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, a
         return nb, errors, export_kwargs
 
 
-def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
+def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logger=None):
     """Takes a notebook node and exports it to ReST and HTML
 
     Args:
@@ -172,6 +178,8 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
         PLATFORM (str): Used to generate the output file name.
     """
 
+    if not logger:
+        logger = test_logger
     notebook_dir, file_name = os.path.split(nb_path)
 
     #need to make sure course is in rst file name
@@ -202,7 +210,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
 
 
         rst_file.write(body)
-        test_logger.info('Wrote to: '+ rst_path)
+        logger.info('Wrote to: '+ rst_path)
 
         ## need resources
 
@@ -212,87 +220,95 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None):
         body, res = html_exporter.from_notebook_node(nb)
 
         html_file.write(body)
-        test_logger.info('Wrote to: '+ html_path)
+        logger.info('Wrote to: '+ html_path)
 
 
-def _print_tracebacks(errors, config=None):
+def _print_tracebacks(errors, logger = None, config=None):
     # to escape ANSI sequences use regex
+    if logger is None:
+        logger = test_logger
     ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
     if errors == []:
-        test_logger.info("Passed all tests!")
+        logger.info("Passed all tests!")
     for error in errors:
-        test_logger.warning("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
+        logger.warning("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
         for line in error[1]['traceback']:
-            test_logger.warning(ansi_escape.sub('', line))
+            logger.warning(ansi_escape.sub('', line))
 
 
 def _get_outputs(nb):
     return [[i, cell] for i, cell in enumerate(nb.cells) if "outputs" in cell]
 
 
-def _print_stderr(nb):
+def _print_stderr(nb, logger=None):
     outputs = _get_outputs(nb)
+    if logger is None:
+        logger = test_logger
     printed_output = [[cell[0], output] for cell in outputs for output in cell[1]['outputs'] if
                       ('name' in output and output['name'] == 'stderr')]
     for out in printed_output:
-        test_logger.warning("[{}]:\n{}".format(out[0], out[1]['text']))
+        logger.warning("[{}]:\n{}".format(out[0], out[1]['text']))
 
 
-def _print_stdout(nb):
+def _print_stdout(nb, logger=None):
+    if logger is None:
+        logger = test_logger
     outputs = _get_outputs(nb)
     printed_output = [[cell[0], output] for cell in outputs for output in cell[1]['outputs'] if
                       ('name' in output and output['name'] == 'stdout')]
     for out in printed_output:
-        test_logger.info("[{}]:\n{}".format(out[0], out[1]['text']))
+        logger.info("[{}]:\n{}".format(out[0], out[1]['text']))
 
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
-                  allowable_exceptions=None, baud=None, hw_location=None, **kwargs):
+                  allowable_exceptions=None, baud=None, hw_location=None, logger=None, **kwargs):
     # reset output for next test
     output[:] = list()
     passed = False
-    test_logger.info("Testing: {}:...".format(os.path.abspath(nb_path)))
-    test_logger.info("with {}.".format(kwargs))
+    if logger is None:
+        logger = test_logger
+    logger.info("Testing: {}:...".format(os.path.abspath(nb_path)))
+    logger.info("with {}.".format(kwargs))
     if serial_number:
-        test_logger.info('on device with serial number {}.'.format(serial_number))
+        logger.info('on device with serial number {}.'.format(serial_number))
     elif hw_location:
-        test_logger.info('on device at {}'.format(hw_location))
+        logger.info('on device at {}'.format(hw_location))
     else:
-        test_logger.debug('No serial number specified... only bad if more than one device attached.')
+        logger.debug('No serial number specified... only bad if more than one device attached.')
     nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, hw_location=hw_location, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, baud=baud, **kwargs)
     if not errors:
-        test_logger.info("PASSED")
+        logger.info("PASSED")
         passed = True
         if export:
-            export_notebook(nb, nb_path, output_dir, **export_kwargs)
+            export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
     else:
         if allowable_exceptions:
             error_is_acceptable = [error[1]['ename'] in allowable_exceptions for error in errors]
             if all(error_is_acceptable):
-                test_logger.info("PASSED with expected errors")
+                logger.info("PASSED with expected errors")
                 passed = True
                 for error in errors:
-                    test_logger.info(error[1]['ename']+ ':'+ error[1]['evalue'])
+                    logger.info(error[1]['ename']+ ':'+ error[1]['evalue'])
                 if export:
-                    export_notebook(nb, nb_path, output_dir, **export_kwargs)
+                    export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
             else:
-                test_logger.warning("FAILED {} config {}:".format(nb_path, kwargs))
+                logger.warning("FAILED {} config {}:".format(nb_path, kwargs))
                 passed = False
                 if print_first_traceback_only:
-                    _print_tracebacks([error for i, error in enumerate(errors) if i == 0])
+                    _print_tracebacks([error for i, error in enumerate(errors) if i == 0], logger=logger)
                 else:
-                    _print_tracebacks(errors)
+                    _print_tracebacks(errors, logger=logger)
         else:
-            test_logger.warning("FAILED:")
+            logger.warning("FAILED:")
             passed = False
             if print_first_traceback_only:
                 _print_tracebacks([error for i, error in enumerate(errors) if i == 0])
             else:
                 _print_tracebacks(errors)
     if print_stdout:
-        _print_stdout(nb)
+        _print_stdout(nb, logger)
     if print_stderr:
-        _print_stderr(nb)
+        _print_stderr(nb, logger)
 
     return passed, '\n'.join(output)
 
@@ -526,7 +542,7 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
         return cell, resources
 
 #need to separate into separate functions to multiprocess
-def run_test_hw_config(id, cw_dir, config, hw_location=None):
+def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
     tutorials, connected_hardware = load_configuration(config)
     summary = {'failed': 0, 'run': 0}
     hw_settings = connected_hardware[id]
@@ -534,6 +550,8 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None):
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
     tests = {}
+    if logger is None:
+        logger = test_logger
     # if not hw_settings['enabled']:
     #     return summary, tests
 
@@ -555,7 +573,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None):
 
                 path = os.path.join(nb_dir, nb)
                 hw_kwargs = hw_settings.get('kwargs')
-                test_logger.debug("HW kwargs: {}".format(hw_kwargs))
+                logger.debug("HW kwargs: {}".format(hw_kwargs))
                 if hw_kwargs:
                     kwargs.update(hw_kwargs)
 
@@ -563,7 +581,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None):
                 if tutorial_kwargs:
                     kwargs.update(tutorial_kwargs)
 
-                test_logger.debug("Testing {} with {} ({})".format(nb, id, kwargs))
+                logger.debug("Testing {} with {} ({})".format(nb, id, kwargs))
                 passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, **kwargs)
                 if not passed:
                     summary['failed'] += 1
@@ -576,8 +594,13 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None):
     time.sleep(0.5)
     return summary, tests
 
-def run_tests(cw_dir, config):
+def run_tests(cw_dir, config, results_path=None):
     from concurrent.futures import ProcessPoolExecutor, as_completed
+    if not results_path:
+        results_path = "./"
+    
+    results_handler = logging.FileHandler(results_path + "/testing.log")
+    test_logger.addHandler(results_handler)
     tutorials, connected_hardware = load_configuration(config)
 
     num_hardware = len(connected_hardware)
@@ -623,8 +646,16 @@ def run_tests(cw_dir, config):
     summary['all']['run'] = 0
     results = []
     test_logger.info("num hw: {}".format(num_hardware))
+    loggers = []
+    handlers = []
+    for i in range(num_hardware):
+        handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
+        loggers.append(logging.getLogger("Test Logger {}".format(i)))
+        cur = loggers[i]
+        cur.setLevel(logging.DEBUG)
+        cur.addHandler(handlers[i])
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
-        test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i]): i for i in range(num_hardware)}
+        test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
             hw_summary, hw_tests = future.result()
             summary['all']['failed'] += hw_summary['failed']
