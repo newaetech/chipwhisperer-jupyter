@@ -24,14 +24,14 @@
 #
 #  PA_HW_CW305.ipynb
 #  PA_CPA_4-Hardware_Crypto_Attack.ipynb
-# - id: 1
+# - id: 2
 #   scope: OPENADC
 #   target: CWLITEXMEGA
 #   serial number: 4420312046304a383230352033313037
 #   firmware: TINYAES128C
 #   tutorial type: HARDWARE
 #   enabled: True
-# - id: 2
+# - id: 3
 #   scope: CWNANO
 #   target: CWNANO
 #   firmware: TINYAES128C
@@ -58,16 +58,48 @@ connected:
     firmware: NONE
     tutorial type: SIMULATED
     enabled: True
+  - id: 2
+    scope: OPENADC
+    target: CWLITEXMEGA
+    serial number: 50203220343043543130382038303034
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+  - id: 3
+    scope: CWNANO
+    target: CWNANO
+    serial number: 53373100383248323030323034333038
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+  - id: 4
+    scope: OPENADC
+    target: CW308_STM32F4
+    serial number: 50203120355448513030343237313039
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+  - id: 5
+    scope: OPENADC
+    target: CW308_K82F
+    serial number: 44203120484d39433330353236313033
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
 
 tutorials:
+  ChipWhisperer Firmware Upgrade.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2, 3, 4]
   courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
     configurations:
       - ssver: SS_VER_2_1
-        ids: [0, 1]
+        ids: [0, 1, 2, 3, 4]
   courses/sca101/SOLN_Lab 3_1 - Large Hamming Weight Swings.ipynb:
     configurations:
       - ssver: SS_VER_2_1
-        ids: [0, 1]
+        ids: [0, 1, 2, 3, 4]
   courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
     configurations:
       - ssver: SS_VER_2_1
@@ -75,11 +107,11 @@ tutorials:
   courses/sca101/SOLN_Lab 4_1 - Power and Hamming Weight Relationship.ipynb:
     configurations:
       - ssver: SS_VER_2_1
-        ids: [0, 1]
+        ids: [0, 1, 2, 3, 4]
   courses/sca101/SOLN_Lab 4_2 - CPA on Firmware Implementation of AES.ipynb:
     configurations:
       - ssver: SS_VER_2_1
-        ids: [0, 1]
+        ids: [0, 1, 2, 3, 4]
   # courses/sca201/SOLN_Lab 1_1A - Resynchronizing Traces with Sum of Absolute Difference.ipynb:
   #   configurations:
   #     - ssver: SS_VER_2_1
