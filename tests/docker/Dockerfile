@@ -68,6 +68,7 @@ RUN pyenv install 3.9.5
 RUN pyenv global 3.9.5
 RUN pyenv rehash
 RUN mkdir -p /home/$CW_USER/results
+RUN cd /home/$CW_USER && curl -L https://github.com/xpack-dev-tools/openocd-xpack/releases/download/v0.11.0-3/xpack-openocd-0.11.0-3-linux-x64.tar.gz --output openocd.tar.gz && tar -xzf openocd.tar.gz
 # RUN pyenv activate cw
 
 # upgrade pip and install setuptools

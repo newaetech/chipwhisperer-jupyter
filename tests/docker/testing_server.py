@@ -64,6 +64,7 @@ def execute_command(command, directory, shell=False):
 def update_from_remote(directory):
     updated = False
     out, err = execute_command('git pull --rebase', directory)
+    print(out)
 
     # check if there was any updates to remote repository
     if 'Already up to date.' not in out:
@@ -250,6 +251,8 @@ def main(chipwhisperer_dir, config_file):
         hours = "always"
     else:
         hours = [int(h.strip()) for h in hours_env.strip().split(',') if h.strip()]
+
+    print("Hours = {}".format(hours))
 
     tester = Tester(chipwhisperer_dir, config_file, hours)
 
