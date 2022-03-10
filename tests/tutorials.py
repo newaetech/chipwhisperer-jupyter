@@ -80,22 +80,26 @@ class cd:
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.saved_path)
 
-def put_all_kwargs_in_notebook(params, **kwargs):
+def put_all_kwargs_in_notebook(params, logger=None, **kwargs):
+    if logger is None:
+        logger = test_logger
     for kwarg in kwargs:
         in_params = False
         for p in params:
             if p.name == kwarg:
                 in_params = True
         if in_params == False:
-            test_logger.debug(f"Inserting {kwarg}")
+            logger.debug(f"Inserting {kwarg}")
             params.append(Parameter(kwarg, str, kwargs[kwarg]))
 
-def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', **kwargs):
+def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', logger=None, **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
     notebook_dir, file_name = os.path.split(nb_path)
     real_path = Path(nb_path).absolute()
+    if logger is None:
+        logger=test_logger
 
     with open(real_path, encoding='utf-8') as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
@@ -104,7 +108,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, a
         params = parameter_values(orig_parameters, SCOPETYPE=SCOPETYPE, PLATFORM=PLATFORM, **kwargs)
         kwargs['SCOPETYPE'] = SCOPETYPE
         kwargs['PLATFORM'] = PLATFORM
-        put_all_kwargs_in_notebook(params, **kwargs)
+        put_all_kwargs_in_notebook(params, logger=logger, **kwargs)
         nb = replace_definitions(nb, params, execute=False)
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
