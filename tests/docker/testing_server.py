@@ -33,7 +33,6 @@ run_logger.setLevel(logging.DEBUG)
 run_logger.addHandler(run_handler)
 run_logger.addHandler(std_hanlder)
 
-result_path = Path(os.getcwd(), "results")
 # os.environ.setdefault
 
 # fix logging inside docker container
@@ -136,6 +135,14 @@ def run_tests(cw_dir, config_file):
     spec = util.spec_from_file_location("tutorials", os.path.join(jupyter_test_dir, path))
     tutorials = util.module_from_spec(spec)
     spec.loader.exec_module(tutorials)
+
+    cur_date = local_time()
+    cur_date_formatted = '{}-{}-{}:{}'.format(cur_date.year, 
+        cur_date.month, cur_date.day, cur_date.hour)
+    result_folder = Path(os.getcwd(), cur_date_formatted)
+
+    result_folder.mkdir("666", exist_ok=True)
+    result_path = Path(result_folder, "results")
 
     if not config_file:
         config_path = os.path.abspath(os.path.join(cw_dir, '..', 'tests.yaml'))
