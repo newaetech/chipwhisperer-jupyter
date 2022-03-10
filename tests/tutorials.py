@@ -279,7 +279,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
         logger.info('on device at {}'.format(hw_location))
     else:
         logger.debug('No serial number specified... only bad if more than one device attached.')
-    nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, hw_location=hw_location, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, baud=baud, **kwargs)
+    nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, hw_location=hw_location, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, baud=baud, logger=logger, **kwargs)
     if not errors:
         logger.info("PASSED")
         passed = True
@@ -596,6 +596,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                 pass # we don't need to test this hardware on this tutorial
 
     time.sleep(0.5)
+    logger.debug("\n-----------------\nFinished test run\n-----------------\n")
     return summary, tests
 
 def run_tests(cw_dir, config, results_path=None):
@@ -673,6 +674,7 @@ def run_tests(cw_dir, config, results_path=None):
             with open("config_{}_log.txt".format(index), 'w') as f:
                 for header in hw_tests:
                     f.write("Test {}, output:\n{}".format(header, hw_tests[header]))
+
         # for i in range(num_hardware):
         #     test_logger.debug("Running hw")
         #     results.append(nb_pool.apply_async(run_test_hw_config, args=(i, config)))
