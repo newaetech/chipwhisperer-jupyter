@@ -582,7 +582,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                     kwargs.update(tutorial_kwargs)
 
                 logger.debug("Testing {} with {} ({})".format(nb, id, kwargs))
-                passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, **kwargs)
+                passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
                 if not passed:
                     summary['failed'] += 1
                 summary['run'] += 1
