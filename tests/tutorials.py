@@ -306,14 +306,15 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
             logger.warning("FAILED:")
             passed = False
             if print_first_traceback_only:
-                _print_tracebacks([error for i, error in enumerate(errors) if i == 0])
+                _print_tracebacks([error for i, error in enumerate(errors) if i == 0],logger=logger)
             else:
-                _print_tracebacks(errors)
+                _print_tracebacks(errors,logger=logger)
     if print_stdout:
         _print_stdout(nb, logger)
     if print_stderr:
         _print_stderr(nb, logger)
 
+    logger.debug("\n")
     return passed, '\n'.join(output)
 
 
@@ -585,7 +586,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                 if tutorial_kwargs:
                     kwargs.update(tutorial_kwargs)
 
-                logger.debug("Testing {} with {} ({})".format(nb, id, kwargs))
+                logger.debug("\nTesting {} with {} ({})".format(nb, id, kwargs))
                 passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
                 if not passed:
                     summary['failed'] += 1
