@@ -9,11 +9,35 @@ from datetime import datetime
 from time import sleep
 from importlib import util
 import usb1
+from pathlib import Path
 
 #from mail import send_mail, create_email_contents
 
+std_hanlder = logging.StreamHandler(sys.stdout)
+
+nb_handler = logging.FileHandler("results/nb.log")
+nb_logger = logging.getLogger("notebooks")
+nb_logger.setLevel(logging.DEBUG)
+nb_logger.addHandler(nb_handler)
+nb_logger.addHandler(std_hanlder)
+
+cmd_handler = logging.FileHandler("results/cmd.log")
+cmd_logger = logging.getLogger("commands")
+cmd_logger.setLevel(logging.DEBUG)
+cmd_logger.addHandler(cmd_handler)
+cmd_logger.addHandler(std_hanlder)
+
+run_handler = logging.FileHandler("results/run.log")
+run_logger = logging.getLogger("runtime")
+run_logger.setLevel(logging.DEBUG)
+run_logger.addHandler(run_handler)
+run_logger.addHandler(std_hanlder)
+
+result_path = Path(os.getcwd(), "results")
+# os.environ.setdefault
 
 # fix logging inside docker container
+logging.basicConfig(filename="results/log.txt", encoding='utf-8', level=logging.DEBUG)
 root = logging.getLogger()
 handler = logging.StreamHandler(sys.stdout)
 
@@ -34,7 +58,7 @@ ACTIVATE_VENV_PYTHON = '/home/cwtests/.virtualenvs/tests/bin/activate_this.py'
 
 
 def execute_command(command, directory, shell=False):
-    logging.debug('executing "{}" in "{}" with shell={}'.format(command, directory, shell))
+    cmd_logger.debug('executing "{}" in "{}" with shell={}'.format(command, directory, shell))
     if shell:
         process = subprocess.Popen(command,
             stdin=PIPE,
@@ -54,9 +78,9 @@ def execute_command(command, directory, shell=False):
     stdout, stderr = stdout.decode('utf-8').strip(), stderr.decode('utf-8').strip()
 
     if stdout:
-        logging.debug('stdout: \n"{}"'.format(stdout))
+        cmd_logger.debug('stdout: \n"{}"'.format(stdout))
     if stderr:
-        logging.error('stderr: \n"{}"'.format(stderr))
+        cmd_logger.error('stderr: \n"{}"'.format(stderr))
 
     return stdout, stderr
 
@@ -64,7 +88,6 @@ def execute_command(command, directory, shell=False):
 def update_from_remote(directory):
     updated = False
     out, err = execute_command('git pull --rebase', directory)
-    print(out)
 
     # check if there was any updates to remote repository
     if 'Already up to date.' not in out:
@@ -76,9 +99,9 @@ def update_from_remote(directory):
     out, err = execute_command('git submodule update --init jupyter', directory)
 
     if updated:
-        logging.info('pulled new changes to repository')
+        cmd_logger.info('pulled new changes to repository')
     else:
-        logging.info('repository already up to date')
+        cmd_logger.info('repository already up to date')
 
     return updated
 
@@ -122,7 +145,7 @@ def run_tests(cw_dir, config_file):
     cwd = os.getcwd()
     os.chdir(jupyter_test_dir)
     sys.modules['tutorials'] = tutorials
-    summary, tests = eval('tutorials.run_tests("{}", "{}")'.format(cw_dir, config_path), {'tutorials': tutorials, '__name__': '__main__'})
+    summary, tests = eval('tutorials.run_tests("{}", "{}", "{}")'.format(cw_dir, config_path, result_path), {'tutorials': tutorials, '__name__': '__main__'})
     os.chdir(cwd)
 
     #tests[cmd] = 'Stdout:\n{}\nStderr:{}\n'.format(out1, err1)
@@ -153,9 +176,11 @@ class Tester:
     def should_check_repo(self):
         #return True
         if self.testing_hours == "always":
+            run_logger.info("Skipping hour check")
             return True
         h = local_time().hour
         if h in self.testing_hours and h not in self.hours_tested_today:
+            run_logger.info("Hour check fine, can run test: {} in {}".format(h, self.testing_hours))
             return True
         else:
             return False
@@ -169,7 +194,7 @@ class Tester:
             commit = checked_out_commit(self.cw_dir)
             if changes_pulled:
                 # run the tests on newest changes
-                logging.info('running tests at {}'.format(local_time()))
+                run_logger.info('running tests at {}'.format(local_time()))
                 #reset_usb()
                 self.last_test_start_time = local_time()
                 self.last_test_time_pretty = server_time()
@@ -252,7 +277,7 @@ def main(chipwhisperer_dir, config_file):
     else:
         hours = [int(h.strip()) for h in hours_env.strip().split(',') if h.strip()]
 
-    print("Hours = {}".format(hours))
+    run_logger.info("Running test server with Hours = {}".format(hours))
 
     tester = Tester(chipwhisperer_dir, config_file, hours)
 
@@ -271,7 +296,14 @@ def main(chipwhisperer_dir, config_file):
                 'tests': tests,
             }
             HOME = os.environ.get('HOME')
-            with open(HOME + "/results/results.txt", "w") as f:
+            with open(HOME + "/results/results.txt", "w", encoding='utf-8') as f:
+                for k in jinja_context:
+                    if k == 'tests':
+                        f.write('tests:')
+                        for ktest in jinja_context[k]:
+                            f.write('     {}'.format(ktest))
+                    else:
+                        f.write('{}: {}'.format(k, jinja_context[k]))
                 f.write(str(jinja_context))
 
             #email_contents = create_email_contents(jinja_context)
@@ -285,7 +317,8 @@ def reset_usb():
     with usb1.USBContext() as ctx:
         cw_list = [dev for dev in ctx.getDeviceIterator() if dev.getVendorID() == 0x2b3e]
         for dev in cw_list:
-            subprocess.run(["./usbreset", "/dev/bus/usb/{:03d}/{:03d}".format(dev.getBusNumber(), dev.getDeviceAddress())])
+            subprocess.run(["./usbreset", "/dev/bus/usb/{:03d}/{:03d}".format(dev.getBusNumber(), \
+                dev.getDeviceAddress())])
 
     sleep(5)
 
@@ -294,6 +327,6 @@ def reset_usb():
         
 
 if __name__ == '__main__':
-    logging.info('server time is {}'.format(server_time()))
+    run_logger.info('server time is {}'.format(server_time()))
     script, cw_dir, config_file = sys.argv
     main(cw_dir, config_file)
