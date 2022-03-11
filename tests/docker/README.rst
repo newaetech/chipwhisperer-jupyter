@@ -47,6 +47,7 @@ testing done before committing changes. However, it gets us closer to a more
 stable and reliable ChipWhisperer.
 
 
+
 Configuring and Building
 ========================
 
@@ -257,3 +258,9 @@ and port 8888 in your browser. You should then be asked for your token/password.
 Copy the token from your ssh session into your browser and use it to sign on.
 Ctrl+C in your ssh session will terminate the notebook server.
 
+Bash Helper Functions
+=====================
+
+A few bash helper functions are provided in :code:`helper_func.sh`, including
+:code:`run_test` (use :code:`run_test -h` to see args) to run the test image, :code:`build_test`
+to build the test image, and :code:`attach_test image_id` to attach to the test image.
