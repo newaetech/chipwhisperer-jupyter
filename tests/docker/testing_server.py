@@ -77,9 +77,9 @@ def execute_command(command, directory, shell=False):
     stdout, stderr = stdout.decode('utf-8').strip(), stderr.decode('utf-8').strip()
 
     if stdout:
-        cmd_logger.debug('stdout: \n"{}"'.format(stdout))
+        cmd_logger.debug('stdout: \n"{}"\n'.format(stdout))
     if stderr:
-        cmd_logger.error('stderr: \n"{}"'.format(stderr))
+        cmd_logger.error('stderr: \n"{}"\n'.format(stderr))
 
     return stdout, stderr
 
@@ -89,18 +89,21 @@ def update_from_remote(directory):
     out, err = execute_command('git pull --rebase', directory)
 
     # check if there was any updates to remote repository
-    if 'Already up to date.' not in out:
+    if os.environ.get('CHECK_GIT') == "NO":
+        updated = True
+        run_logger.debug('\nskipping git check\n')
+    elif 'Already up to date.' not in out:
+        run_logger.debug('\ngit not up to date, running test. out: {}\n'.format(out))
         updated = True
 
-    updated = True
 
     # Always update the jupyter submodule
     out, err = execute_command('git submodule update --init jupyter', directory)
 
     if updated:
-        cmd_logger.info('pulled new changes to repository')
+        run_logger.info('pulled new changes to repository')
     else:
-        cmd_logger.info('repository already up to date')
+        run_logger.info('repository already up to date')
 
     return updated
 
@@ -139,10 +142,11 @@ def run_tests(cw_dir, config_file):
     cur_date = local_time()
     cur_date_formatted = '{}-{}-{}:{}'.format(cur_date.year, 
         cur_date.month, cur_date.day, cur_date.hour)
-    result_folder = Path(os.getcwd(), cur_date_formatted)
+    result_path = Path(os.getcwd(), "results", cur_date_formatted)
 
-    result_folder.mkdir("666", exist_ok=True)
-    result_path = Path(result_folder, "results")
+    result_path.mkdir(0o777, exist_ok=True)
+    os.chmod(str(result_path), 0o777) ## need to do this for some reason to get correct permissions
+    #result_path = Path(os.getcwd(), "results")
 
     if not config_file:
         config_path = os.path.abspath(os.path.join(cw_dir, '..', 'tests.yaml'))
