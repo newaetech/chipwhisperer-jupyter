@@ -88,6 +88,10 @@ connected:
     enabled: True
 
 tutorials:
+  tests/Test MPSSE.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [5]
   ChipWhisperer Firmware Upgrade.ipynb:
     configurations:
       - ssver: SS_VER_2_1
