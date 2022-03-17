@@ -309,6 +309,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
                 _print_tracebacks([error for i, error in enumerate(errors) if i == 0],logger=logger)
             else:
                 _print_tracebacks(errors,logger=logger)
+            export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
     if print_stdout:
         _print_stdout(nb, logger)
     if print_stderr:
