@@ -612,6 +612,8 @@ def run_tests(cw_dir, config, results_path=None):
 
     num_hardware = len(connected_hardware)
     hw_locations = []
+    loggers = []
+    handlers = []
     for i in range(num_hardware):
         handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
         loggers.append(logging.getLogger("Test Logger {}".format(i)))
@@ -668,8 +670,6 @@ def run_tests(cw_dir, config, results_path=None):
     summary['all']['run'] = 0
     results = []
     test_logger.info("num hw: {}".format(num_hardware))
-    loggers = []
-    handlers = []
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
         test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
