@@ -612,12 +612,27 @@ def run_tests(cw_dir, config, results_path=None):
     num_hardware = len(connected_hardware)
     hw_locations = []
     for i in range(num_hardware):
+        handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
+        loggers.append(logging.getLogger("Test Logger {}".format(i)))
+        cur = loggers[i]
+        cur.setLevel(logging.DEBUG)
+        cur.addHandler(handlers[i])
+
         if connected_hardware[i].get('serial number') is None:
             hw_locations.append(None)
             continue
         scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
+        if scope.latest_fw_str > scope.fw_version_str:
+            scope.upgrade_firmware()
+            time.sleep(5)
+            scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
+            test_logger.info("Upgraded firmware for device {}".format(i))
+        else:
+            test_logger.info("Device {} up to date")
+
         hw_locations.append((scope._getNAEUSB().usbtx.device.getBusNumber(),\
             scope._getNAEUSB().usbtx.device.getDeviceAddress()))
+        test_logger.info("Found device {} at {}".format(i, hw_locations[i]))
         scope.dis()
         #hw_locations.appe
 
@@ -655,11 +670,6 @@ def run_tests(cw_dir, config, results_path=None):
     loggers = []
     handlers = []
     for i in range(num_hardware):
-        handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
-        loggers.append(logging.getLogger("Test Logger {}".format(i)))
-        cur = loggers[i]
-        cur.setLevel(logging.DEBUG)
-        cur.addHandler(handlers[i])
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
         test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
