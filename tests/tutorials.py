@@ -309,6 +309,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
                 _print_tracebacks([error for i, error in enumerate(errors) if i == 0],logger=logger)
             else:
                 _print_tracebacks(errors,logger=logger)
+            export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
     if print_stdout:
         _print_stdout(nb, logger)
     if print_stderr:
@@ -611,6 +612,8 @@ def run_tests(cw_dir, config, results_path=None):
 
     num_hardware = len(connected_hardware)
     hw_locations = []
+    loggers = []
+    handlers = []
     for i in range(num_hardware):
         handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
         loggers.append(logging.getLogger("Test Logger {}".format(i)))
@@ -667,9 +670,6 @@ def run_tests(cw_dir, config, results_path=None):
     summary['all']['run'] = 0
     results = []
     test_logger.info("num hw: {}".format(num_hardware))
-    loggers = []
-    handlers = []
-    for i in range(num_hardware):
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
         test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
