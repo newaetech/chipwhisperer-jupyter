@@ -670,7 +670,6 @@ def run_tests(cw_dir, config, results_path=None):
     test_logger.info("num hw: {}".format(num_hardware))
     loggers = []
     handlers = []
-    for i in range(num_hardware):
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
         test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
