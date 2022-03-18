@@ -619,7 +619,7 @@ def run_tests(cw_dir, config, results_path=None):
     output_dir = os.path.join(cw_dir, 'tutorials')
     for nb in tutorials.keys():
         path = os.path.join(nb_dir, nb)
-        if not (os.path.exists(path):
+        if not (os.path.exists(path)):
                 raise FileNotFoundError("File {} does not exist!".format(path))
 
     for i in range(num_hardware):
