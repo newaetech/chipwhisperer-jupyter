@@ -631,7 +631,7 @@ def run_tests(cw_dir, config, results_path=None):
             scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
             test_logger.info("Upgraded firmware for device {}".format(i))
         else:
-            test_logger.info("Device {} up to date")
+            test_logger.info("Device {} up to date".format(i))
 
         hw_locations.append((scope._getNAEUSB().usbtx.device.getBusNumber(),\
             scope._getNAEUSB().usbtx.device.getDeviceAddress()))
