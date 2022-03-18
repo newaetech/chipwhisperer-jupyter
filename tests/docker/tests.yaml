@@ -20,29 +20,9 @@
 #       num_traces: <number of traces to capture>
 #       sample_size: <sample size>
 
-#######  Not yet included tutorials ######
-#
-#  PA_HW_CW305.ipynb
-#  PA_CPA_4-Hardware_Crypto_Attack.ipynb
-# - id: 2
-#   scope: OPENADC
-#   target: CWLITEXMEGA
-#   serial number: 4420312046304a383230352033313037
-#   firmware: TINYAES128C
-#   tutorial type: HARDWARE
-#   enabled: True
-# - id: 3
-#   scope: CWNANO
-#   target: CWNANO
-#   firmware: TINYAES128C
-#   serial number: 53373100383248323030323034333038
-#   tutorial type: HARDWARE
-#   enabled: True
-# ChipWhisperer Firmware Upgrade.ipynb:
-#   configurations:
-#     - ssver: SS_VER_2_1
-#       ids: [0]
-
+# NOTES
+# Don't run sca101/2_1 on F4 since it's too noisy to work
+# Don't run sca101/3_1 on F4 since it takes a long time and the HW aes attack already takes forever
 
 connected:
   - id: 0
@@ -99,7 +79,7 @@ tutorials:
   courses/sca101/SOLN_Lab 3_1 - Large Hamming Weight Swings.ipynb:
     configurations:
       - ssver: SS_VER_2_1
-        ids: [0, 1, 2, 3, 4]
+        ids: [0, 1, 2, 3]
   courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
     configurations:
       - ssver: SS_VER_2_1
@@ -112,6 +92,14 @@ tutorials:
     configurations:
       - ssver: SS_VER_2_1
         ids: [0, 1, 2, 3, 4]
+  courses/sca201/SOLN_Lab 2_1 - CPA on 32bit AES.ipynb:
+    configurations: 
+      - ssver: SS_VER_2_1
+        ids: [0, 3, 4]
+  courses/sca201/SOLN_Lab 2_2 - CPA on Hardware AES Implementation.ipynb:
+    configurations: 
+      - ssver: SS_VER_2_1
+        ids: [4]
   # courses/sca201/SOLN_Lab 1_1A - Resynchronizing Traces with Sum of Absolute Difference.ipynb:
   #   configurations:
   #     - ssver: SS_VER_2_1
