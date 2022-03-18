@@ -614,6 +614,14 @@ def run_tests(cw_dir, config, results_path=None):
     hw_locations = []
     loggers = []
     handlers = []
+
+    nb_dir = os.path.join(cw_dir, 'jupyter')
+    output_dir = os.path.join(cw_dir, 'tutorials')
+    for nb in tutorials.keys():
+        path = os.path.join(nb_dir, nb)
+        if not (os.path.exists(path):
+                raise FileNotFoundError("File {} does not exist!".format(path))
+
     for i in range(num_hardware):
         handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
         loggers.append(logging.getLogger("Test Logger {}".format(i)))
@@ -639,8 +647,6 @@ def run_tests(cw_dir, config, results_path=None):
         scope.dis()
         #hw_locations.appe
 
-    nb_dir = os.path.join(cw_dir, 'jupyter')
-    output_dir = os.path.join(cw_dir, 'tutorials')
 
     # copy the images from input to output directory
     # keeping them in the same relative directory
