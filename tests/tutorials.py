@@ -617,10 +617,13 @@ def run_tests(cw_dir, config, results_path=None):
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
+    wrong_paths = ""
     for nb in tutorials.keys():
         path = os.path.join(nb_dir, nb)
         if not (os.path.exists(path)):
-                raise FileNotFoundError("File {} does not exist!".format(path))
+            wrong_paths += path
+        if wrong_paths != "":
+            raise FileNotFoundError("Incorrect paths: {}".format(wrong_paths))
 
     for i in range(num_hardware):
         handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
