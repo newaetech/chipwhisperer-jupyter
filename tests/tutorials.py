@@ -580,6 +580,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                 }
 
                 path = os.path.join(nb_dir, nb)
+                nb_short = str(nb).split('/')[-1].split(' -')[0]
                 hw_kwargs = hw_settings.get('kwargs')
                 logger.debug("HW kwargs: {}".format(hw_kwargs))
                 if hw_kwargs:
@@ -590,14 +591,14 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                     kwargs.update(tutorial_kwargs)
 
                 logger.debug("\nTesting {} with {} ({})".format(nb, id, kwargs))
-                logger.log(60, "Running {} with {}".format(nb, id))
+                logger.log(60, "Running {}".format(nb_short))
                 t_a = datetime.now()
                 passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
                 if not passed:
                     summary['failed'] += 1
                 summary['run'] += 1
                 dt = datetime.now() - t_a
-                header = " {} {} with config {} in {} min\n".format("Passed" if passed else "Failed", nb, id, dt.seconds/60)
+                header = " {} {} in {}:{:02d} min\n".format("Passed" if passed else "Failed", nb_short, dt.seconds//60, dt.seconds % 60)
                 logger.log(60, header)
                 tests[header] = output
                 
@@ -607,6 +608,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
 
     time.sleep(0.5)
     logger.debug("\n-----------------\nFinished test run\n-----------------\n")
+    logger.log(60, "Finished all tests")
     return summary, tests
 
 def run_tests(cw_dir, config, results_path=None):
@@ -617,7 +619,7 @@ def run_tests(cw_dir, config, results_path=None):
     results_handler = logging.FileHandler(results_path + "/testing.log")
     test_logger.addHandler(results_handler)
 
-    global_fmt = logging.Formatter("%(asctime)s||%(name)s:%(message)s")
+    global_fmt = logging.Formatter("%(asctime)s||%(name)s||%(message)s", "%H:%M")
     global_sum_handler =  logging.FileHandler(results_path + "/sum_test.log")
     global_sum_handler.setFormatter(global_fmt)
     global_sum_handler.setLevel(60)
@@ -642,11 +644,11 @@ def run_tests(cw_dir, config, results_path=None):
     for i in range(num_hardware):
 
         # set up logging for tests
-        full_fmt = logging.Formatter("%(asctime)s||%(levelname)s||%(lineno)d:%(message)s")
+        full_fmt = logging.Formatter("%(asctime)s||%(levelname)s||%(lineno)d||%(message)s", "%y-%m-%d %H:%M:%S")
         full_handle = logging.FileHandler(results_path + "/test_{}.log".format(i))
         full_handle.setFormatter(full_fmt)
 
-        sum_fmt = logging.Formatter("%(asctime)s:%(message)s")
+        sum_fmt = logging.Formatter("%(asctime)s||%(message)s", "%H:%M")
         sum_handle = logging.FileHandler(results_path + "/sum_test_{}.log".format(i))
         sum_handle.setFormatter(sum_fmt)
         sum_handle.setLevel(60)
