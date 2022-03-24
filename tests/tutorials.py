@@ -38,7 +38,7 @@ script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
 # set configuration options
 RSTExporter.template_paths = ['.', tests_dir]
-# RSTExporter.extra_template_basedirs = [tests_dir, tests_dir+'/rst_extended']
+RSTExporter.extra_template_basedirs = [tests_dir, tests_dir+'/rst_extended']
 RSTExporter.template_file = 'rst_extended.tpl'
 # NbConvertBase.display_data_priority = [
 #     'application/vnd.jupyter.widget-state+json',
@@ -209,12 +209,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         for name in file_names:
             with open(os.path.join(output_dir, name), 'wb') as f:
                 f.write(res['outputs'][name])
-                test_logger.info('writing to '+ name)
+                test_logger.debug('writing to '+ name)
             #print(res['outputs'][name])
 
 
         rst_file.write(body)
-        logger.info('Wrote to: '+ rst_path)
+        logger.debug('Wrote to: '+ rst_path)
 
         ## need resources
 
@@ -224,7 +224,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, res = html_exporter.from_notebook_node(nb)
 
         html_file.write(body)
-        logger.info('Wrote to: '+ html_path)
+        logger.debug('Wrote to: '+ html_path)
 
 
 def _print_tracebacks(errors, logger = None, config=None):
@@ -233,11 +233,11 @@ def _print_tracebacks(errors, logger = None, config=None):
         logger = test_logger
     ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
     if errors == []:
-        logger.info("Passed all tests!")
+        logger.debug("Passed all tests!")
     for error in errors:
-        logger.warning("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
+        logger.debug("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
         for line in error[1]['traceback']:
-            logger.warning(ansi_escape.sub('', line))
+            logger.log(60, ansi_escape.sub('', line))
 
 
 def _get_outputs(nb):
@@ -593,7 +593,10 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                     summary['failed'] += 1
                 summary['run'] += 1
                 header = "{} {} with config {}\n".format("Passed" if passed else "Failed", nb, id)
+                logger.log(60, header)
                 tests[header] = output
+                
+
             else:
                 pass # we don't need to test this hardware on this tutorial
 
@@ -613,7 +616,8 @@ def run_tests(cw_dir, config, results_path=None):
     num_hardware = len(connected_hardware)
     hw_locations = []
     loggers = []
-    handlers = []
+    # handlers = []
+    summary_handlers = []
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
@@ -626,15 +630,28 @@ def run_tests(cw_dir, config, results_path=None):
             raise FileNotFoundError("Incorrect paths: {}".format(wrong_paths))
 
     for i in range(num_hardware):
-        handlers.append(logging.FileHandler(results_path + "/test_{}.log".format(i)))
-        loggers.append(logging.getLogger("Test Logger {}".format(i)))
-        cur = loggers[i]
-        cur.setLevel(logging.DEBUG)
-        cur.addHandler(handlers[i])
+
+        # set up logging for tests
+        full_fmt = logging.Formatter("%(asctime)||%(levelname)||%(lineno):%(message)")
+        full_handle = logging.FileHandler(results_path + "/test_{}.log".format(i))
+        full_handle.setFormatter(full_fmt)
+
+        sum_fmt = logging.Formatter("%(asctime):%(message)")
+        sum_handle = logging.FileHandler(results_path + "/sum_test_{}.log".format(i))
+        sum_handle.setFormatter(sum_fmt)
+        sum_handle.setLevel(60)
+
+        cur = logging.getLogger("Test Logger {}".format(i))
+        loggers.append(cur)
+
+        cur.setLevel(logging.NOTSET)
+        cur.addHandler(full_handle)
+        cur.addHandler(sum_handle)
 
         if connected_hardware[i].get('serial number') is None:
             hw_locations.append(None)
             continue
+
         scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
         if scope.latest_fw_str > scope.fw_version_str:
             scope.upgrade_firmware()
