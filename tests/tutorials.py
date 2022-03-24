@@ -632,7 +632,7 @@ def run_tests(cw_dir, config, results_path=None):
     for i in range(num_hardware):
 
         # set up logging for tests
-        full_fmt = logging.Formatter("%(asctime)||%(levelname)||%(lineno):%(message)")
+        full_fmt = logging.Formatter("%(asctime)s||%(levelname)s||%(lineno)d:%(message)s")
         full_handle = logging.FileHandler(results_path + "/test_{}.log".format(i))
         full_handle.setFormatter(full_fmt)
 
