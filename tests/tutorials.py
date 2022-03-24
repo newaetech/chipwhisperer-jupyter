@@ -618,8 +618,9 @@ def run_tests(cw_dir, config, results_path=None):
     test_logger.addHandler(results_handler)
 
     global_fmt = logging.Formatter("%(asctime)s||%(name)s:%(message)s")
-    global_sum_handler =  logging.FileHandler(results_path + "sum_test.log")
+    global_sum_handler =  logging.FileHandler(results_path + "/sum_test.log")
     global_sum_handler.setFormatter(global_fmt)
+    global_sum_handler.setLevel(60)
     tutorials, connected_hardware = load_configuration(config)
 
     num_hardware = len(connected_hardware)
