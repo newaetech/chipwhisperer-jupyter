@@ -636,7 +636,7 @@ def run_tests(cw_dir, config, results_path=None):
         full_handle = logging.FileHandler(results_path + "/test_{}.log".format(i))
         full_handle.setFormatter(full_fmt)
 
-        sum_fmt = logging.Formatter("%(asctime):%(message)")
+        sum_fmt = logging.Formatter("%(asctime)s:%(message)s")
         sum_handle = logging.FileHandler(results_path + "/sum_test_{}.log".format(i))
         sum_handle.setFormatter(sum_fmt)
         sum_handle.setLevel(60)
