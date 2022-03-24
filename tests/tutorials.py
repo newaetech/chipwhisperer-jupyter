@@ -12,6 +12,7 @@ from pprint import pprint
 import logging
 import time
 import chipwhisperer as cw
+from datetime import datetime
 
 import nbformat
 import nbconvert
@@ -33,6 +34,7 @@ import builtins
 test_logger = logging.getLogger("ChipWhisperer Test")
 test_logger.setLevel(logging.DEBUG)
 #test_logger.addHandler(test_handler)
+
 
 script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
@@ -588,11 +590,14 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                     kwargs.update(tutorial_kwargs)
 
                 logger.debug("\nTesting {} with {} ({})".format(nb, id, kwargs))
+                logger.log(60, "Running {} with {}".format(nb, id))
+                t_a = datetime.now()
                 passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
                 if not passed:
                     summary['failed'] += 1
                 summary['run'] += 1
-                header = "{} {} with config {}\n".format("Passed" if passed else "Failed", nb, id)
+                dt = datetime.now() - t_a
+                header = " {} {} with config {} in {} min\n".format("Passed" if passed else "Failed", nb, id, dt.seconds/60)
                 logger.log(60, header)
                 tests[header] = output
                 
@@ -611,6 +616,10 @@ def run_tests(cw_dir, config, results_path=None):
     
     results_handler = logging.FileHandler(results_path + "/testing.log")
     test_logger.addHandler(results_handler)
+
+    global_fmt = logging.Formatter("%(asctime)s||%(name)s:%(message)s")
+    global_sum_handler =  logging.FileHandler(results_path + "sum_test.log")
+    global_sum_handler.setFormatter(global_fmt)
     tutorials, connected_hardware = load_configuration(config)
 
     num_hardware = len(connected_hardware)
@@ -647,6 +656,7 @@ def run_tests(cw_dir, config, results_path=None):
         cur.setLevel(logging.NOTSET)
         cur.addHandler(full_handle)
         cur.addHandler(sum_handle)
+        cur.addHandler(global_sum_handler)
 
         if connected_hardware[i].get('serial number') is None:
             hw_locations.append(None)
