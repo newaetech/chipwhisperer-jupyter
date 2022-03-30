@@ -190,6 +190,11 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     #need to make sure course is in rst file name
     notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
+    if "courses" in notebook_dir:
+        notebook_dir = notebook_dir.split("jupyter_courses_")[-1]
+    else:
+        notebook_dir = notebook_dir.split("jupyter_tests_")[-1]
+
     file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
     base_path = os.path.join(output_dir, file_name_root + '-{}-{}'.format(SCOPETYPE, PLATFORM))
     rst_path = os.path.abspath(base_path + '.rst')
