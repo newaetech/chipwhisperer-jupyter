@@ -678,6 +678,7 @@ def run_tests(cw_dir, config, results_path=None):
             scope.enable_MPSSE()
             time.sleep(5)
             scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
+            test_logger.info("Changing device {} to MPSSE mode".format(i))
 
         hw_locations.append((scope._getNAEUSB().usbtx.device.getBusNumber(),\
             scope._getNAEUSB().usbtx.device.getDeviceAddress()))
