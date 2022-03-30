@@ -193,6 +193,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     if "courses" in notebook_dir:
         notebook_dir = notebook_dir.split("jupyter_courses_")[-1]
     else:
+        logger.info("Alt split {}".format(notebook_dir))
         notebook_dir = notebook_dir.split("jupyter_tests_")[-1]
 
     
