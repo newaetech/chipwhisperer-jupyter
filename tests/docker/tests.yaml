@@ -32,12 +32,14 @@ connected:
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
+    MPSSE: False
   - id: 1
     scope: NONE
     target: NONE
     firmware: NONE
     tutorial type: SIMULATED
     enabled: True
+    MPSSE: False
   - id: 2
     scope: OPENADC
     target: CWLITEXMEGA
@@ -45,6 +47,7 @@ connected:
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
+    MPSSE: False
   - id: 3
     scope: CWNANO
     target: CWNANO
@@ -52,6 +55,7 @@ connected:
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
+    MPSSE: False
   - id: 4
     scope: OPENADC
     target: CW308_STM32F4
@@ -59,6 +63,7 @@ connected:
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
+    MPSSE: False
   - id: 5
     scope: OPENADC
     target: CW308_K82F
@@ -66,6 +71,7 @@ connected:
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
+    MPSSE: True
 
 tutorials:
   tests/Test MPSSE.ipynb:
