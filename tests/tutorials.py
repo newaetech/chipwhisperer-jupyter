@@ -195,8 +195,10 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     else:
         notebook_dir = notebook_dir.split("jupyter_tests_")[-1]
 
+    
+
     file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
-    base_path = os.path.join(output_dir, file_name_root + '-{}-{}'.format(SCOPETYPE, PLATFORM))
+    base_path = os.path.join(output_dir, PLATFORM, file_name_root + '-{}'.format(SCOPETYPE, PLATFORM))
     rst_path = os.path.abspath(base_path + '.rst')
     html_path = os.path.abspath(base_path + '.html')
 
@@ -665,6 +667,16 @@ def run_tests(cw_dir, config, results_path=None):
         cur.addHandler(full_handle)
         cur.addHandler(sum_handle)
         cur.addHandler(global_sum_handler)
+
+        target_name = connected_hardware[i]["target"]
+        if target_name is None and (connected_hardware[i].get('tutorial type') == "SIMULATED"):
+            target_name = "SIMULATED"
+        target_folder = os.path.join(output_dir, target_name)
+        test_logger.info("Making folder {}".format(target_folder))
+        try:
+            os.mkdir(target_folder)
+        except FileExistsError as e:
+            test_logger.info("Making folder {} failed err {}".format(target_folder, str(e)))
 
         if connected_hardware[i].get('serial number') is None:
             hw_locations.append(None)
