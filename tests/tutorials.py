@@ -698,6 +698,7 @@ def run_tests(cw_dir, config, results_path=None):
             scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
             test_logger.info("Changing device {} to MPSSE mode".format(i))
 
+        test_logger.info("MPSSE enabled = {}".format(scope._getNAEUSB().is_MPSSE_enabled()))
         hw_locations.append((scope._getNAEUSB().usbtx.device.getBusNumber(),\
             scope._getNAEUSB().usbtx.device.getDeviceAddress()))
         test_logger.info("Found device {} at {}".format(i, hw_locations[i]))
