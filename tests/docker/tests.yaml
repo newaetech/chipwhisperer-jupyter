@@ -106,6 +106,43 @@ tutorials:
     configurations: 
       - ssver: SS_VER_2_1
         ids: [4]
+  courses/fault101/SOLN_Fault 1_1 - Introduction to Clock Glitching.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2, 4]
+  courses/fault101/SOLN_Fault 1_2 - Clock Glitching to Bypass Password.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2, 4]
+  courses/fault101/SOLN_Fault 1_3 - Clock Glitching to Memory Dump.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2, 4]
+  courses/fault101/SOLN_Fault 2_1 - Introduction to Voltage Glitching.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2]
+  courses/fault101/SOLN_Fault 2_2 - Voltage Glitching to Bypass Password.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2]
+  courses/fault101/SOLN_Fault 2_3 - Voltage Glitching to Memory Dump.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2]
+  tests/Test Pro.ipynb:
+     configurations:
+      - ssver: SS_VER_2_1
+        ids: [4]
+  courses/fault101/SOLN_Fault 2_1B - Introduction to Voltage Glitching with CWNano.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [3]
+  courses/fault101/SOLN_Fault 2_2B - Voltage Glitching with CWNano to Bypass Password.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [3]
+      
   # courses/sca201/SOLN_Lab 1_1A - Resynchronizing Traces with Sum of Absolute Difference.ipynb:
   #   configurations:
   #     - ssver: SS_VER_2_1
