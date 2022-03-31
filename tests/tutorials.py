@@ -737,7 +737,7 @@ def run_tests(cw_dir, config, results_path=None):
 
     for i in range(num_hardware):
         loggers.append(create_logger(i))
-        s, t = setup_HW(connected_hardware, i)
+        s, t = setup_HW(connected_hardware[i], i)
         hw_locations.append(s)
         target_hw_locations.append(t)
 
