@@ -92,7 +92,7 @@ def put_all_kwargs_in_notebook(params, logger=None, **kwargs):
             if p.name == kwarg:
                 in_params = True
         if in_params == False:
-            logger.debug(f"Inserting {kwarg}")
+            logger.info(f"Inserting {kwarg}")
             params.append(Parameter(kwarg, str, kwargs[kwarg]))
 
 def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, target_hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', logger=None, **kwargs):
@@ -228,12 +228,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         for name in file_names:
             with open(os.path.join(output_dir, name), 'wb') as f:
                 f.write(res['outputs'][name])
-                test_logger.debug('writing to '+ name)
+                test_logger.info('writing to '+ name)
             #print(res['outputs'][name])
 
 
         rst_file.write(body)
-        logger.debug('Wrote to: '+ rst_path)
+        logger.info('Wrote to: '+ rst_path)
 
         ## need resources
 
@@ -243,7 +243,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, res = html_exporter.from_notebook_node(nb)
 
         html_file.write(body)
-        logger.debug('Wrote to: '+ html_path)
+        logger.info('Wrote to: '+ html_path)
 
 
 def _print_tracebacks(errors, logger = None, config=None):
@@ -252,9 +252,9 @@ def _print_tracebacks(errors, logger = None, config=None):
         logger = test_logger
     ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
     if errors == []:
-        logger.debug("Passed all tests!")
+        logger.info("Passed all tests!")
     for error in errors:
-        logger.debug("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
+        logger.info("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
         for line in error[1]['traceback']:
             logger.log(60, ansi_escape.sub('', line))
 
@@ -297,7 +297,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     elif hw_location:
         logger.info('on device at {}'.format(hw_location))
     else:
-        logger.debug('No serial number specified... only bad if more than one device attached.')
+        logger.info('No serial number specified... only bad if more than one device attached.')
     nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, hw_location=hw_location, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, baud=baud, logger=logger, **kwargs)
     if not errors:
         logger.info("PASSED")
@@ -334,7 +334,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     if print_stderr:
         _print_stderr(nb, logger)
 
-    logger.debug("\n")
+    logger.info("\n")
     return passed, '\n'.join(output)
 
 
@@ -600,7 +600,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=
                 path = os.path.join(nb_dir, nb)
                 nb_short = str(nb).split('/')[-1].split(' -')[0]
                 hw_kwargs = hw_settings.get('kwargs')
-                logger.debug("HW kwargs: {}".format(hw_kwargs))
+                logger.info("HW kwargs: {}".format(hw_kwargs))
                 if hw_kwargs:
                     kwargs.update(hw_kwargs)
 
@@ -608,7 +608,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=
                 if tutorial_kwargs:
                     kwargs.update(tutorial_kwargs)
 
-                logger.debug("\nTesting {} with {} ({})".format(nb, id, kwargs))
+                logger.info("\nTesting {} with {} ({})".format(nb, id, kwargs))
                 logger.log(60, "Running {}".format(nb_short))
                 t_a = datetime.now()
                 passed, output = test_notebook(hw_location=hw_location, target_hw_location=target_hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
@@ -625,7 +625,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=
                 pass # we don't need to test this hardware on this tutorial
 
     time.sleep(0.5)
-    logger.debug("\n-----------------\nFinished test run\n-----------------\n")
+    logger.info("\n-----------------\nFinished test run\n-----------------\n")
     logger.log(60, "Finished all tests")
     return summary, tests
 
