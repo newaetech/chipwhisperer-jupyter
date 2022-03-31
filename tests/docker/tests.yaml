@@ -76,12 +76,13 @@ connected:
     scope: OPENADC
     target: CW305
     serial number: 44203120394d36433230342038303039
-    target serial number: 44203120314854373030353234303039
+    target serial number: 44203120314854373030353234303039 
     firmware: NONE
     tutorial type: HARDWARE
     enabled: True
     MPSSE: False
-    FPGA_ID: 35t
+    kwargs:
+        FPGA_ID: "35t"
 
 tutorials:
   tests/Test MPSSE.ipynb:
