@@ -244,13 +244,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         ## need resources
 
     with open(html_path, 'w', encoding='utf-8') as html_file:
+        logger.info('Wrote to: '+ html_path)
         html_exporter = HTMLExporter()
 
         body, res = html_exporter.from_notebook_node(nb)
-        file_names = res['outputs'].keys()
 
         html_file.write(body)
-        logger.info('Wrote to: '+ html_path)
 
 
 def _print_tracebacks(errors, logger = None, config=None):
