@@ -584,27 +584,16 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=
         for test_config in tutorials[nb]['configurations']:
             # run the test
             if id in test_config['ids']:
-                tmpkwargs = {
-                    # 'SCOPETYPE': hw_settings['scope'],
-                    # 'PLATFORM': hw_settings['target'],
-                    # 'CRYPTO_TARGET': hw_settings['firmware'],
-                    # # 'serial_number': hw_settings.get('serial number'),
-                    # 'VERSION': hw_settings['tutorial type'],
+                kwargs = {
+                    'SCOPETYPE': hw_settings['scope'],
+                    'PLATFORM': hw_settings['target'],
+                    'CRYPTO_TARGET': hw_settings['firmware'],
+                    # 'serial_number': hw_settings.get('serial number'),
+                    'VERSION': hw_settings['tutorial type'],
                     'SS_VER': test_config['ssver']
 
                 }
-                tmpkwargs.update(hw_settings)
-
-                # quick n dirty space replace
-                kwargs = {}
-                for key in tmpkwargs:
-                    if " " in key:
-                        tmp = tmpkwargs[key]
-                        new_key = str().join(key.split(" "))
-                        kwargs[new_key] = tmp
-
-                logger.debug("old kwargs: {}".format(str(tmpkwargs)))
-                logger.debug("new kwargs: {}".format(str(kwargs)))
+                kwargs.update(hw_settings)
 
                 path = os.path.join(nb_dir, nb)
                 nb_short = str(nb).split('/')[-1].split(' -')[0]
