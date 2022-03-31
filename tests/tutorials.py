@@ -199,9 +199,11 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
     if "courses" in notebook_dir:
         notebook_dir = notebook_dir.split("jupyter_courses_")[-1]
-    else:
+    elif "demos" in notebook_dir:
+        notebook_dir = notebook_dir.split("jupyter_demos")[-1]
+    elif "jupyter_tests" in notebook_dir:
         logger.info("Alt split {}".format(notebook_dir))
-        notebook_dir = notebook_dir.split("jupyter_tests_")[-1]
+        notebook_dir = notebook_dir.split("jupyter_tests")[-1]
 
     
 
