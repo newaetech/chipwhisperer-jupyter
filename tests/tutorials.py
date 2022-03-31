@@ -222,7 +222,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         rst_exporter = RSTExporter()
 
 
-        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': '../img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
         file_names = res['outputs'].keys()
         for name in file_names:
             with open(os.path.join(output_dir, name), 'wb') as f:
@@ -698,6 +698,19 @@ def run_tests(cw_dir, config, results_path=None):
         except Exception as e:
             test_logger.info("Making folder {} failed err {}".format(target_folder, str(e)))
 
+        # copy the images from input to output directory
+        # keeping them in the same relative directory
+        image_input_dir = os.path.join(nb_dir, 'img')
+        image_output_dir = os.path.join(target_folder, 'img')
+        if not os.path.isdir(image_output_dir):
+            os.mkdir(image_output_dir)
+
+        test_logger.info('Copying over image files...')
+        for image_path in glob(os.path.join(image_input_dir, '*')):
+            _, image_name = os.path.split(image_path)
+            shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
+        test_logger.info('Done')
+
         if not conf.get('target serial number') is None:
             if conf['target'] == "CW305":
                 target_type =  cw.targets.CW305
@@ -745,19 +758,7 @@ def run_tests(cw_dir, config, results_path=None):
         hw_locations.append(s)
         target_hw_locations.append(t)
 
-    # copy the images from input to output directory
-    # keeping them in the same relative directory
-    image_input_dir = os.path.join(nb_dir, 'img')
-    image_output_dir = os.path.join(output_dir, 'img')
 
-    if not os.path.isdir(image_output_dir):
-        os.mkdir(image_output_dir)
-
-    test_logger.info('Copying over image files...')
-    for image_path in glob(os.path.join(image_input_dir, '*')):
-        _, image_name = os.path.split(image_path)
-        shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
-    test_logger.info('Done')
 
     # Run each on of the tutorials with each supported hardware
     # configuration for that tutorial and export the output
