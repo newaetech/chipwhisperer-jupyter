@@ -209,6 +209,8 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
     base_path = os.path.join(output_dir, PLATFORM, file_name_root + '-{}'.format(SCOPETYPE, PLATFORM))
+    if base_path[0] == '_':
+        base_path = base_path[1:]
     rst_path = os.path.abspath(base_path + '.rst')
     html_path = os.path.abspath(base_path + '.html')
 
