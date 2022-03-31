@@ -222,7 +222,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         rst_exporter = RSTExporter()
 
 
-        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': '../img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
         file_names = res['outputs'].keys()
         for name in file_names:
             with open(os.path.join(output_dir, name), 'wb') as f:
