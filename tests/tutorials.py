@@ -99,6 +99,8 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
     if logger is None:
         logger=test_logger
 
+    
+
     with open(real_path, encoding='utf-8') as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
 
@@ -189,6 +191,16 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     if not logger:
         logger = test_logger
     notebook_dir, file_name = os.path.split(nb_path)
+    image_input_dir = os.path.join(notebook_dir, 'img')
+    image_output_dir = os.path.join(output_dir, 'img')
+    if not os.path.isdir(image_output_dir):
+        os.mkdir(image_output_dir)
+
+    test_logger.info('Copying over image files...')
+    for image_path in glob(os.path.join(image_input_dir, '*')):
+        _, image_name = os.path.split(image_path)
+        shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
+    test_logger.info('Done')
 
     #need to make sure course is in rst file name
     notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
@@ -700,16 +712,16 @@ def run_tests(cw_dir, config, results_path=None):
 
         # copy the images from input to output directory
         # keeping them in the same relative directory
-        image_input_dir = os.path.join(nb_dir, 'img')
-        image_output_dir = os.path.join(target_folder, 'img')
-        if not os.path.isdir(image_output_dir):
-            os.mkdir(image_output_dir)
+        # image_input_dir = os.path.join(nb_dir, 'img')
+        # image_output_dir = os.path.join(target_folder, 'img')
+        # if not os.path.isdir(image_output_dir):
+        #     os.mkdir(image_output_dir)
 
-        test_logger.info('Copying over image files...')
-        for image_path in glob(os.path.join(image_input_dir, '*')):
-            _, image_name = os.path.split(image_path)
-            shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
-        test_logger.info('Done')
+        # test_logger.info('Copying over image files...')
+        # for image_path in glob(os.path.join(image_input_dir, '*')):
+        #     _, image_name = os.path.split(image_path)
+        #     shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
+        # test_logger.info('Done')
 
         if not conf.get('target serial number') is None:
             if conf['target'] == "CW305":
