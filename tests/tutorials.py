@@ -243,11 +243,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         ## need resources
 
     with open(html_path, 'w', encoding='utf-8') as html_file:
-        from traitlets.config import Config
-        c = Config()
-
-        c.HTMLExporter.preprocessors = ['nbconvert.preprocessors.ExtractOutputPreprocessor']
-        html_exporter = HTMLExporter(config=c)
+        html_exporter = HTMLExporter()
 
         body, res = html_exporter.from_notebook_node(nb)
         file_names = res['outputs'].keys()
