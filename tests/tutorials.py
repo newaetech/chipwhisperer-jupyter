@@ -190,6 +190,13 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         logger = test_logger
     notebook_dir, file_name = os.path.split(nb_path)
 
+    #copy images to final directory
+    test_logger.info("Copying over images")
+    for image_path in glob(os.path.join(notebook_dir, "img", "*")):
+        _, image_name = os.path.split(image_path)
+        shutil.copyfile(image_path, os.path.join(output_dir, "img", image_name))
+    test_logger.info("Done")
+
     #need to make sure course is in rst file name
     notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
     if "courses" in notebook_dir:
