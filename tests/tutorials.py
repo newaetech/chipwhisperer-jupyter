@@ -99,8 +99,6 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
     if logger is None:
         logger=test_logger
 
-    
-
     with open(real_path, encoding='utf-8') as nbfile:
         nb = nbformat.read(nbfile, as_version=4)
 
@@ -191,16 +189,6 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     if not logger:
         logger = test_logger
     notebook_dir, file_name = os.path.split(nb_path)
-    image_input_dir = os.path.join(notebook_dir, 'img')
-    image_output_dir = os.path.join(output_dir, 'img')
-    if not os.path.isdir(image_output_dir):
-        os.mkdir(image_output_dir)
-
-    test_logger.info('Copying over image files...')
-    for image_path in glob(os.path.join(image_input_dir, '*')):
-        _, image_name = os.path.split(image_path)
-        shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
-    test_logger.info('Done')
 
     #need to make sure course is in rst file name
     notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
@@ -213,10 +201,8 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         notebook_dir = notebook_dir.split("jupyter_tests")[-1]
 
     
-    if notebook_dir == "":
-        file_name_root = file_name
-    else:
-        file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
+
+    file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
     base_path = os.path.join(output_dir, PLATFORM, file_name_root + '-{}'.format(SCOPETYPE, PLATFORM))
     if base_path[0] == '_':
         base_path = base_path[1:]
@@ -237,7 +223,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
         file_names = res['outputs'].keys()
         for name in file_names:
-            with open(os.path.join(output_dir, name), 'wb') as f:
+            with open(os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1]), 'wb') as f:
                 f.write(res['outputs'][name])
                 test_logger.info('writing to '+ name)
             #print(res['outputs'][name])
@@ -712,16 +698,17 @@ def run_tests(cw_dir, config, results_path=None):
 
         # copy the images from input to output directory
         # keeping them in the same relative directory
-        # image_input_dir = os.path.join(nb_dir, 'img')
-        # image_output_dir = os.path.join(target_folder, 'img')
-        # if not os.path.isdir(image_output_dir):
-        #     os.mkdir(image_output_dir)
+        image_input_dir = os.path.join(nb_dir, 'img')
+        image_output_dir = os.path.join(target_folder, 'img')
 
-        # test_logger.info('Copying over image files...')
-        # for image_path in glob(os.path.join(image_input_dir, '*')):
-        #     _, image_name = os.path.split(image_path)
-        #     shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
-        # test_logger.info('Done')
+        if not os.path.isdir(image_output_dir):
+            os.mkdir(image_output_dir)
+
+        test_logger.info('Copying over image files...')
+        for image_path in glob(os.path.join(image_input_dir, '*')):
+            _, image_name = os.path.split(image_path)
+            shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
+        test_logger.info('Done')
 
         if not conf.get('target serial number') is None:
             if conf['target'] == "CW305":
@@ -769,7 +756,6 @@ def run_tests(cw_dir, config, results_path=None):
         s, t = setup_HW(connected_hardware[i], i)
         hw_locations.append(s)
         target_hw_locations.append(t)
-
 
 
     # Run each on of the tutorials with each supported hardware
