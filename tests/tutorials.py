@@ -195,6 +195,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     for image_path in glob(os.path.join(notebook_dir, "img", "*")):
         _, image_name = os.path.split(image_path)
         shutil.copyfile(image_path, os.path.join(output_dir, "img", image_name))
+        test_logger.info("Copying {} to {}".format(image_path, os.path.join(output_dir, "img", image_name)))
     test_logger.info("Done")
 
     #need to make sure course is in rst file name
