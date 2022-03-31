@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import shutil
 import os
 from glob import glob
@@ -94,7 +95,7 @@ def put_all_kwargs_in_notebook(params, logger=None, **kwargs):
             logger.debug(f"Inserting {kwarg}")
             params.append(Parameter(kwarg, str, kwargs[kwarg]))
 
-def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', logger=None, **kwargs):
+def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, target_hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', logger=None, **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
@@ -143,6 +144,12 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, a
             replacements.update({
                 r'cw.scope(\(\))': 'cw.scope(hw_location={})'.format(hw_location),
                 r'chipwhisperer.scope()': 'chipwhisperer.scope(hw_location={})'.format(hw_location)
+            })
+        
+
+        if target_hw_location:
+            replacements.update({
+                r'(cw|chipwhisperer)(\.target\()(.*,)(.*)(\))': r"\1\2\3\4, hw_location={}\5".format(target_hw_location)
             })
 
         # %matplotlib notebook won't show up in blank plots
@@ -558,7 +565,7 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
         return cell, resources
 
 #need to separate into separate functions to multiprocess
-def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
+def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=None, logger=None):
     tutorials, connected_hardware = load_configuration(config)
     summary = {'failed': 0, 'run': 0}
     hw_settings = connected_hardware[id]
@@ -601,7 +608,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, logger=None):
                 logger.debug("\nTesting {} with {} ({})".format(nb, id, kwargs))
                 logger.log(60, "Running {}".format(nb_short))
                 t_a = datetime.now()
-                passed, output = test_notebook(hw_location=hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
+                passed, output = test_notebook(hw_location=hw_location, target_hw_location=target_hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
                 if not passed:
                     summary['failed'] += 1
                 summary['run'] += 1
@@ -635,6 +642,7 @@ def run_tests(cw_dir, config, results_path=None):
 
     num_hardware = len(connected_hardware)
     hw_locations = []
+    target_hw_locations = []
     loggers = []
     # handlers = []
     summary_handlers = []
@@ -649,8 +657,9 @@ def run_tests(cw_dir, config, results_path=None):
         if wrong_paths != "":
             raise FileNotFoundError("Incorrect paths: {}".format(wrong_paths))
 
-    for i in range(num_hardware):
 
+
+    def create_logger(i):
         # set up logging for tests
         full_fmt = logging.Formatter("%(asctime)s||%(levelname)s||%(lineno)d||%(message)s", "%y-%m-%d %H:%M:%S")
         full_handle = logging.FileHandler(results_path + "/test_{}.log".format(i))
@@ -662,49 +671,75 @@ def run_tests(cw_dir, config, results_path=None):
         sum_handle.setLevel(60)
 
         cur = logging.getLogger("Test Logger {}".format(i))
-        loggers.append(cur)
 
         cur.setLevel(logging.NOTSET)
         cur.addHandler(full_handle)
         cur.addHandler(sum_handle)
         cur.addHandler(global_sum_handler)
-
-        target_name = connected_hardware[i]["target"]
-        if target_name is None and (connected_hardware[i].get('tutorial type') == "SIMULATED"):
+        return cur
+    
+    def setup_HW(conf: dict, i: int):
+        target_name = conf["target"]
+        if target_name is None and (conf.get('tutorial type') == "SIMULATED"):
             target_name = "SIMULATED"
         target_folder = os.path.join(output_dir, target_name)
         test_logger.info("Making folder {}".format(target_folder))
+        slocation = None
+        tlocation = None
+
         try:
             os.mkdir(target_folder)
         except FileExistsError as e:
+            pass
+        except Exception as e:
             test_logger.info("Making folder {} failed err {}".format(target_folder, str(e)))
 
-        if connected_hardware[i].get('serial number') is None:
-            hw_locations.append(None)
-            continue
+        if not conf.get('target serial number') is None:
+            if conf['target'] == "CW305":
+                target_type =  cw.targets.CW305
+            elif conf['target'] == "CW310":
+                target_type =  cw.targets.CW310
+            else:
+                raise ValueError("Invalid target type ")
+            target = cw.target(None, target_type, sn=conf['target serial number'])
 
-        scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
-        if scope.latest_fw_str > scope.fw_version_str:
-            scope.upgrade_firmware()
-            time.sleep(5)
-            scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
-            test_logger.info("Upgraded firmware for device {}".format(i))
-        else:
-            test_logger.info("Device {} up to date".format(i))
+            if target.latest_fw_str > target.fw_version_str:
+                target.upgrade_firmware()
+                time.sleep(5)
+                target = cw.target(None, target_type, sn=conf['target serial number'])
+                test_logger.info("Upgraded target firmware for device {}".format(i))
 
-        if connected_hardware[i].get('MPSSE') is True:
-            scope.enable_MPSSE()
-            time.sleep(5)
-            scope = cw.scope(sn=str(connected_hardware[i]['serial number']))
-            test_logger.info("Changing device {} to MPSSE mode".format(i))
+            tlocation = target._getNAEUSB().hw_location()
+            test_logger.info("Found target device {} at {}".format(i, tlocation))
+            target.dis()
 
-        test_logger.info("MPSSE enabled = {}".format(scope._getNAEUSB().is_MPSSE_enabled()))
-        hw_locations.append((scope._getNAEUSB().usbtx.device.getBusNumber(),\
-            scope._getNAEUSB().usbtx.device.getDeviceAddress()))
-        test_logger.info("Found device {} at {}".format(i, hw_locations[i]))
-        scope.dis()
-        #hw_locations.appe
+        if not conf.get('serial number') is None:
+            scope = cw.scope(sn=str(conf['serial number']))
+            if scope.latest_fw_str > scope.fw_version_str:
+                scope.upgrade_firmware()
+                time.sleep(5)
+                scope = cw.scope(sn=str(conf['serial number']))
+                test_logger.info("Upgraded firmware for device {}".format(i))
+            else:
+                test_logger.info("Device {} up to date".format(i))
 
+            if conf.get('MPSSE') is True:
+                scope.enable_MPSSE()
+                time.sleep(5)
+                scope = cw.scope(sn=str(conf['serial number']))
+                test_logger.info("Changing device {} to MPSSE mode".format(i))
+
+            test_logger.info("MPSSE enabled = {}".format(scope._getNAEUSB().is_MPSSE_enabled()))
+            slocation = scope._getNAEUSB().hw_location()
+            test_logger.info("Found device {} at {}".format(i, slocation))
+            scope.dis()
+        return slocation, tlocation
+
+    for i in range(num_hardware):
+        loggers.append(create_logger(i))
+        s, t = setup_HW(connected_hardware, i)
+        hw_locations.append(s)
+        target_hw_locations.append(t)
 
     # copy the images from input to output directory
     # keeping them in the same relative directory
@@ -735,7 +770,7 @@ def run_tests(cw_dir, config, results_path=None):
     results = []
     test_logger.info("num hw: {}".format(num_hardware))
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
-        test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], loggers[i]): i for i in range(num_hardware)}
+        test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], target_hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
             hw_summary, hw_tests = future.result()
             summary['all']['failed'] += hw_summary['failed']
@@ -749,28 +784,6 @@ def run_tests(cw_dir, config, results_path=None):
             with open("config_{}_log.txt".format(index), 'w') as f:
                 for header in hw_tests:
                     f.write("Test {}, output:\n{}".format(header, hw_tests[header]))
-
-        # for i in range(num_hardware):
-        #     test_logger.debug("Running hw")
-        #     results.append(nb_pool.apply_async(run_test_hw_config, args=(i, config)))
-
-        # try:
-        #     for index, result in enumerate(results):
-                # hw_summary, hw_tests = result.get()
-                # summary['all']['failed'] += hw_summary['failed']
-                # summary['all']['run'] += hw_summary['run']
-                # summary[str(index)] = {'failed': hw_summary['failed'], 'run': hw_summary['run']}
-                # # summary[str(index)]['failed'] += hw_summary['failed']
-                # # summary[str(index)]['run'] += hw_summary['run']
-                # tests.update(hw_tests)
-
-                # with open("config_{}_log.txt".format(index), 'w') as f:
-                #     for header in hw_tests:
-                #         f.write("Test {}, output:\n{}".format(header, hw_tests[header]))
-        # except Exception as e:
-        #     nb_pool.terminate()
-        #     test_logger.error(e)
-
     try:
         shutil.rmtree('projects')
     except FileNotFoundError:
