@@ -679,6 +679,7 @@ def run_tests(cw_dir, config, results_path=None):
         return cur
     
     def setup_HW(conf: dict, i: int):
+        test_logger.info("Setting up conf {}".format(str(conf)))
         target_name = conf["target"]
         if target_name is None and (conf.get('tutorial type') == "SIMULATED"):
             target_name = "SIMULATED"
