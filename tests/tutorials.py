@@ -702,7 +702,7 @@ def run_tests(cw_dir, config, results_path=None):
                 target_type =  cw.targets.CW310
             else:
                 raise ValueError("Invalid target type ")
-            target = cw.target(None, target_type, sn=conf['target serial number'])
+            target = cw.target(None, target_type, sn=str(conf['target serial number']))
 
             if target.latest_fw_str > target.fw_version_str:
                 target.upgrade_firmware()
