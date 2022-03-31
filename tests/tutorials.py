@@ -593,7 +593,7 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=
                     'SS_VER': test_config['ssver']
 
                 }
-                kwargs.update(hw_settings)
+                # kwargs.update(hw_settings)
 
                 path = os.path.join(nb_dir, nb)
                 nb_short = str(nb).split('/')[-1].split(' -')[0]
