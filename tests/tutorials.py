@@ -201,8 +201,10 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         notebook_dir = notebook_dir.split("jupyter_tests")[-1]
 
     
-
-    file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
+    if notebook_dir == "":
+        file_name_root = file_name
+    else:
+        file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
     base_path = os.path.join(output_dir, PLATFORM, file_name_root + '-{}'.format(SCOPETYPE, PLATFORM))
     if base_path[0] == '_':
         base_path = base_path[1:]
