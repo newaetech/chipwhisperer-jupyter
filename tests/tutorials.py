@@ -24,17 +24,12 @@ from nbconvert import RSTExporter, HTMLExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions, Parameter
 from nbconvert.nbconvertapp import NbConvertBase
 
-# results_path = os.environ.get('CW_TEST_RESULT_PATH')
-# if not results_path:
-#     results_path = "./"
 
 from functools import partial
 import builtins
 
-#test_handler = logging.FileHandler(results_path + "test_log.txt")
 test_logger = logging.getLogger("ChipWhisperer Test")
 test_logger.setLevel(logging.DEBUG)
-#test_logger.addHandler(test_handler)
 
 
 script_path = os.path.abspath(__file__)
