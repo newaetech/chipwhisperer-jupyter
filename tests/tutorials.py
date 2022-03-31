@@ -238,6 +238,11 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         html_exporter = HTMLExporter()
 
         body, res = html_exporter.from_notebook_node(nb)
+        file_names = res['outputs'].keys()
+        for name in file_names:
+            with open(os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1]), 'wb') as f:
+                f.write(res['outputs'][name])
+                test_logger.info('writing to '+ name)
 
         html_file.write(body)
         logger.info('Wrote to: '+ html_path)
