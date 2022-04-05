@@ -610,7 +610,7 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
     time.sleep(0.5)
     logger.info("\n-----------------\nFinished test run\n-----------------\n")
     logger.log(60, "Finished all tests")
-    return summary, tests
+    return summary, tests, hw_id
 
 def run_tests(cw_dir, config, results_path=None):
     from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -778,11 +778,13 @@ def run_tests(cw_dir, config, results_path=None):
     summary['all']['run'] = 0
     results = []
     test_logger.info("num hw: {}".format(num_hardware))
+    results_data = {}
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
         test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], target_hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
-            hw_summary, hw_tests = future.result()
-            results.append(hw_tests)
+            hw_summary, hw_tests, hw_id = future.result()
+            sname = sname_to_log_name(connected_hardware[hw_id])
+            results_data[sname] = hw_tests
             # summary[str(index)]['failed'] += hw_summary['failed']
             # summary[str(index)]['run'] += hw_summary['run']
 
@@ -791,11 +793,6 @@ def run_tests(cw_dir, config, results_path=None):
     
     test_logger.log(60, "Finished all tests, writing results.yaml...")
 
-    results_data = {}
-    for i in range(num_hardware):
-        sname = sname_to_log_name(connected_hardware[i])
-        results_data[sname] = results[i]
-    
     test_logger.info("\nResults data: {}\n".format(str(results_data)))
     with open(os.path.join(results_path, "results.yaml"), "w+") as f:
         test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
