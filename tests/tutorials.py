@@ -44,8 +44,8 @@ RSTExporter.template_file = 'rst_extended.tpl'
 def sname_to_log_name(hw_dict):
     sname:str = hw_dict['short name']
     if len(sname) < 11:
-        sname = sname + "_"*(11-len(sname))
-    sname += "_({})".format(hw_dict['id'])
+        sname = "_"*(11-len(sname)) + sname
+    sname = "({})_".format(hw_dict['id']) + sname
     return sname
 
 output = []
