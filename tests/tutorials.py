@@ -38,22 +38,51 @@ tests_dir, _ = os.path.split(script_path)
 RSTExporter.template_paths = ['.', tests_dir]
 RSTExporter.extra_template_basedirs = [tests_dir, tests_dir+'/rst_extended']
 RSTExporter.template_file = 'rst_extended.tpl'
-# NbConvertBase.display_data_priority = [
-#     'application/vnd.jupyter.widget-state+json',
-#     'application/vnd.jupyter.widget-view+json',
-#     'application/javascript',
-#     'application/vnd.bokehjs_exec.v0+json',
-#     'text/html',
-#     'text/markdown',
-#     'image/svg+xml',
-#     'text/latex',
-#     'image/png',
-#     'image/jpeg',
-#     'text/plain'
-# ]
 
+# generate logger name from hw config id and short name
+# make it so all the names line up and have the same length
+def sname_to_log_name(hw_dict):
+    sname = hw_dict['short name']
+    if len(sname) < 7:
+        sname = sname + "_"*(7-len(sname))
+    sname += "_({})".format(hw_dict['id'])
+    return sname
 
 output = []
+
+# helper functions for printing results/errors from notebook
+def _get_outputs(nb):
+    return [[i, cell] for i, cell in enumerate(nb.cells) if "outputs" in cell]
+
+def _print_stderr(nb, logger=None):
+    outputs = _get_outputs(nb)
+    if logger is None:
+        logger = test_logger
+    printed_output = [[cell[0], output] for cell in outputs for output in cell[1]['outputs'] if
+                      ('name' in output and output['name'] == 'stderr')]
+    for out in printed_output:
+        logger.warning("[{}]:\n{}".format(out[0], out[1]['text']))
+
+def _print_stdout(nb, logger=None):
+    if logger is None:
+        logger = test_logger
+    outputs = _get_outputs(nb)
+    printed_output = [[cell[0], output] for cell in outputs for output in cell[1]['outputs'] if
+                      ('name' in output and output['name'] == 'stdout')]
+    for out in printed_output:
+        logger.info("[{}]:\n{}".format(out[0], out[1]['text']))
+
+def _print_tracebacks(errors, logger = None, config=None):
+    # to escape ANSI sequences use regex
+    if logger is None:
+        logger = test_logger
+    ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+    if errors == []:
+        logger.info("Passed all tests!")
+    for error in errors:
+        logger.info("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
+        for line in error[1]['traceback']:
+            logger.log(60, ansi_escape.sub('', line))
 
 _builtin_print = print
 def print(*args, **kwargs):
@@ -100,6 +129,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
         logger=test_logger
 
     with open(real_path, encoding='utf-8') as nbfile:
+        # replace variables in first block with passed in kwargs (from .yaml file)
         nb = nbformat.read(nbfile, as_version=4)
 
         orig_parameters = extract_parameters(nb)
@@ -111,6 +141,11 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
 
+        # %run blocks can be run just fine through ExecutePreprocessor;
+        # however, things like cw.scope() that we need to modify (to insert hw_location mostly)
+        # are locked in another notebook
+
+        # so we have to traverse the %run blocks and inline all the code
         if serial_number or baud or hw_location:
             ip = InLineCodePreprocessor(notebook_dir)
             # inline all code before doing any replacements
@@ -118,30 +153,26 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
 
         replacements = {}
 
-        if hw_location and serial_number:
-            print("Make error for this later")
-
+        # do regex replacements for attaching specific devies
+        # cw.scope() -> cw.scope(sn='<SN>')
         if serial_number:
             replacements.update({
-                r'cw.scope(\(\))': 'cw.scope(sn=\'{}\')'.format(serial_number),
-                r'chipwhisperer.scope()': 'chipwhisperer.scope(sn=\'{}\')'.format(serial_number)
+                r'(cw|chipwhisperer)\.scope\(\)': r'\1.scope(sn=\'{}\')'.format(serial_number),
             })
 
+        # cw.program_target(...) -> cw.program_target(..., baud=<BAUD>)
         if baud:
-            # replacements.update({
-            #     r'program_target\(((?:[\w=\+/*\s]+\s*,\s*)*[\w=+/*]+)': r"program_target(\g<1>, baud=38400"
-            # })
             replacements.update({
                 r'(program_target\(.*)\)': r'\g<1>, baud={})'.format(baud)
             })
 
+        # cw.scope() -> cw.scope(hw_location=<HW_LOCATION>)
         if hw_location:
             replacements.update({
-                r'cw.scope(\(\))': 'cw.scope(hw_location={})'.format(hw_location),
-                r'chipwhisperer.scope()': 'chipwhisperer.scope(hw_location={})'.format(hw_location)
+                r'(cw|chipwhisperer)\.scope\(\)': r'\1.scope(hw_location={})'.format(hw_location),
             })
-        
 
+        # cw.target(...) -> cw.target(..., hw_location=<HW_LOCATION>)
         if target_hw_location:
             replacements.update({
                 r'(cw|chipwhisperer)(\.target\()(.*,)(.*)(\))': r"\1\2\3\4, hw_location={}\5".format(target_hw_location)
@@ -156,6 +187,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
             rp = RegexReplacePreprocessor(replacements)
             nb, resources = rp.preprocess(nb, {})
 
+        # idk...
         if notebook_dir:
             with cd(notebook_dir):
                 nb, resources = ep.preprocess(nb, {'metadata': {'path': './'}})
@@ -188,9 +220,28 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     if not logger:
         logger = test_logger
-    notebook_dir, file_name = os.path.split(nb_path)
 
-    #copy images to final directory
+    # Modify name of output notebook, figure out final directory,
+    # move images so that they appear in the .html, etc
+
+    # Objective is to put final tutorials in
+    # ~/chipwhisperer/tutorials/<PLATFORM>/<LAB_NAME>.html
+
+    test_logger.info("Exporting {}".format(nb_path))
+
+    # extract lab name
+    notebook_dir, file_name = os.path.split(nb_path)
+    lab_name, ext = os.path.splitext(nb_path)
+
+    # ~/chipwhisperer/tutorials + <PLATFORM> + lab name
+    base_path = os.path.join(output_dir, PLATFORM, lab_name)
+
+    # add rst/html extension
+    rst_path = os.path.abspath(base_path + '.rst')
+    html_path = os.path.abspath(base_path + '.html')
+
+    # copy images to final directory for .html file
+    # just do a dumb copy where we grab notebook_dir/img/*
     test_logger.info("Copying over images")
     for image_path in glob(os.path.join(notebook_dir, "img", "*")):
         _, image_name = os.path.split(image_path)
@@ -199,49 +250,26 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         shutil.copyfile(image_path, outpath)
     test_logger.info("Done")
 
-    #need to make sure course is in rst file name
-    notebook_dir = notebook_dir.replace(r'\\', '_').replace('../', '').replace('/', '_')
-    if "courses" in notebook_dir:
-        notebook_dir = notebook_dir.split("jupyter_courses_")[-1]
-    elif "demos" in notebook_dir:
-        notebook_dir = notebook_dir.split("jupyter_demos")[-1]
-    elif "jupyter_tests" in notebook_dir:
-        logger.info("Alt split {}".format(notebook_dir))
-        notebook_dir = notebook_dir.split("jupyter_tests")[-1]
-
-    
-
-    file_name_root, _ = os.path.splitext(notebook_dir + '_' + file_name)
-    base_path = os.path.join(output_dir, PLATFORM, file_name_root)
-    if base_path[0] == '_':
-        base_path = base_path[1:]
-    rst_path = os.path.abspath(base_path + '.rst')
-    html_path = os.path.abspath(base_path + '.html')
-
-
-
-    #   class EscapeBacktickPreprocessor(nbconvert.preprocessors.Preprocessor):
-
     ebp = EscapeBacktickPreprocessor()
 
+    # export finished notebook to RST and HTML
     rst_ready_nb, _ = ebp.preprocess(nb, {})
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
 
-
-        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources={'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, file_name_root).replace(' ', '')})
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
+            {'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, lab_name).replace(' ', '')})
         file_names = res['outputs'].keys()
+
+        # copy over images from notebook
+        # only works with rst file
         for name in file_names:
             with open(os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1]), 'wb') as f:
                 f.write(res['outputs'][name])
                 test_logger.info('writing to '+ name)
-            #print(res['outputs'][name])
-
 
         rst_file.write(body)
         logger.info('Wrote to: '+ rst_path)
-
-        ## need resources
 
     with open(html_path, 'w', encoding='utf-8') as html_file:
         logger.info('Wrote to: '+ html_path)
@@ -251,48 +279,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
         html_file.write(body)
 
-
-def _print_tracebacks(errors, logger = None, config=None):
-    # to escape ANSI sequences use regex
-    if logger is None:
-        logger = test_logger
-    ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
-    if errors == []:
-        logger.info("Passed all tests!")
-    for error in errors:
-        logger.info("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
-        for line in error[1]['traceback']:
-            logger.log(60, ansi_escape.sub('', line))
-
-
-def _get_outputs(nb):
-    return [[i, cell] for i, cell in enumerate(nb.cells) if "outputs" in cell]
-
-
-def _print_stderr(nb, logger=None):
-    outputs = _get_outputs(nb)
-    if logger is None:
-        logger = test_logger
-    printed_output = [[cell[0], output] for cell in outputs for output in cell[1]['outputs'] if
-                      ('name' in output and output['name'] == 'stderr')]
-    for out in printed_output:
-        logger.warning("[{}]:\n{}".format(out[0], out[1]['text']))
-
-
-def _print_stdout(nb, logger=None):
-    if logger is None:
-        logger = test_logger
-    outputs = _get_outputs(nb)
-    printed_output = [[cell[0], output] for cell in outputs for output in cell[1]['outputs'] if
-                      ('name' in output and output['name'] == 'stdout')]
-    for out in printed_output:
-        logger.info("[{}]:\n{}".format(out[0], out[1]['text']))
-
-
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, baud=None, hw_location=None, logger=None, **kwargs):
     # reset output for next test
-    output[:] = list()
+
+    # TODO: clean this up
+    output[:] = list() # probably just remove this
     passed = False
     if logger is None:
         logger = test_logger
@@ -304,44 +296,40 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
         logger.info('on device at {}'.format(hw_location))
     else:
         logger.info('No serial number specified... only bad if more than one device attached.')
+
+    # run notebook and record runtime
+    t_a = datetime.now()
     nb, errors, export_kwargs = execute_notebook(nb_path, serial_number, hw_location=hw_location, allow_errors=allow_errors, allowable_exceptions=allowable_exceptions, baud=baud, logger=logger, **kwargs)
+    dt = datetime.now() - t_a
+
     if not errors:
         logger.info("PASSED")
         passed = True
         if export:
             export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
     else:
-        if allowable_exceptions:
-            error_is_acceptable = [error[1]['ename'] in allowable_exceptions for error in errors]
-            if all(error_is_acceptable):
-                logger.info("PASSED with expected errors")
-                passed = True
-                for error in errors:
-                    logger.info(error[1]['ename']+ ':'+ error[1]['evalue'])
-                if export:
-                    export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
-            else:
-                logger.warning("FAILED {} config {}:".format(nb_path, kwargs))
-                passed = False
-                if print_first_traceback_only:
-                    _print_tracebacks([error for i, error in enumerate(errors) if i == 0], logger=logger)
-                else:
-                    _print_tracebacks(errors, logger=logger)
+        logger.warning("FAILED:")
+        passed = False
+        if print_first_traceback_only:
+            _print_tracebacks([error for i, error in enumerate(errors) if i == 0],logger=logger)
         else:
-            logger.warning("FAILED:")
-            passed = False
-            if print_first_traceback_only:
-                _print_tracebacks([error for i, error in enumerate(errors) if i == 0],logger=logger)
-            else:
-                _print_tracebacks(errors,logger=logger)
-            export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
+            _print_tracebacks(errors,logger=logger)
+        export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
+
     if print_stdout:
         _print_stdout(nb, logger)
     if print_stderr:
         _print_stderr(nb, logger)
 
     logger.info("\n")
-    return passed, '\n'.join(output)
+
+    result = {
+        'passed': passed,
+        'errors': '\n'.join(errors),
+        'run time': '{}:{:02d}'.format(dt.seconds//60, dt.seconds % 60)
+    }
+
+    return passed, '\n'.join(output), result
 
 
 def clear_notebook(path, kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
@@ -370,15 +358,11 @@ def clear_notebook(path, kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM"
 
 
 def clear_outputs_in_dir(dirpath, default_list=r".*\.ipynb$", blacklist=r"^Lab.*", kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
-
     notebook_files = [dirpath + "/" + f for f in listdir(dirpath) if isfile(dirpath + "/" + f) and re.search(default_list, f) and not re.search(blacklist, f)]
 
     for file in notebook_files:
         _builtin_print("Clearing {}".format(file))
         clear_notebook(file, kwargs)
-
-    
-
 
 def load_configuration(path):
     """Load the yaml configuration file for the tutorials.
@@ -394,7 +378,6 @@ def load_configuration(path):
     tutorials = config['tutorials']
     connected_hardware = config['connected']
     return tutorials, connected_hardware
-
 
 def matching_connected_configuration(config, connected):
     """
@@ -502,7 +485,6 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
                 def regex_replace(p):
                     # external_notebooks = re.findall(p, cell['source'])
 
-
                     run_line = re.search(p, cell['source'])
                     if not run_line:
                         return
@@ -559,49 +541,41 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
                 # for full_match, ext_nb in external_notebooks:
                 full_match = match.group(1)
                 shell_cmd = match.group(2)
-                # print(run_line.group(1))
-                # print(run_line.group(2))
                 space_tab = " " * num_spaces + "\t" * num_tabs
                 a = cell['source'].replace(full_match, f'try:\n{space_tab}    {full_match}\n{space_tab}except:\n{space_tab}    x=open("/tmp/tmp.txt").read(); print(x); raise OSError(x)\n')
                 a = a.replace(shell_cmd, shell_cmd + " &> /tmp/tmp.txt")
                 cell['source'] = a
-                # print(a)
-                # python_code = " " * num_spaces + "\t" * num_tabs + python_code.replace("\n", "\n{}{}".format(" " * num_spaces, "\t" * num_tabs))
-                # print(str(num_spaces), str(num_tabs))
-                # cell['source'] = cell['source'].replace(full_match, '\n{}\n'.format(python_code))
 
         return cell, resources
 
-#need to separate into separate functions to multiprocess
-def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=None, logger=None):
+# function to run all notebooks for a given hardware configuration
+# select hardware via hw_id (i.e. 0 runs hw configuration 0, 1 runs hw configuration 1, and so on)
+def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_location=None, logger=None):
+    if logger is None:
+        logger = test_logger
+
     tutorials, connected_hardware = load_configuration(config)
     summary = {'failed': 0, 'run': 0}
-    hw_settings = connected_hardware[id]
+    hw_settings = connected_hardware[hw_id]
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
     tests = {}
-    if logger is None:
-        logger = test_logger
-    # if not hw_settings['enabled']:
-    #     return summary, tests
-
-    # TODO: grab HW configuration settings
 
     for nb in tutorials.keys():
         for test_config in tutorials[nb]['configurations']:
             # run the test
-            if id in test_config['ids']:
+            if hw_id in test_config['ids']:
+
+                # grab hw specific info from yaml file
                 kwargs = {
                     'SCOPETYPE': hw_settings['scope'],
                     'PLATFORM': hw_settings['target'],
                     'CRYPTO_TARGET': hw_settings['firmware'],
-                    # 'serial_number': hw_settings.get('serial number'),
                     'VERSION': hw_settings['tutorial type'],
                     'SS_VER': test_config['ssver']
 
                 }
-                # kwargs.update(hw_settings)
 
                 path = os.path.join(nb_dir, nb)
                 nb_short = str(nb).split('/')[-1].split(' -')[0]
@@ -614,21 +588,21 @@ def run_test_hw_config(id, cw_dir, config, hw_location=None, target_hw_location=
                 if tutorial_kwargs:
                     kwargs.update(tutorial_kwargs)
 
-                logger.info("\nTesting {} with {} ({})".format(nb, id, kwargs))
+                logger.info("\nTesting {} with {} ({})".format(nb, hw_id, kwargs))
                 logger.log(60, "Running {}".format(nb_short))
-                t_a = datetime.now()
-                passed, output = test_notebook(hw_location=hw_location, target_hw_location=target_hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
+                passed, output, result_dict = test_notebook(hw_location=hw_location, target_hw_location=target_hw_location, nb_path=path, output_dir=output_dir, logger=logger, **kwargs)
                 if not passed:
                     summary['failed'] += 1
                 summary['run'] += 1
-                dt = datetime.now() - t_a
-                header = " {} {} in {}:{:02d} min\n".format("Passed" if passed else "Failed", nb_short, dt.seconds//60, dt.seconds % 60)
+                header = " {} {} in {} min\n".format("Passed" if passed else "Failed", nb_short, result_dict['run time'])
                 logger.log(60, header)
-                tests[header] = output
-                
 
             else:
                 pass # we don't need to test this hardware on this tutorial
+        lab_file = os.path.split(nb)
+        lab_name = os.path.splitext(lab_file)
+        tests[lab_name] = result_dict
+        
 
     time.sleep(0.5)
     logger.info("\n-----------------\nFinished test run\n-----------------\n")
@@ -640,13 +614,17 @@ def run_tests(cw_dir, config, results_path=None):
     if not results_path:
         results_path = "./"
     
+    # create the many loggers we use for tests
     results_handler = logging.FileHandler(results_path + "/testing.log")
     test_logger.addHandler(results_handler)
 
+    # global summary file that takes output from all test loggers
     global_fmt = logging.Formatter("%(asctime)s||%(name)s||%(message)s", "%H:%M")
     global_sum_handler =  logging.FileHandler(results_path + "/sum_test.log")
     global_sum_handler.setFormatter(global_fmt)
     global_sum_handler.setLevel(60)
+
+    # load yaml file
     tutorials, connected_hardware = load_configuration(config)
 
     num_hardware = len(connected_hardware)
@@ -654,10 +632,11 @@ def run_tests(cw_dir, config, results_path=None):
     target_hw_locations = []
     loggers = []
     # handlers = []
-    summary_handlers = []
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
+
+    # make sure all the notebooks we have to test actually exist (catch typos)
     wrong_paths = ""
     for nb in tutorials.keys():
         path = os.path.join(nb_dir, nb)
@@ -666,21 +645,23 @@ def run_tests(cw_dir, config, results_path=None):
         if wrong_paths != "":
             raise FileNotFoundError("Incorrect paths: {}".format(wrong_paths))
 
-
-
+    # create loggers for each test hardware
     def create_logger(i):
         # set up logging for tests
+
+        # short name used for id
+        sname = sname_to_log_name(connected_hardware[i])
         full_fmt = logging.Formatter("%(asctime)s||%(levelname)s||%(lineno)d||%(message)s", "%y-%m-%d %H:%M:%S")
-        full_handle = logging.FileHandler(results_path + "/test_{}.log".format(i))
+        full_handle = logging.FileHandler(results_path + "/test_{}.log".format(sname))
         full_handle.setFormatter(full_fmt)
         full_handle.setLevel(logging.NOTSET)
 
         sum_fmt = logging.Formatter("%(asctime)s||%(message)s", "%H:%M")
-        sum_handle = logging.FileHandler(results_path + "/sum_test_{}.log".format(i))
+        sum_handle = logging.FileHandler(results_path + "/sum_test_{}.log".format(sname))
         sum_handle.setFormatter(sum_fmt)
         sum_handle.setLevel(60)
 
-        cur = logging.getLogger("Test Logger {}".format(i))
+        cur = logging.getLogger("{} Logger".format(sname))
 
         cur.setLevel(logging.NOTSET)
         cur.addHandler(full_handle)
@@ -688,11 +669,16 @@ def run_tests(cw_dir, config, results_path=None):
         cur.addHandler(global_sum_handler)
         return cur
     
+    # grab scope hw location and target hw location if needed
+    # also swap to MPSSE mode if required, since doing that changes hw_location due to reenumeration
+    # also update firmware if required
     def setup_HW(conf: dict, i: int):
         test_logger.info("Setting up conf {}".format(str(conf)))
         target_name = conf["target"]
         if target_name is None and (conf.get('tutorial type') == "SIMULATED"):
             target_name = "SIMULATED"
+
+        # make tutorial output folder
         target_folder = os.path.join(output_dir, target_name)
         test_logger.info("Making folder {}".format(target_folder))
         slocation = None
@@ -719,6 +705,7 @@ def run_tests(cw_dir, config, results_path=None):
             shutil.copyfile(image_path, os.path.join(image_output_dir, image_name))
         test_logger.info('Done')
 
+        # get target hw_location
         if not conf.get('target serial number') is None:
             if conf['target'] == "CW305":
                 target_type =  cw.targets.CW305
@@ -728,6 +715,7 @@ def run_tests(cw_dir, config, results_path=None):
                 raise ValueError("Invalid target type ")
             target = cw.target(None, target_type, sn=str(conf['target serial number']))
 
+            # update firmware if new one available
             if target.latest_fw_str > target.fw_version_str:
                 target.upgrade_firmware()
                 time.sleep(5)
@@ -738,8 +726,11 @@ def run_tests(cw_dir, config, results_path=None):
             test_logger.info("Found target device {} at {}".format(i, tlocation))
             target.dis()
 
+        # get scope hw_location
         if not conf.get('serial number') is None:
             scope = cw.scope(sn=str(conf['serial number']))
+
+            #update firmware if new one available
             if scope.latest_fw_str > scope.fw_version_str:
                 scope.upgrade_firmware()
                 time.sleep(5)
@@ -748,6 +739,7 @@ def run_tests(cw_dir, config, results_path=None):
             else:
                 test_logger.info("Device {} up to date".format(i))
 
+            # swap to MPSSE mode if required
             if conf.get('MPSSE') is True:
                 scope.enable_MPSSE()
                 time.sleep(5)
@@ -789,13 +781,19 @@ def run_tests(cw_dir, config, results_path=None):
             summary['all']['run'] += hw_summary['run']
             index = test_future[future]
             summary[str(index)] = {'failed': hw_summary['failed'], 'run': hw_summary['run']}
+            results.append(hw_tests)
             # summary[str(index)]['failed'] += hw_summary['failed']
             # summary[str(index)]['run'] += hw_summary['run']
-            tests.update(hw_tests)
 
-            with open("config_{}_log.txt".format(index), 'w') as f:
-                for header in hw_tests:
-                    f.write("Test {}, output:\n{}".format(header, hw_tests[header]))
+            # tests
+            # tests.update(hw_tests)
+
+    for i in range(num_hardware):
+        sname = sname_to_log_name(connected_hardware[i])
+        results[sname] = results[i]
+    
+    with open(results_path + "results.yaml", "w+") as f:
+        yaml.dump(results, f, default_flow_style=False)
     try:
         shutil.rmtree('projects')
     except FileNotFoundError:
