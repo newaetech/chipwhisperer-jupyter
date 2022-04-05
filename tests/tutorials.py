@@ -793,6 +793,7 @@ def run_tests(cw_dir, config, results_path=None):
         results[sname] = results[i]
     
     with open(results_path + "results.yaml", "w+") as f:
+        test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
         yaml.dump(results, f, default_flow_style=False)
     try:
         shutil.rmtree('projects')
