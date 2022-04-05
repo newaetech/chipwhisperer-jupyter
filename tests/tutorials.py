@@ -325,7 +325,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
 
     result = {
         'passed': passed,
-        'errors': '\n'.join(errors),
+        'errors': errors,
         'run time': '{}:{:02d}'.format(dt.seconds//60, dt.seconds % 60)
     }
 
@@ -624,6 +624,8 @@ def run_tests(cw_dir, config, results_path=None):
     global_sum_handler.setFormatter(global_fmt)
     global_sum_handler.setLevel(60)
 
+    test_logger.addHandler(global_sum_handler)
+
     # load yaml file
     tutorials, connected_hardware = load_configuration(config)
 
@@ -787,6 +789,8 @@ def run_tests(cw_dir, config, results_path=None):
 
             # tests
             # tests.update(hw_tests)
+    
+    test_logger.log(60, "Finished all tests, writing results.yaml...")
 
     for i in range(num_hardware):
         sname = sname_to_log_name(connected_hardware[i])
