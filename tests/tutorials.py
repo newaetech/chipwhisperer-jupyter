@@ -782,10 +782,6 @@ def run_tests(cw_dir, config, results_path=None):
         test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], target_hw_locations[i], loggers[i]): i for i in range(num_hardware)}
         for future in as_completed(test_future):
             hw_summary, hw_tests = future.result()
-            summary['all']['failed'] += hw_summary['failed']
-            summary['all']['run'] += hw_summary['run']
-            index = test_future[future]
-            summary[str(index)] = {'failed': hw_summary['failed'], 'run': hw_summary['run']}
             results.append(hw_tests)
             # summary[str(index)]['failed'] += hw_summary['failed']
             # summary[str(index)]['run'] += hw_summary['run']
