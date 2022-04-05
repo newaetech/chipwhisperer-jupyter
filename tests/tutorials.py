@@ -231,7 +231,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     # extract lab name
     notebook_dir, file_name = os.path.split(nb_path)
-    lab_name, ext = os.path.splitext(nb_path)
+    lab_name, ext = os.path.splitext(file_name)
 
     # ~/chipwhisperer/tutorials + <PLATFORM> + lab name
     base_path = os.path.join(output_dir, PLATFORM, lab_name)
