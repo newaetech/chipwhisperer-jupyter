@@ -596,12 +596,12 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
                 summary['run'] += 1
                 header = " {} {} in {} min\n".format("Passed" if passed else "Failed", nb_short, result_dict['run time'])
                 logger.log(60, header)
+                lab_dir, lab_file = os.path.split(nb)
+                lab_name = os.path.splitext(lab_file)
+                tests[lab_name] = result_dict
 
             else:
                 pass # we don't need to test this hardware on this tutorial
-        lab_dir, lab_file = os.path.split(nb)
-        lab_name = os.path.splitext(lab_file)
-        tests[lab_name] = result_dict
         
 
     time.sleep(0.5)
