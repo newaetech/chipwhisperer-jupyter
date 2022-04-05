@@ -792,9 +792,10 @@ def run_tests(cw_dir, config, results_path=None):
     
     test_logger.log(60, "Finished all tests, writing results.yaml...")
 
+    results_data = {}
     for i in range(num_hardware):
         sname = sname_to_log_name(connected_hardware[i])
-        results[sname] = results[i]
+        results_data[sname] = results[i]
     
     with open(results_path + "results.yaml", "w+") as f:
         test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
