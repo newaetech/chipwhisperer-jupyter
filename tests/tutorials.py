@@ -558,7 +558,7 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
     summary = {'failed': 0, 'run': 0}
     hw_settings = connected_hardware[hw_id]
     if hw_settings['enabled'] is False:
-        return "", {"enabled": False}
+        return "", {"enabled": False}, hw_id
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
