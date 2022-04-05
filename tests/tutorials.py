@@ -42,7 +42,7 @@ RSTExporter.template_file = 'rst_extended.tpl'
 # generate logger name from hw config id and short name
 # make it so all the names line up and have the same length
 def sname_to_log_name(hw_dict):
-    sname = hw_dict['short name']
+    sname:str = hw_dict['short name']
     if len(sname) < 11:
         sname = sname + "_"*(11-len(sname))
     sname += "_({})".format(hw_dict['id'])
@@ -597,7 +597,8 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
                 header = " {} {} in {} min\n".format("Passed" if passed else "Failed", nb_short, result_dict['run time'])
                 logger.log(60, header)
                 lab_dir, lab_file = os.path.split(nb)
-                lab_name = os.path.splitext(lab_file)
+                lab_name, ext = os.path.splitext(lab_file)
+                logger.info("Lab name: {}".format(lab_name))
                 tests[lab_name] = result_dict
 
             else:
@@ -797,9 +798,10 @@ def run_tests(cw_dir, config, results_path=None):
         sname = sname_to_log_name(connected_hardware[i])
         results_data[sname] = results[i]
     
-    with open(results_path + "results.yaml", "w+") as f:
+    test_logger.info("\nResults data: {}\n".format(str(results_data)))
+    with open(os.path.join(results_path, "results.yaml"), "w+") as f:
         test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
-        yaml.dump(results, f, default_flow_style=False)
+        yaml.dump(results_data, f, default_flow_style=False)
     try:
         shutil.rmtree('projects')
     except FileNotFoundError:
