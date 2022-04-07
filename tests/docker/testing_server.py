@@ -285,8 +285,8 @@ def main(chipwhisperer_dir, config_file):
     #   to_emails = [email.strip() for email in to_emails_env.strip().split(',') if email.strip()]
     #   from_email = os.environ.get('FROM_EMAIL').strip()
     hours_env = os.environ.get('HOURS')
-    if hours_env == "always":
-        hours = "always"
+    if (hours_env == "always") or (hours_env == "once"):
+        hours = hours_env
     else:
         hours = [int(h.strip()) for h in hours_env.strip().split(',') if h.strip()]
 
