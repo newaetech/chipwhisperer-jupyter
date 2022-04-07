@@ -24,13 +24,13 @@ from nbconvert import RSTExporter, HTMLExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions, Parameter
 from nbconvert.nbconvertapp import NbConvertBase
 
-
 from functools import partial
 import builtins
 
+
+# generic logging for things like setup
 test_logger = logging.getLogger("ChipWhisperer Test")
 test_logger.setLevel(logging.DEBUG)
-
 
 script_path = os.path.abspath(__file__)
 tests_dir, _ = os.path.split(script_path)
@@ -90,7 +90,9 @@ def print(*args, **kwargs):
     builtins.print(*args, flush=True, **kwargs)
     output.append(' '.join(args))
 
-
+# Context manager for changing current working directory.
+# with cd('/path/') as f:
+#   directory specific stuff
 class cd:
     """Context manager for changing current working directory.
 
@@ -119,6 +121,8 @@ def put_all_kwargs_in_notebook(params, logger=None, **kwargs):
             logger.info(f"Inserting {kwarg}")
             params.append(Parameter(kwarg, str, kwargs[kwarg]))
 
+# do the execution of the notebook
+# also do any substiutions (scope hw location, PLATFORM, SS_VER, etc)
 def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, target_hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', logger=None, **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
@@ -187,7 +191,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
             rp = RegexReplacePreprocessor(replacements)
             nb, resources = rp.preprocess(nb, {})
 
-        # idk...
+        # grab notebook resources
         if notebook_dir:
             with cd(notebook_dir):
                 nb, resources = ep.preprocess(nb, {'metadata': {'path': './'}})
@@ -206,6 +210,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
         return nb, errors, export_kwargs
 
 
+# Takes a notebook node and exports it to ReST and HTML
 def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logger=None):
     """Takes a notebook node and exports it to ReST and HTML
 
@@ -331,7 +336,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
 
     return passed, '\n'.join(output), result
 
-
+# clear cell output in notebook and insert kwargs. Useful for clearing notebooks before pushing to github
 def clear_notebook(path, kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
     real_path = Path(path)
     body = ""
@@ -356,7 +361,7 @@ def clear_notebook(path, kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM"
     with open(real_path, "w", encoding="utf-8") as nbfile:
         nbfile.write(body)
 
-
+# apply clear_notebook() to an entire directory. default_list and blacklist are regex
 def clear_outputs_in_dir(dirpath, default_list=r".*\.ipynb$", blacklist=r"^Lab.*", kwargs={"SCOPETYPE": "OPENADC", "PLATFORM": "CWLITEARM", "VERSION": "HARDWARE"}):
     notebook_files = [dirpath + "/" + f for f in listdir(dirpath) if isfile(dirpath + "/" + f) and re.search(default_list, f) and not re.search(blacklist, f)]
 
@@ -403,6 +408,8 @@ def matching_connected_configuration(config, connected):
             return True, connected
     return False, None
 
+# escape ` and _ since they cause issues with rst
+# may not be necessary?
 class EscapeBacktickPreprocessor(nbconvert.preprocessors.Preprocessor):
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -443,7 +450,6 @@ class RegexReplacePreprocessor(nbconvert.preprocessors.Preprocessor):
             for p, repl in self.replacement_pairs:
                 cell['source'] = re.sub(p, repl, cell['source'])
         return cell, resources
-
 
 class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
     """Preprocessor that in lines code instead of using %run in nb.
@@ -566,7 +572,7 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
 
     for nb in tutorials.keys():
         for test_config in tutorials[nb]['configurations']:
-            # run the test
+            # if this hardware is in the notebook's hardware list
             if hw_id in test_config['ids']:
 
                 # grab hw specific info from yaml file
@@ -612,6 +618,8 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
     logger.log(60, "Finished all tests")
     return summary, tests, hw_id
 
+# main function for running tests on all hardware
+# runs tests for each hardware concurrently
 def run_tests(cw_dir, config, results_path=None):
     from concurrent.futures import ProcessPoolExecutor, as_completed
     if not results_path:
@@ -636,7 +644,6 @@ def run_tests(cw_dir, config, results_path=None):
     hw_locations = []
     target_hw_locations = []
     loggers = []
-    # handlers = []
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
     output_dir = os.path.join(cw_dir, 'tutorials')
@@ -794,6 +801,8 @@ def run_tests(cw_dir, config, results_path=None):
     test_logger.log(60, "Finished all tests, writing results.yaml...")
 
     test_logger.info("\nResults data: {}\n".format(str(results_data)))
+
+    # write results to a yaml file
     with open(os.path.join(results_path, "results.yaml"), "w+") as f:
         test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
         yaml.dump(results_data, f, default_flow_style=False)
