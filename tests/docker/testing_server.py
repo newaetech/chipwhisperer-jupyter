@@ -186,7 +186,7 @@ class Tester:
 
     def should_check_repo(self):
         #return True
-        if self.testing_hours == "always":
+        if (self.testing_hours == "always") or (self.testing_hours == "once"):
             run_logger.info("Skipping hour check")
             return True
         h = local_time().hour
@@ -210,6 +210,8 @@ class Tester:
                 self.last_test_start_time = local_time()
                 self.last_test_time_pretty = server_time()
                 summary, tests = run_tests(cw_dir, self.config_file)
+                if self.testing_hours == "once":
+                    sys.exit()
                 self.hours_tested_today.append(self.last_test_start_time.day)
         else:
             pass
@@ -332,10 +334,6 @@ def reset_usb():
                 dev.getDeviceAddress())])
 
     sleep(5)
-
-
-
-        
 
 if __name__ == '__main__':
     run_logger.info('server time is {}'.format(server_time()))
