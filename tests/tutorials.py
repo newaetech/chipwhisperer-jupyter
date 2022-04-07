@@ -801,9 +801,13 @@ def run_tests(cw_dir, config, results_path=None):
     test_logger.log(60, "Finished all tests, writing results.yaml...")
 
     test_logger.info("\nResults data: {}\n".format(str(results_data)))
+    # output_dir = os.path.join(cw_dir, 'tutorials')
 
     # write results to a yaml file
     with open(os.path.join(results_path, "results.yaml"), "w+") as f:
+        test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
+        yaml.dump(results_data, f, default_flow_style=False)
+    with open(os.path.join(output_dir, "results.yaml"), "w+") as f:
         test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
         yaml.dump(results_data, f, default_flow_style=False)
     try:
