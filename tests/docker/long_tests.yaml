@@ -112,22 +112,54 @@ tutorials:
     configurations:
       - ssver: SS_VER_2_1
         ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 3_1 - Large Hamming Weight Swings.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
   courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
     configurations:
       - ssver: SS_VER_2_1
         ids: [1]
+  courses/sca101/SOLN_Lab 4_1 - Power and Hamming Weight Relationship.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3, 4]
   courses/sca101/SOLN_Lab 4_2 - CPA on Firmware Implementation of AES.ipynb:
     configurations:
       - ssver: SS_VER_2_1
         ids: [0, 1, 2, 3, 4]
+  courses/sca201/SOLN_Lab 2_1 - CPA on 32bit AES.ipynb:
+    configurations: 
+      - ssver: SS_VER_2_1
+        ids: [0, 3, 4]
+  courses/sca201/SOLN_Lab 2_2 - CPA on Hardware AES Implementation.ipynb:
+    configurations: 
+      - ssver: SS_VER_2_1
+        ids: [4]
   courses/fault101/SOLN_Fault 1_1 - Introduction to Clock Glitching.ipynb:
     configurations:
       - ssver: SS_VER_2_1
         ids: [0, 2, 4]
+  courses/fault101/SOLN_Fault 1_2 - Clock Glitching to Bypass Password.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2, 4]
+  courses/fault101/SOLN_Fault 1_3 - Clock Glitching to Memory Dump.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2]
   courses/fault101/SOLN_Fault 2_1 - Introduction to Voltage Glitching.ipynb:
     configurations:
       - ssver: SS_VER_2_1
-        ids: [0]
+        ids: [0, 2]
+  courses/fault101/SOLN_Fault 2_2 - Voltage Glitching to Bypass Password.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2]
+  courses/fault101/SOLN_Fault 2_3 - Voltage Glitching to Memory Dump.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2]
   tests/Test Pro.ipynb:
      configurations:
       - ssver: SS_VER_2_1
