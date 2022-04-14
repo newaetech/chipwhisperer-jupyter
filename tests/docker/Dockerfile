@@ -118,6 +118,7 @@ RUN chown $CW_USER:$CW_USER /home/$CW_USER/testing_server.py && \
 
 # add test configuration file
 COPY tests.yaml /home/$CW_USER/tests.yaml
+COPY long_tests.yaml /home/$CW_USER/long_tests.yaml
 RUN chown $CW_USER:$CW_USER /home/$CW_USER
 
 # script that starts the container
