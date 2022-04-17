@@ -81,8 +81,9 @@ def _print_tracebacks(errors, logger = None, config=None):
         logger.info("Passed all tests!")
     for error in errors:
         logger.info("Test failed in cell {}: {}: {}".format(error[0], error[1]['ename'], error[1]['evalue']))
-        for line in error[1]['traceback']:
-            logger.log(60, ansi_escape.sub('', line))
+        for lineno in range(len(error[1]['traceback'])):
+            error[1]['traceback'][lineno] = ansi_escape.sub('', error[1]['traceback'][lineno])
+            logger.log(60, error[1]['traceback'][lineno])
 
 _builtin_print = print
 def print(*args, **kwargs):
