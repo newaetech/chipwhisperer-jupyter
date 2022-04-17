@@ -85,11 +85,6 @@ def _print_tracebacks(errors, logger = None, config=None):
             error[1]['traceback'][lineno] = ansi_escape.sub('', error[1]['traceback'][lineno])
             logger.log(60, error[1]['traceback'][lineno])
 
-_builtin_print = print
-def print(*args, **kwargs):
-    """Overwrite print to allow recording of output."""
-    builtins.print(*args, flush=True, **kwargs)
-    output.append(' '.join(args))
 
 # Context manager for changing current working directory.
 # with cd('/path/') as f:
@@ -316,6 +311,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     else:
         logger.warning("FAILED:")
         passed = False
+        #note: print_tracebacks changes errors, should change at some point
         if print_first_traceback_only:
             _print_tracebacks([error for i, error in enumerate(errors) if i == 0],logger=logger)
         else:
@@ -328,6 +324,10 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
         _print_stderr(nb, logger)
 
     logger.info("\n")
+    if errors != []:
+        errors = [error[1]['traceback'] for error in errors],
+
+
 
     result = {
         'passed': passed,
