@@ -251,8 +251,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
 
-        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
-            {'unique_key': 'img/{}-{}-{}'.format(SCOPETYPE, PLATFORM, lab_name).replace(' ', '')})
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb)
         file_names = res['outputs'].keys()
 
         # copy over images from notebook
