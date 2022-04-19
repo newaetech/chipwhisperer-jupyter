@@ -243,13 +243,6 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     # copy images to final directory for .html file
     # just do a dumb copy where we grab notebook_dir/img/*
-    test_logger.info("Copying over images")
-    for image_path in glob(os.path.join(notebook_dir, "img", "*")):
-        _, image_name = os.path.split(image_path)
-        outpath = os.path.join(output_dir, PLATFORM, "img", image_name)
-        test_logger.info("Copying {} to {}".format(image_path, outpath))
-        shutil.copyfile(image_path, outpath)
-    test_logger.info("Done")
 
     ebp = EscapeBacktickPreprocessor()
 
@@ -279,6 +272,14 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, res = html_exporter.from_notebook_node(nb)
 
         html_file.write(body)
+
+    test_logger.info("Copying over images")
+    for image_path in glob(os.path.join(notebook_dir, "img", "*")):
+        _, image_name = os.path.split(image_path)
+        outpath = os.path.join(output_dir, PLATFORM, "img", image_name)
+        test_logger.info("Copying {} to {}".format(image_path, outpath))
+        shutil.copyfile(image_path, outpath)
+    test_logger.info("Done")
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
                   allowable_exceptions=None, baud=None, hw_location=None, logger=None, **kwargs):
@@ -741,13 +742,13 @@ def run_tests(cw_dir, config, results_path=None):
 
         # get scope hw_location
         if not conf.get('serial number') is None:
-            scope = cw.scope(sn=str(conf['serial number']))
+            scope = cw.scope(force=True, sn=str(conf['serial number']))
 
             #update firmware if new one available
             if scope.latest_fw_str > scope.fw_version_str:
                 scope.upgrade_firmware()
                 time.sleep(5)
-                scope = cw.scope(sn=str(conf['serial number']))
+                scope = cw.scope(force=True, sn=str(conf['serial number']))
                 test_logger.info("Upgraded firmware for device {}".format(i))
             else:
                 test_logger.info("Device {} up to date".format(i))
@@ -756,7 +757,7 @@ def run_tests(cw_dir, config, results_path=None):
             if conf.get('MPSSE') is True:
                 scope.enable_MPSSE()
                 time.sleep(5)
-                scope = cw.scope(sn=str(conf['serial number']))
+                scope = cw.scope(force=True, sn=str(conf['serial number']))
                 test_logger.info("Changing device {} to MPSSE mode".format(i))
 
             test_logger.info("MPSSE enabled = {}".format(scope._getNAEUSB().is_MPSSE_enabled()))
