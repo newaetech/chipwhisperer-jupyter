@@ -249,19 +249,22 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     # export finished notebook to RST and HTML
     rst_ready_nb, _ = ebp.preprocess(nb, {})
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
-        rst_exporter = RSTExporter()
+        from traitlets.config import Config
+        config = Config()
+        config = {'ExtractOutputPreprocessor': {'enabled': False}}
+        rst_exporter = RSTExporter(config=config)
 
-        body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
-            {'output_files_dir': 'img/'})
+        body, res = rst_exporter.from_notebook_node(rst_ready_nb)
         file_names = res['outputs'].keys()
+        print(file_names)
 
         # copy over images from notebook
         # only works with rst file
-        for name in file_names:
-            img_path = os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1])
-            with open(img_path, 'wb') as f:
-                f.write(res['outputs'][name])
-                test_logger.info('writing to '+ img_path)
+        # for name in file_names:
+        #     img_path = os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1])
+        #     with open(img_path, 'wb') as f:
+        #         f.write(res['outputs'][name])
+        #         test_logger.info('writing to '+ img_path)
 
         rst_file.write(body)
         logger.info('Wrote to: '+ rst_path)
