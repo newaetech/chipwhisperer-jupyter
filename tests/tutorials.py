@@ -258,9 +258,10 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         # copy over images from notebook
         # only works with rst file
         for name in file_names:
-            with open(os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1]), 'wb') as f:
+            img_path = os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1])
+            with open(img_path, 'wb') as f:
                 f.write(res['outputs'][name])
-                test_logger.info('writing to '+ name)
+                test_logger.info('writing to '+ img_path)
 
         rst_file.write(body)
         logger.info('Wrote to: '+ rst_path)
