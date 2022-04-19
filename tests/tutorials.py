@@ -252,7 +252,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         rst_exporter = RSTExporter()
 
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
-            {'output_files_dir': 'img/', 'resource-path': 'img/'})
+            {'output_files_dir': 'img/', 'unique_key': 'img/'})
         file_names = res['outputs'].keys()
         test_logger.info("Resources: {}".format(str(res)))
 
