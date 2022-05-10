@@ -252,14 +252,14 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         rst_exporter = RSTExporter()
 
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
-            {'output_files_dir': 'img/', 'unique_key': 'img/'})
+            {'unique_key': 'img/'})
         file_names = res['outputs'].keys()
         test_logger.info("Resources: {}".format(str(res)))
 
         # copy over images from notebook
         # only works with rst file
         for name in file_names:
-            img_path = os.path.join(output_dir, PLATFORM, "img", name.split("-")[-1])
+            img_path = os.path.join(output_dir, PLATFORM, name)
             with open(img_path, 'wb') as f:
                 f.write(res['outputs'][name])
                 test_logger.info('writing to '+ img_path)
