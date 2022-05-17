@@ -46,8 +46,6 @@ What the testing server is not is a replacement for unit testing and other
 testing done before committing changes. However, it gets us closer to a more
 stable and reliable ChipWhisperer.
 
-
-
 Configuring and Building
 ========================
 
@@ -190,7 +188,6 @@ Future Enhancements
 ===================
 
   * See if we can get a build badge based on the results.
-  * Add ability to run tests on different hardware in parrallel.
 
 Troubleshooting
 ===============
@@ -264,3 +261,35 @@ Bash Helper Functions
 A few bash helper functions are provided in :code:`helper_func.sh`, including
 :code:`run_test` (use :code:`run_test -h` to see args) to run the test image, :code:`build_test`
 to build the test image, and :code:`attach_test image_id` to attach to the test image.
+
+The following functions are available:
+
+.. code:: bash
+    build_test # navigate to ~/chipwhisperer/jupyter/tests/docker and build docker image
+
+.. code:: bash
+	# Usage: run_test [-h|--help] [-H|--hours hours] 
+    #                 [--emails sendgrid_api_key from_email to_emails] 
+    #                 [--no-check-git] [--no-clear]
+    run_test # start docker test image
+
+.. code:: bash
+    kill_test # kill docker test image image
+
+.. code:: bash
+    attach_test # attach to docker test image
+
+.. code:: bash
+    log_test # display log for docker test image
+
+.. code:: bash
+    list_chipwhisperers # list newae devices/serial numbers from lsusb
+
+.. code:: bash
+    monitor_log file # repeatedly clear screen and print file
+
+.. code:: bash
+    monitor_summary # monitor_log ./sum_test.log
+
+.. code:: bash
+    monitor_summary # monitor_summary, but only with the "Finished all tests" line

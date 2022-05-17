@@ -186,7 +186,7 @@ class Tester:
 
     def should_check_repo(self):
         #return True
-        if self.testing_hours == "always":
+        if (self.testing_hours == "always") or (self.testing_hours == "once"):
             run_logger.info("Skipping hour check")
             return True
         h = local_time().hour
@@ -210,6 +210,8 @@ class Tester:
                 self.last_test_start_time = local_time()
                 self.last_test_time_pretty = server_time()
                 summary, tests = run_tests(cw_dir, self.config_file)
+                if self.testing_hours == "once":
+                    sys.exit()
                 self.hours_tested_today.append(self.last_test_start_time.day)
         else:
             pass
@@ -283,8 +285,8 @@ def main(chipwhisperer_dir, config_file):
     #   to_emails = [email.strip() for email in to_emails_env.strip().split(',') if email.strip()]
     #   from_email = os.environ.get('FROM_EMAIL').strip()
     hours_env = os.environ.get('HOURS')
-    if hours_env == "always":
-        hours = "always"
+    if (hours_env == "always") or (hours_env == "once"):
+        hours = hours_env
     else:
         hours = [int(h.strip()) for h in hours_env.strip().split(',') if h.strip()]
 
@@ -332,10 +334,6 @@ def reset_usb():
                 dev.getDeviceAddress())])
 
     sleep(5)
-
-
-
-        
 
 if __name__ == '__main__':
     run_logger.info('server time is {}'.format(server_time()))
