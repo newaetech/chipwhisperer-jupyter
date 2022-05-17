@@ -88,10 +88,16 @@ USER $CW_USER
 RUN cd /home/$CW_USER && \
     git clone https://github.com/newaetech/chipwhisperer.git && \
     cd chipwhisperer && \
+    git checkout testing_server && \
     git submodule update --init jupyter && \
     python -m pip install -e . --user --no-warn-script-location && \
     python -m pip install --user -r jupyter/requirements.txt --no-warn-script-location && \
     python -m pip install pyyaml
+
+RUN cd /home/$CW_USER && \
+	git clone https://github.com/Ledger-Donjon/lascar.git && \
+	cd lascar && \
+	python -m pip install -e . --user --no-warn-script-location
 
 # RUN mkdir -p /home/$CW_USER/.virtualenvs && \
 #     virtualenv --python=/home/$CW_USER/.pyenv/shims/python /home/$CW_USER/.virtualenvs/tests
@@ -112,6 +118,7 @@ RUN chown $CW_USER:$CW_USER /home/$CW_USER/testing_server.py && \
 
 # add test configuration file
 COPY tests.yaml /home/$CW_USER/tests.yaml
+COPY long_tests.yaml /home/$CW_USER/long_tests.yaml
 RUN chown $CW_USER:$CW_USER /home/$CW_USER
 
 # script that starts the container
