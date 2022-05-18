@@ -1,16 +1,12 @@
-from multiprocessing.sharedctypes import Value
 import shutil
 import os
 from glob import glob
 from pathlib import Path
 from os import listdir
-import os
-from os.path import isfile, join
-from pybars import log
+from os.path import isfile
 import yaml
 import re
 import sys
-from pprint import pprint
 import logging
 import time
 import chipwhisperer as cw
@@ -25,8 +21,6 @@ from nbconvert import RSTExporter, HTMLExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions, Parameter
 from nbconvert.nbconvertapp import NbConvertBase
 
-from functools import partial
-import builtins
 
 
 # generic logging for things like setup
