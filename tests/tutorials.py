@@ -228,7 +228,9 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     # Objective is to put final tutorials in
     # ~/chipwhisperer/tutorials/<PLATFORM>/<LAB_NAME>.html
 
-    test_logger.info("Exporting {}".format(nb_path))
+    logger.info("Exporting {}".format(nb_path))
+    # test_logger.info("Exporting {}".format(nb_path))
+    logger.info("AHH".format(nb_path))
 
     # extract lab name
     notebook_dir, file_name = os.path.split(nb_path)
@@ -261,7 +263,8 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
             img_path = os.path.join(output_dir, PLATFORM, name)
             with open(img_path, 'wb') as f:
                 f.write(res['outputs'][name])
-                test_logger.info('writing to '+ img_path)
+                logger.info('writing to '+ img_path)
+
 
         rst_file.write(body)
         logger.info('Wrote to: '+ rst_path)
@@ -308,8 +311,7 @@ def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_er
     if not errors:
         logger.info("PASSED")
         passed = True
-        if export:
-            export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
+        export_notebook(nb, nb_path, output_dir, **export_kwargs, logger=logger)
     else:
         logger.warning("FAILED:")
         passed = False
