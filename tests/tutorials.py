@@ -247,6 +247,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     rst_ready_nb, _ = ebp.preprocess(nb, {})
     logger.info("Here 1")
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
+        logger.info("Here 1.5") #WHAT
         rst_exporter = RSTExporter()
         logger.info("Here 2")
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
