@@ -230,7 +230,6 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     logger.info("Exporting {}".format(nb_path))
     # test_logger.info("Exporting {}".format(nb_path))
-    logger.info("AHH".format(nb_path))
 
     # extract lab name
     notebook_dir, file_name = os.path.split(nb_path)
@@ -238,6 +237,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     # ~/chipwhisperer/tutorials + <PLATFORM> + lab name
     base_path = os.path.join(output_dir, PLATFORM, lab_name)
+    logger.info("Base path: {}".format(base_path))
 
     # add rst/html extension
     rst_path = os.path.abspath(base_path + '.rst')
