@@ -6,6 +6,7 @@ from pathlib import Path
 from os import listdir
 import os
 from os.path import isfile, join
+from pybars import log
 import yaml
 import re
 import sys
@@ -250,9 +251,10 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     # export finished notebook to RST and HTML
     rst_ready_nb, _ = ebp.preprocess(nb, {})
+    logger.info("Here 1")
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
         rst_exporter = RSTExporter()
-
+        logger.info("Here 2")
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
             {'unique_key': 'img/'})
         file_names = res['outputs'].keys()
@@ -260,6 +262,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         # copy over images from notebook
         # only works with rst file
         for name in file_names:
+            logger.info("Here 3")
             img_path = os.path.join(output_dir, PLATFORM, name)
             with open(img_path, 'wb') as f:
                 f.write(res['outputs'][name])
