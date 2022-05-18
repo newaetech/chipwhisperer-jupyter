@@ -119,7 +119,7 @@ def put_all_kwargs_in_notebook(params, logger=None, **kwargs):
 
 # do the execution of the notebook
 # also do any substiutions (scope hw location, PLATFORM, SS_VER, etc)
-def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, target_hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', logger=None, **kwargs):
+def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, target_hw_location=None, allow_errors=True, SCOPETYPE='OPENADC', PLATFORM='CWLITEARM', SNAME="CWLITEARM", logger=None, **kwargs):
     """Execute a notebook via nbconvert and collect output.
        :returns (parsed nb object, execution errors)
     """
@@ -200,7 +200,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
 
         export_kwargs = {
             'SCOPETYPE': SCOPETYPE,
-            'PLATFORM': PLATFORM
+            'PLATFORM': SNAME
         }
 
         return nb, errors, export_kwargs
@@ -254,7 +254,6 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
             {'unique_key': 'img/'})
         file_names = res['outputs'].keys()
-        test_logger.info("Resources: {}".format(str(res)))
 
         # copy over images from notebook
         # only works with rst file
@@ -585,7 +584,8 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
                     'PLATFORM': hw_settings['target'],
                     'CRYPTO_TARGET': hw_settings['firmware'],
                     'VERSION': hw_settings['tutorial type'],
-                    'SS_VER': test_config['ssver']
+                    'SS_VER': test_config['ssver'],
+                    'SNAME': hw_settings['short name']
 
                 }
 
