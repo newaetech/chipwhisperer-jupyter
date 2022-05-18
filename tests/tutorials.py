@@ -245,7 +245,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
     # export finished notebook to RST and HTML
     rst_ready_nb, _ = ebp.preprocess(nb, {})
-    logger.info("Here 1")
+    logger.info("Here 1, rst_path = {}".format(rst_path))
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
         logger.info("Here 1.5") #WHAT
         rst_exporter = RSTExporter()
@@ -690,7 +690,7 @@ def run_tests(cw_dir, config, results_path=None):
     # also update firmware if required
     def setup_HW(conf: dict, i: int):
         test_logger.info("Setting up conf {}".format(str(conf)))
-        target_name = conf["target"]
+        target_name = conf["short name"]
         if target_name is None and (conf.get('tutorial type') == "SIMULATED"):
             target_name = "SIMULATED"
 
