@@ -88,7 +88,6 @@ USER $CW_USER
 RUN cd /home/$CW_USER && \
     git clone https://github.com/newaetech/chipwhisperer.git && \
     cd chipwhisperer && \
-    git checkout testing_server && \
     git submodule update --init jupyter && \
     python -m pip install -e . --user --no-warn-script-location && \
     python -m pip install --user -r jupyter/requirements.txt --no-warn-script-location && \
