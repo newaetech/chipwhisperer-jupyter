@@ -35,3 +35,4 @@ project/*
 html/*
 jupyter-backup/*
 test.ipynb
+/tests/*.out
