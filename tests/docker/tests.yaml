@@ -150,6 +150,10 @@ tutorials:
     configurations:
       - ssver: SS_VER_2_1
         ids: [6]
+  tests/Husky_Test.ipynb:
+    configurations:
+      - ssver: SS_VER_1_1
+        ids: [5]
       
 # courses/fault101/SOLN_Fault 2_2B - Voltage Glitching with CWNano to Bypass Password.ipynb:
 #   configurations:
