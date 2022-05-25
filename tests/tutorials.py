@@ -656,10 +656,12 @@ def run_tests(cw_dir, config, results_path=None):
     wrong_paths = ""
     for nb in tutorials.keys():
         path = os.path.join(nb_dir, nb)
+        test_logger.info("Checking that {} in {} exists...".format(nb, nb_dir))
         if not (os.path.exists(path)):
-            wrong_paths += path
-        if wrong_paths != "":
-            raise FileNotFoundError("Incorrect paths: {}".format(wrong_paths))
+            wrong_paths += " " + path
+
+    if wrong_paths != "":
+        raise FileNotFoundError("Incorrect paths: {}".format(wrong_paths))
 
     # create loggers for each test hardware
     def create_logger(i):
