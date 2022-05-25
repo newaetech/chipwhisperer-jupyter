@@ -150,7 +150,7 @@ tutorials:
     configurations:
       - ssver: SS_VER_2_1
         ids: [6]
-  tests/Husky_Test.ipynb:
+  tests/Test_Husky.ipynb:
     configurations:
       - ssver: SS_VER_1_1
         ids: [5]
