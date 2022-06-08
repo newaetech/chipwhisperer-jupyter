@@ -1,0 +1,46 @@
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.collapsible {
+  background-color: #777;
+  color: white;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+.active, .collapsible:hover {
+  background-color: #555;
+}
+
+.content {
+  padding: 0 18px;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+</style>
+</head>
+<body>
+
+<h2>
+{% block title %}
+{% endblock %}
+</h2>
+
+<h4>
+{% block commit %}
+{% endblock %}
+</h4>
+
+{% block summary %}
+{% endblock %}
+
+{% block body %}
+{% endblock %}
+</body>
+</html>
