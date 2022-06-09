@@ -23,7 +23,7 @@ What do you want to do now? If you're just getting to know ChipWhisperer, check 
 
 ## Getting Started
 First time using ChipWhisperer? Check out these links:
-* [Overview from ChipWhisperer Docs]([https://chipwhisperer.readthedocs.io/en/latest/installing.html](https://chipwhisperer.readthedocs.io/en/latest/index.html#overview)) Links to a background on ChipWhisperer, how to run the Jupyter server, and how to install ChipWhisperer.
+* [Overview from ChipWhisperer Docs](https://chipwhisperer.readthedocs.io/en/latest/index.html#overview) Links to a background on ChipWhisperer, how to run the Jupyter server, and how to install ChipWhisperer.
 * `0 - Introduction to Jupyter Notebooks.ipynb` and `1 - Connecting to Hardware.ipynb` also serve as introductions to interacting with Jupyter Notebooks and the ChipWhisperer hardware.
 
 ## Getting Support
