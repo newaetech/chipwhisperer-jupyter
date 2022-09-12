@@ -87,7 +87,7 @@ connected:
   - id: 5
     scope: OPENADC
     target: CW308_STM32F3
-    serial number: 50203120374a38503130343137303032
+    serial number: 50203120314136503030393138303036
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
