@@ -624,7 +624,7 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
 
 # main function for running tests on all hardware
 # runs tests for each hardware concurrently
-def run_tests(cw_dir, config, results_path=None):
+def run_tests(cw_dir, config, results_path=None, output_dir=None):
     from concurrent.futures import ProcessPoolExecutor, as_completed
     if not results_path:
         results_path = "./"
@@ -650,7 +650,8 @@ def run_tests(cw_dir, config, results_path=None):
     loggers = []
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
-    output_dir = os.path.join(cw_dir, 'tutorials')
+    if output_dir is None:
+        output_dir = os.path.join(cw_dir, 'tutorials')
 
     # make sure all the notebooks we have to test actually exist (catch typos)
     wrong_paths = ""
@@ -824,5 +825,7 @@ def run_tests(cw_dir, config, results_path=None):
     return summary, tests
 
 if __name__ == '__main__':
-    script, config_file_path = sys.argv
+    script, cw_dir, config_file_path, results_path, tutorial_path = sys.argv
     run_tests(config_file_path)
+    # run_tests()
+
