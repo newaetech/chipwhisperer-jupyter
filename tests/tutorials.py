@@ -238,6 +238,11 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     rst_path = os.path.abspath(base_path + '.rst')
     html_path = os.path.abspath(base_path + '.html')
 
+    test_logger.info("Writing to {}".format(rst_path))
+    test_logger.info("Writing to {}".format(html_path))
+    logger.info("Writing to {}".format(rst_path))
+    logger.info("Writing to {}".format(html_path))
+
     # copy images to final directory for .html file
     # just do a dumb copy where we grab notebook_dir/img/*
 
@@ -247,9 +252,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     rst_ready_nb, _ = ebp.preprocess(nb, {})
     logger.info("Here 1, rst_path = {}".format(rst_path))
     with open(rst_path, 'w', encoding='utf-8') as rst_file:
-        logger.info("Here 1.5") #WHAT
         rst_exporter = RSTExporter()
-        logger.info("Here 2")
         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
             {'unique_key': 'img/'})
         file_names = res['outputs'].keys()
@@ -257,7 +260,6 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         # copy over images from notebook
         # only works with rst file
         for name in file_names:
-            logger.info("Here 3")
             img_path = os.path.join(output_dir, PLATFORM, name)
             with open(img_path, 'wb') as f:
                 f.write(res['outputs'][name])
@@ -811,11 +813,11 @@ def run_tests(cw_dir, config, results_path=None, output_dir=None):
     # output_dir = os.path.join(cw_dir, 'tutorials')
 
     # write results to a yaml file
-    with open(os.path.join(results_path, "results.yaml"), "w+") as f:
-        test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
+    with open(os.path.join(results_dir, "results.yaml"), "w+") as f:
+        test_logger.info("Writing to {}".format(results_dir + 'results.yaml'))
         yaml.dump(results_data, f, default_flow_style=False)
     with open(os.path.join(output_dir, "results.yaml"), "w+") as f:
-        test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
+        test_logger.info("Writing to {}".format(output_dir + 'results.yaml'))
         yaml.dump(results_data, f, default_flow_style=False)
     try:
         shutil.rmtree('projects')
