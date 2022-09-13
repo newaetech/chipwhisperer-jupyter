@@ -19,7 +19,7 @@ from nbconvert.exporters import NotebookExporter
 from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert import RSTExporter, HTMLExporter
 from nbparameterise import extract_parameters, parameter_values, replace_definitions, Parameter
-from nbconvert.nbconvertapp importresults_dir logging for things like setup
+from nbconvert.nbconvertapp import NbConvertBase
 test_logger = logging.getLogger("ChipWhisperer Test")
 test_logger.setLevel(logging.DEBUG)
 
@@ -266,6 +266,7 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
 
             rst_file.write(body)
             logger.info('Wrote to: '+ rst_path)
+            test_logger.info('Wrote to: '+ rst_path)
         except Exception as e:
             test_logger.error("Exception {} when writing {}".format(str(e), rst_path))
     except Exception as e:
