@@ -826,6 +826,6 @@ def run_tests(cw_dir, config, results_path=None, output_dir=None):
 
 if __name__ == '__main__':
     script, cw_dir, config_file_path, results_path, tutorial_path = sys.argv
-    run_tests(config_file_path)
+    run_tests(cw_dir, config_file_path, results_path, tutorial_path)
     # run_tests()
 
