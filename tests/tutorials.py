@@ -564,7 +564,7 @@ class InLineCodePreprocessor(nbconvert.preprocessors.Preprocessor):
 
 # function to run all notebooks for a given hardware configuration
 # select hardware via hw_id (i.e. 0 runs hw configuration 0, 1 runs hw configuration 1, and so on)
-def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_location=None, logger=None):
+def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_location=None, logger=None, output_dir=None):
     if logger is None:
         logger = test_logger
 
@@ -575,7 +575,8 @@ def run_test_hw_config(hw_id, cw_dir, config, hw_location=None, target_hw_locati
         return "", {"enabled": False}, hw_id
 
     nb_dir = os.path.join(cw_dir, 'jupyter')
-    output_dir = os.path.join(cw_dir, 'tutorials')
+    if not output_dir:
+        output_dir = os.path.join(cw_dir, 'tutorials')
     tests = {}
 
     for nb in tutorials.keys():
@@ -799,7 +800,7 @@ def run_tests(cw_dir, config, results_path=None, output_dir=None):
     test_logger.info("num hw: {}".format(num_hardware))
     results_data = {}
     with ProcessPoolExecutor(max_workers=num_hardware) as nb_pool:
-        test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], target_hw_locations[i], loggers[i]): i for i in range(num_hardware)}
+        test_future = {nb_pool.submit(run_test_hw_config, i, cw_dir, config, hw_locations[i], target_hw_locations[i], loggers[i], output_dir): i for i in range(num_hardware)}
         for future in as_completed(test_future):
             hw_summary, hw_tests, hw_id = future.result()
             sname = sname_to_log_name(connected_hardware[hw_id])
