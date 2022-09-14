@@ -817,8 +817,8 @@ def run_tests(cw_dir, config, results_path=None, output_dir=None):
     # output_dir = os.path.join(cw_dir, 'tutorials')
 
     # write results to a yaml file
-    with open(os.path.join(results_dir, "results.yaml"), "w+") as f:
-        test_logger.info("Writing to {}".format(results_dir + 'results.yaml'))
+    with open(os.path.join(results_path, "results.yaml"), "w+") as f:
+        test_logger.info("Writing to {}".format(results_path + 'results.yaml'))
         yaml.dump(results_data, f, default_flow_style=False)
     with open(os.path.join(output_dir, "results.yaml"), "w+") as f:
         test_logger.info("Writing to {}".format(output_dir + 'results.yaml'))
