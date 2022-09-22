@@ -76,14 +76,16 @@ connected:
     short name: CW1200
   - id: 5
     scope: OPENADC
-    target: CW308_K82F
-    serial number: 44203120484d39433330353236313033
+    target: CW308_STM32F3
+    serial number: 50203120314136503030393138303036
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
-    MPSSE: True
-    name: ChipWhisperer-Lite K82F
-    short name: CW308_K82F
+    MPSSE: False
+    name: ChipWhisperer-Husky
+    short name: CWHUSKY
+    kwargs: 
+        LONG_TEST: "Yes"
   - id: 6
     scope: OPENADC
     target: CW305
@@ -91,7 +93,7 @@ connected:
     target serial number: 44203120314854373030353234303039 
     firmware: NONE
     tutorial type: HARDWARE
-    enabled: True
+    enabled: False
     MPSSE: False
     name: ChipWhisperer-Lite CW305
     short name: CW305
@@ -104,10 +106,6 @@ connected:
 #       ids: [0, 2, 3, 4]
 #       Doesn't work for some reason
 tutorials:
-  tests/Test MPSSE.ipynb:
-    configurations:
-      - ssver: SS_VER_2_1
-        ids: [5]
   courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
     configurations:
       - ssver: SS_VER_2_1
