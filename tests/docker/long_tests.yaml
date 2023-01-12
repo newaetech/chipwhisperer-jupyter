@@ -76,7 +76,7 @@ connected:
     short name: CW1200
   - id: 5
     scope: OPENADC
-    target: CW308_STM32F3
+    target: CW308_SAM4S
     serial number: 50203120314136503030393138303036
     firmware: TINYAES128C
     tutorial type: HARDWARE
