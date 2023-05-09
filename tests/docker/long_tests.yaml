@@ -77,7 +77,7 @@ connected:
   - id: 5
     scope: OPENADC
     target: CW308_SAM4S
-    serial number: 50203120314136503030393138303036
+    serial number: 50203120374a38503230343136303038
     firmware: TINYAES128C
     tutorial type: HARDWARE
     enabled: True
