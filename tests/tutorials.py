@@ -128,7 +128,10 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
         kwargs['SCOPETYPE'] = SCOPETYPE
         kwargs['PLATFORM'] = PLATFORM
         put_all_kwargs_in_notebook(params, logger=logger, **kwargs)
-        nb = replace_definitions(nb, params, execute=False)
+        try:
+            nb = replace_definitions(nb, params, execute=False)
+        except:
+            pass
 
         ep = ExecutePreprocessor(timeout=None, kernel_name='python3', allow_errors=allow_errors)
 
