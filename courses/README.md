@@ -37,7 +37,11 @@
 * TVLA on ECC
 
 ### SCA204: Power Analysis on Hardware ECC
-TODO
+* **Part 1**: Introduction to Hardware ECC Attacks
+* **Part 2**: Improving the Attack
+* **Part 3**: Countermeasures
+* **Part 4**: More Countermeasures and Unintended Consequences
+* **Part 5**: TVLA
 
 ### FAULT101
 * **Lab 1-1**: Introduction to Clock Glitching
