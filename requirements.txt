@@ -1,6 +1,7 @@
-bokeh
+bokeh==2.4.3
 cycler
 datashader
+notebook<=6.5.5
 jupyter_client
 jupyter
 jupyter_contrib_nbextensions
