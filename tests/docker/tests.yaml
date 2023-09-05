@@ -101,19 +101,19 @@ connected:
     short name: CWHUSKY
     kwargs: 
         LONG_TEST: "No"
-  - id: 6
-    scope: OPENADC
-    target: CW305
-    serial number: 44203120394d36433230342038303039
-    target serial number: 44203120314854373030353234303039 
-    firmware: NONE
-    tutorial type: HARDWARE
-    enabled: False
-    MPSSE: False
-    name: ChipWhisperer-Lite CW305
-    short name: CW305
-    kwargs:
-        FPGA_ID: "35t"
+  # - id: 6
+  #   scope: OPENADC
+  #   target: CW305
+  #   serial number: 44203120394d36433230342038303039
+  #   target serial number: 44203120314854373030353234303039 
+  #   firmware: NONE
+  #   tutorial type: HARDWARE
+  #   enabled: False
+  #   MPSSE: False
+  #   name: ChipWhisperer-Lite CW305
+  #   short name: CW305
+  #   kwargs:
+  #       FPGA_ID: "35t"
 
 # tests/Test CDC.ipynb:
 #   configurations:
@@ -157,10 +157,10 @@ tutorials:
     configurations:
       - ssver: SS_VER_2_1
         ids: [3]
-  demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb:
-    configurations:
-      - ssver: SS_VER_2_1
-        ids: [6]
+  # demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb:
+  #   configurations:
+  #     - ssver: SS_VER_2_1
+  #       ids: [6]
       
 # courses/fault101/SOLN_Fault 2_2B - Voltage Glitching with CWNano to Bypass Password.ipynb:
 #   configurations:
