@@ -43,6 +43,11 @@
 * **Part 4**: More Countermeasures and Unintended Consequences
 * **Part 5**: TVLA
 
+### SCA205: Power Analysis on Software ECC
+* **Part 1**: Breaking software ECC with TraceWhisperer
+* **Part 2**: Breaking software ECC without TraceWhisperer
+* **Part 3**: Breaking software ECC with TraceWhisperer *and* SAD
+
 ### FAULT101
 * **Lab 1-1**: Introduction to Clock Glitching
 * **Lab 1-2**: Clock Glitching to Bypass Password
