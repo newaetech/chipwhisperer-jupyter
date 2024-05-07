@@ -4,7 +4,6 @@ datashader
 notebook
 jupyter_client
 jupyter
-jupyter_contrib_nbextensions
 nbparameterise
 pandas
 holoviews
