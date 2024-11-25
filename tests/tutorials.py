@@ -393,6 +393,12 @@ def load_configuration(path):
         config = yaml.full_load(config_file)
     tutorials = config['tutorials']
     connected_hardware = config['connected']
+
+    # go backwards through list of hardware, removing ones that aren't enabled
+    for i in reversed(range(len(connected_hardware))):
+        if not connected_hardware[i]['enabled']:
+            del connected_hardware[i]
+
     return tutorials, connected_hardware
 
 def matching_connected_configuration(config, connected):
