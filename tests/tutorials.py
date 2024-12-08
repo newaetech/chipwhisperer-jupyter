@@ -200,7 +200,7 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
         return nb, errors, export_kwargs
 
 
-# Takes a notebook node and exports it to ReST and HTML
+# Takes a notebook node and exports it to ReST and HTML and copies the notebook over
 def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logger=None):
     """Takes a notebook node and exports it to ReST and HTML
 
@@ -236,11 +236,14 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     # add rst/html extension
     rst_path = os.path.abspath(base_path + '.rst')
     html_path = os.path.abspath(base_path + '.html')
+    ipynb_path = os.path.abspath(base_path + '.ipynb')
 
     test_logger.info("Writing to {}".format(rst_path))
     test_logger.info("Writing to {}".format(html_path))
+    test_logger.info("Writing to {}".format(ipynb_path))
     logger.info("Writing to {}".format(rst_path))
     logger.info("Writing to {}".format(html_path))
+    logger.info("Writing to {}".format(ipynb_path))
 
     # copy images to final directory for .html file
     # just do a dumb copy where we grab notebook_dir/img/*
@@ -282,6 +285,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, res = html_exporter.from_notebook_node(nb)
 
         html_file.write(body)
+
+    with open(ipynb_path, "w", encoding='utf-8') as ipynb_file:
+        exporter = NotebookExporter()
+        # node, resources = co.preprocess(new_nb, {'metadata': {'path': './'}})
+        body, resources = exporter.from_notebook_node(nb)
+        ipynb_file.write(body)
 
     test_logger.info("Copying over images")
     for image_path in glob(os.path.join(notebook_dir, "img", "*")):
