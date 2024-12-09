@@ -238,53 +238,53 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
     html_path = os.path.abspath(base_path + '.html')
     ipynb_path = os.path.abspath(base_path + '.ipynb')
 
-    test_logger.info("Writing to {}".format(rst_path))
-    test_logger.info("Writing to {}".format(html_path))
+    # test_logger.info("Writing to {}".format(rst_path))
+    # test_logger.info("Writing to {}".format(html_path))
     test_logger.info("Writing to {}".format(ipynb_path))
-    logger.info("Writing to {}".format(rst_path))
-    logger.info("Writing to {}".format(html_path))
+    # logger.info("Writing to {}".format(rst_path))
+    # logger.info("Writing to {}".format(html_path))
     logger.info("Writing to {}".format(ipynb_path))
 
     # copy images to final directory for .html file
     # just do a dumb copy where we grab notebook_dir/img/*
 
-    ebp = EscapeBacktickPreprocessor()
+    # ebp = EscapeBacktickPreprocessor()
 
     # export finished notebook to RST and HTML
-    rst_ready_nb, _ = ebp.preprocess(nb, {})
-    logger.info("Here 1, rst_path = {}".format(rst_path))
-    try:
-        rst_file = open(rst_path, 'w', encoding='utf-8')
-        try:
-            rst_exporter = RSTExporter()
-            body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
-                {'unique_key': 'img/'})
-            file_names = res['outputs'].keys()
+    # rst_ready_nb, _ = ebp.preprocess(nb, {})
+    # logger.info("Here 1, rst_path = {}".format(rst_path))
+    # try:
+    #     rst_file = open(rst_path, 'w', encoding='utf-8')
+    #     try:
+    #         rst_exporter = RSTExporter()
+    #         body, res = rst_exporter.from_notebook_node(rst_ready_nb, resources=
+    #             {'unique_key': 'img/'})
+    #         file_names = res['outputs'].keys()
 
-            # copy over images from notebook
-            # only works with rst file
-            for name in file_names:
-                img_path = os.path.join(output_dir, PLATFORM, name)
-                with open(img_path, 'wb') as f:
-                    f.write(res['outputs'][name])
-                    logger.info('writing to '+ img_path)
+    #         # copy over images from notebook
+    #         # only works with rst file
+    #         for name in file_names:
+    #             img_path = os.path.join(output_dir, PLATFORM, name)
+    #             with open(img_path, 'wb') as f:
+    #                 f.write(res['outputs'][name])
+    #                 logger.info('writing to '+ img_path)
 
 
-            rst_file.write(body)
-            logger.info('Wrote to: '+ rst_path)
-            test_logger.info('Wrote to: '+ rst_path)
-        except Exception as e:
-            test_logger.error("Exception {} when writing {}".format(str(e), rst_path))
-    except Exception as e:
-        test_logger.error("Exception {} when writing {}".format(str(e), rst_path))
+    #         rst_file.write(body)
+    #         logger.info('Wrote to: '+ rst_path)
+    #         test_logger.info('Wrote to: '+ rst_path)
+    #     except Exception as e:
+    #         test_logger.error("Exception {} when writing {}".format(str(e), rst_path))
+    # except Exception as e:
+    #     test_logger.error("Exception {} when writing {}".format(str(e), rst_path))
 
-    with open(html_path, 'w', encoding='utf-8') as html_file:
-        logger.info('Wrote to: '+ html_path)
-        html_exporter = HTMLExporter()
+    # with open(html_path, 'w', encoding='utf-8') as html_file:
+    #     logger.info('Wrote to: '+ html_path)
+    #     html_exporter = HTMLExporter()
 
-        body, res = html_exporter.from_notebook_node(nb)
+    #     body, res = html_exporter.from_notebook_node(nb)
 
-        html_file.write(body)
+    #     html_file.write(body)
 
     with open(ipynb_path, "w", encoding='utf-8') as ipynb_file:
         exporter = NotebookExporter()
@@ -292,12 +292,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, resources = exporter.from_notebook_node(nb)
         ipynb_file.write(body)
 
-    test_logger.info("Copying over images")
-    for image_path in glob(os.path.join(notebook_dir, "img", "*")):
-        _, image_name = os.path.split(image_path)
-        outpath = os.path.join(output_dir, PLATFORM, "img", image_name)
-        test_logger.info("Copying {} to {}".format(image_path, outpath))
-        shutil.copyfile(image_path, outpath)
+    # test_logger.info("Copying over images")
+    # for image_path in glob(os.path.join(notebook_dir, "img", "*")):
+    #     _, image_name = os.path.split(image_path)
+    #     outpath = os.path.join(output_dir, PLATFORM, "img", image_name)
+    #     test_logger.info("Copying {} to {}".format(image_path, outpath))
+    #     shutil.copyfile(image_path, outpath)
     test_logger.info("Done")
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
