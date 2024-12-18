@@ -1,0 +1,17 @@
+bokeh
+cycler
+datashader
+notebook
+jupyter_client
+jupyter
+nbparameterise
+pandas
+holoviews
+matplotlib
+PyYAML
+tqdm
+PyCryptoDome
+terminaltables
+phoenixAES
+ipywidgets
+nbconvert

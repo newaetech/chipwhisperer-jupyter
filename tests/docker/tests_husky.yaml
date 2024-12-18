@@ -1,0 +1,188 @@
+
+# This is the build configuration file for the tutorials.py script.
+# All tutorials and their configurations here will be run excluding
+# configurations that are not included in **connected**.
+#
+# Expected Syntax:
+# 
+#
+# connected:
+#   id: integer ID to refer to in tutorial list
+#   scope: <VALID SCOPE NAME (OPENADC, CWNANO)>
+#   target: <VALID PLATFORM NAME (CWLITEARM, CWLITEXMEGA, CWNANO)>
+#   serial number: <device serial number (optional)>
+#   firmware: AES crypto firmware to use
+#   tutorial type: HARDWARE or SIMULATED
+#   enabled: if False, skip all tests for this HW
+#   MPSSE: Switch device to MPSSE mode when initially connecting
+#   name: Long descriptive name for device
+#   short name: Short name for device
+#   kwargs: Anything else to pass to notebook
+#
+# tutorials:
+#   <tutorial file name including extension>:
+#     configurations:
+#       - ssver: <SS_VER_2_1 or SS_VER_1_1>
+#         ids: [list of ids to run this test for]
+#       - ... any more configurations
+# - id: 5
+#   scope: OPENADC
+#   target: CW308_K82F
+#   serial number: 44203120484d39433330353236313033
+#   firmware: TINYAES128C
+#   tutorial type: HARDWARE
+#   enabled: True
+#   MPSSE: True
+#   name: ChipWhisperer-Lite K82F
+#   short name: CW308_K82F
+
+# NOTES
+# Don't run sca101/2_1 on F4 since it's too noisy to work
+# Don't run sca101/3_1 on F4 since it takes a long time and the HW aes attack already takes forever
+
+connected:
+  - id: 0
+    scope: OPENADC
+    target: CWLITEARM
+    serial number: 50203120324136503330352034313031
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+    MPSSE: False
+    name: ChipWhisperer-Lite Arm
+    short name: CWLITEARM
+  - id: 1
+    scope: NONE
+    target: NONE
+    firmware: NONE
+    tutorial type: SIMULATED
+    enabled: True
+    MPSSE: False
+    name: Simulation
+    short name: SIMULATED
+  - id: 2
+    scope: OPENADC
+    target: CWLITEXMEGA
+    serial number: 50203220343043543130382038303034
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+    MPSSE: False
+    name: ChipWhisperer-Lite XMega
+    short name: CWLITEXMEGA
+  - id: 3
+    scope: CWNANO
+    target: CWNANO
+    serial number: 53373100383248323030323034333038
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+    MPSSE: False
+    name: ChipWhisperer-Nano
+    short name: CWNANO
+  - id: 4
+    scope: OPENADC
+    target: CW308_STM32F4
+    serial number: 50203120355448513030343237313039
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+    MPSSE: False
+    name: ChipWhisperer-Pro STM32F4
+    short name: CW1200
+  - id: 5
+    scope: OPENADC
+    target: CW308_SAM4S
+    serial number: 50203120374a38503230343136303038
+    firmware: TINYAES128C
+    tutorial type: HARDWARE
+    enabled: True
+    MPSSE: False
+    name: ChipWhisperer-Husky
+    short name: CWHUSKY
+    kwargs: 
+        LONG_TEST: "Yes"
+  - id: 6
+    scope: OPENADC
+    target: CW305
+    serial number: 44203120394d36433230342038303039
+    target serial number: 44203120314854373030353234303039 
+    firmware: NONE
+    tutorial type: HARDWARE
+    enabled: False
+    MPSSE: False
+    name: ChipWhisperer-Lite CW305
+    short name: CW305
+    kwargs:
+        FPGA_ID: "35t"
+
+# tests/Test CDC.ipynb:
+#   configurations:
+#     - ssver: SS_VER_2_1
+#       ids: [0, 2, 3, 4]
+#       Doesn't work for some reason
+# tests/Test MPSSE.ipynb:
+#   configurations:
+#     - ssver: SS_VER_2_1
+#       ids: [5]
+tutorials:
+  courses/sca101/SOLN_Lab 2_1B - Power Analysis for Password Bypass.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3]
+  courses/sca101/SOLN_Lab 3_2 - Recovering Data from a Single Bit.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [1]
+  courses/sca101/SOLN_Lab 4_2 - CPA on Firmware Implementation of AES.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 1, 2, 3, 4, 5]
+  courses/fault101/SOLN_Fault 1_1 - Introduction to Clock Glitching.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 2, 4, 5]
+  courses/fault101/SOLN_Fault 2_1 - Introduction to Voltage Glitching.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [0, 5]
+  tests/Test Pro.ipynb:
+     configurations:
+      - ssver: SS_VER_2_1
+        ids: [4]
+  tests/Test Husky.ipynb:
+     configurations:
+      - ssver: SS_VER_2_1
+        ids: [5]
+  courses/fault101/SOLN_Fault 2_1B - Introduction to Voltage Glitching with CWNano.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [3]
+  demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb:
+    configurations:
+      - ssver: SS_VER_2_1
+        ids: [6]
+      
+# courses/fault101/SOLN_Fault 2_2B - Voltage Glitching with CWNano to Bypass Password.ipynb:
+#   configurations:
+#     - ssver: SS_VER_2_1
+#       ids: [3]
+#       Unreliable
+  # courses/sca201/SOLN_Lab 1_1A - Resynchronizing Traces with Sum of Absolute Difference.ipynb:
+  #   configurations:
+  #     - ssver: SS_VER_2_1
+  #       ids: [0, 1, 2, 3]
+      # - scope: OPENADC
+      #   target: CWLITEARM
+      #   firmware: TINYAES128C
+      #   ssver: SS_VER_2_1
+
+      # - scope: OPENADC
+      #   target: CWLITEXMEGA
+      #   firmware: AVRCRYPTOLIB
+      #   ssver: SS_VER_2_1
+
+      # - scope: CWNANO
+      #   target: CWNANO
+      #   firmware: TINYAES128C
+      #   ssver: SS_VER_2_1
