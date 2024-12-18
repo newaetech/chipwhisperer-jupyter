@@ -292,12 +292,12 @@ def export_notebook(nb, nb_path, output_dir, SCOPETYPE=None, PLATFORM=None, logg
         body, resources = exporter.from_notebook_node(nb)
         ipynb_file.write(body)
 
-    # test_logger.info("Copying over images")
-    # for image_path in glob(os.path.join(notebook_dir, "img", "*")):
-    #     _, image_name = os.path.split(image_path)
-    #     outpath = os.path.join(output_dir, PLATFORM, "img", image_name)
-    #     test_logger.info("Copying {} to {}".format(image_path, outpath))
-    #     shutil.copyfile(image_path, outpath)
+    test_logger.info("Copying over images")
+    for image_path in glob(os.path.join(notebook_dir, "img", "*")):
+        _, image_name = os.path.split(image_path)
+        outpath = os.path.join(output_dir, PLATFORM, "img", image_name)
+        test_logger.info("Copying {} to {}".format(image_path, outpath))
+        shutil.copyfile(image_path, outpath)
     test_logger.info("Done")
 
 def test_notebook(nb_path, output_dir, serial_number=None, export=True, allow_errors=True, print_first_traceback_only=True, print_stdout=False, print_stderr=False,
