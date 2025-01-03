@@ -4,6 +4,7 @@ datashader
 notebook
 jupyter_client
 jupyter
+jupyter_bokeh
 nbparameterise
 pandas
 holoviews
