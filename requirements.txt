@@ -16,3 +16,4 @@ phoenixAES
 ipywidgets
 nbconvert
 chipwhisperer
+ipympl
