@@ -15,3 +15,4 @@ terminaltables
 phoenixAES
 ipywidgets
 nbconvert
+chipwhisperer
