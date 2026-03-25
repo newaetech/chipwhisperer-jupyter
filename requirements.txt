@@ -1,4 +1,5 @@
 bokeh
+jupyter_bokeh
 cycler
 datashader
 notebook
