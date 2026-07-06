@@ -9,6 +9,7 @@ nbparameterise
 pandas
 holoviews
 matplotlib
+ipympl
 PyYAML
 tqdm
 PyCryptoDome

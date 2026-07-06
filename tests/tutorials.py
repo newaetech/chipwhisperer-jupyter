@@ -172,9 +172,9 @@ def execute_notebook(nb_path, serial_number=None, baud=None, hw_location=None, t
                 r'(cw|chipwhisperer)(\.target\()(.*,)(.*)(\))': r"\1\2\3\4, hw_location={}\5".format(target_hw_location)
             })
 
-        # %matplotlib notebook won't show up in blank plots
+        # %matplotlib ipympl won't show up in blank plots
         # so replace with %matplotlib inline for now
-        replacements.update({'%matplotlib notebook' : '%matplotlib inline'})
+        replacements.update({'%matplotlib ipympl' : '%matplotlib inline'})
 
         # complete all regex subtitutions
         if replacements:
