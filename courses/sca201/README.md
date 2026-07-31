@@ -13,7 +13,7 @@ The lab numbers follow slide sets from the ChipWhisperer.io training.
 | **1.1A:** Resychronizing Traces with Sum of Absolute Difference | <p align="center"> ✅  | <p align="center"> ✅  | <p align="center"> ✅  |
 | **1.1B:** Alternative Trace Resychronization                    | <p align="center"> ✅  | <p align="center"> ✅  | <p align="center"> ✅  |
 | **2.1:**  CPA on 32bit AES                                      | <p align="center"> ✅  | <p align="center"> ✅  | <p align="center"> ✅  |
-| **2.2:**  CPA on Hardware AES Implementation                    | <p align="center"> ✅  | <p align="center"> ✅  | <p align="center"> ✅  |
+| **2.2:**  CPA on Hardware AES Implementation                    | <p align="center"> ❌  | <p align="center"> ❌  | <p align="center"> ✅  |
 | **2.3:**  CPA on User FPGA AES Implementation                   | <p align="center"> ❌  | <p align="center"> ❌  | <p align="center"> ✅  |
 | **3.1A:** AES256 Bootloader Attack (Basic)                      | <p align="center"> ❌  | <p align="center"> ❌  | <p align="center"> ✅  |
 | **3.1B:** AES256 Bootloader Attack (Advanced)                   | <p align="center"> ❌  | <p align="center"> ❌  | <p align="center"> ✅  |
