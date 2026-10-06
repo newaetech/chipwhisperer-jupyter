@@ -2,6 +2,8 @@
 
 Welcome to the ultimate collection of ChipWhisperer Jupyter notebooks.
 
+**WARNING: Due to API changes, some labs may be under construction or deprecated. SCA101 and Fault101 are currently tested. Some other labs may not work!**
+
 
 ## Repo Contents
 
