@@ -1,0 +1,112 @@
+% template_explorer_guide.tex -- a starting point for a NEW student guide in the SCA101 house style.
+%
+% Copy this file, rename it, replace the text, and build:   pdflatex my_guide.tex   (twice, so the contents page fills in)
+% Every macro and environment of scaguide.sty is used once below, with a comment saying what it is for.
+% The three finished guides next to this file (Lab_2_1A_Explorer_Guide.tex, Lab_2_1B_Explorer_Guide.tex,
+% Lab_2_1A_Real_Husky_Guide.tex) are real examples of the same pieces in use.
+\documentclass[11pt,letterpaper]{article}
+\usepackage{scaguide}
+
+% header (top left / top right), footer (bottom left) and the PDF's title and subject
+\guidesetup{
+  headerleft={ChipWhisperer SCA101  -  Lab X Explorer Guide},
+  headerright={My New Explorer},
+  footerleft={Companion to: Lab X - My New Explorer.ipynb},
+  title={SCA101 Lab X Explorer - Step-by-Step Student Guide},
+  subject={Step-by-step guide to the Lab X Explorer notebook}}
+
+\begin{document}
+
+% ---------------------------------------------------------------- cover: kicker, title (use \\ for a line break), subtitle
+\guidecover{SCA101  -  LAB X  (EXPLORER)}{My New\\Explorer}{Step-by-step student guide: edit the numbers, watch the result change}
+
+Write one or two paragraphs here that say what the lab is about and what the notebook lets the student change. Plain text, \textbf{bold} for
+the key idea, \emph{italics} for a term, and \code{inline code} for anything the student types or sees on the screen
+(write \verb|\_| for an underscore inside normal text, for example \code{MY\_VARIABLE}).
+
+% ---------------------------------------------------------------- call-out boxes: kind = do | see | ifnot | warn | tip
+\begin{guidecallout}{tip}{HOW TO USE THIS GUIDE}
+This guide goes \textbf{with} the notebook. Keep the notebook open next to this PDF.
+\end{guidecallout}
+
+\guidehthree{The four colored boxes you will see everywhere}   % small teal heading (not in the contents)
+\guidelegend                                                   % the four-box legend
+
+\clearpage
+\tableofcontents    % filled in by the \guidehone / \guidehtwo / \guidestep headings; run pdflatex twice
+\clearpage
+
+% ---------------------------------------------------------------- headings
+%   \guidehone{...}  chapter heading        \guidehtwo{...}  section heading
+%   \guidestep{N}{...}  numbered step: navy badge + heading      \guidehthree{...}  small teal heading
+\guidehone{The big picture}
+What is the attack, or the idea? What is different about the Explorer?
+
+\guidehone{Step 1 - look at the data}
+\guidestep{1}{Look at a trace}
+Explain what the cell does. Then list the variables the student may edit:
+
+% ---------------------------------------------------------------- tables
+% Columns are R{fraction of the text width}; the fractions should add up to 1. The header row is navy; rows alternate white/grey.
+% Use \codesmall{...} for code inside a table cell and \textbf{...} for bold.
+{\small\arrayrulecolor{guidegrid}
+\rowcolors{2}{white}{guidezebra}
+\begin{longtable}{|R{0.22}|R{0.18}|R{0.60}|}
+\hline
+\rowcolor{guidenavy}\hdrcell{Variable} & \hdrcell{Default} & \hdrcell{What it does} \\ \hline
+\endhead
+\codesmall{TRACE}      & \codesmall{2}     & Which recorded trace to show: 0, 1, 2 or 3. \\ \hline
+\codesmall{START, END} & \codesmall{0, 600} & The zoom window, in samples. \\ \hline
+% a table cell with a source tag (used by the troubleshooting tables):  text\srctag{Reproduced}
+\end{longtable}}
+
+% ---------------------------------------------------------------- figures: \guidefigure{file}{width as a fraction of the text width}{caption}
+\guidefigure{figures/hw_step3.png}{0.85}{Caption: what the picture shows. Put your PNG files in the figures folder.}
+
+% ---------------------------------------------------------------- the five kinds of call-out
+\begin{guidecallout}{do}{DO THIS}
+\textbf{Try:} (1) change \code{TRACE} to 3. (2) Raise \code{SMOOTH}. What changes?
+\end{guidecallout}
+
+\begin{guidecallout}{see}{YOU SHOULD SEE}
+The plot redraws and the line under it says \code{showing samples 0 to 600}.
+\end{guidecallout}
+
+\begin{guidecallout}{ifnot}{IF IT DOESN'T}
+\code{FileNotFoundError: ...} -- the traces folder is missing. Run the Setup cell again.
+\end{guidecallout}
+
+\begin{guidecallout}{warn}{WATCH OUT}
+A mistake that costs time, and how to avoid it.
+\end{guidecallout}
+
+\begin{guidecallout}{tip}{GOOD TO KNOW}      % the title is free text: use it to name the box
+Extra background that is nice to have but not needed to finish the step.
+\end{guidecallout}
+
+% ---------------------------------------------------------------- code blocks (verbatim, keep lines under about 100 characters)
+\begin{guidecode}
+python -m pip install cwtraces "numpy<=1.26.4"
+\end{guidecode}
+
+% ---------------------------------------------------------------- lists
+\begin{enumerate}[label=\arabic*.,leftmargin=1.8em,itemsep=2pt,topsep=2pt,parsep=0pt]
+\item Start Jupyter and open the notebook.
+\item Choose \textbf{Kernel > Restart \& Run All}.     % write \& for an ampersand
+\end{enumerate}
+
+\guidehtwo{You are done when...}
+\begin{itemize}[leftmargin=1.6em,itemsep=2pt,topsep=2pt,parsep=0pt]
+\item You can say what the trace shows and why.
+\end{itemize}
+
+% keep a block together on a page / start a new page if less than this much room is left
+\Needspace{120pt}
+
+% ---------------------------------------------------------------- the licence notice that every guide ends with
+\guidehthree{Notice}
+\guidesmall{This guide accompanies ChipWhisperer course material that references (commercial) training material on ChipWhisperer.io. You can freely execute
+and use the lab per the open-source license (including in your own courses if you distribute similarly), but you must maintain notice about the source:
+https://www.ChipWhisperer.io.}
+
+\end{document}
