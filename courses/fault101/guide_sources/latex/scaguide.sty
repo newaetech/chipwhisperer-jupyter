@@ -1,0 +1,148 @@
+% scaguide.sty -- house style of the ChipWhisperer SCA101 student guides (navy / teal, coloured call-out boxes).
+%
+% Use it in a document like this:
+%     \documentclass[11pt,letterpaper]{article}
+%     \usepackage{scaguide}
+%     \guidesetup{headerleft={...}, headerright={...}, footerleft={...}, title={...}, subject={...}}
+%     \begin{document}
+%     \guidecover{KICKER}{Title line one\\Title line two}{Subtitle}
+%     ...
+% See template_explorer_guide.tex for every environment and macro in one place.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{scaguide}[2026/11/11 SCA101 student guide style]
+
+% ------------------------------------------------------------------ packages
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{lmodern}
+\IfFileExists{helvet.sty}{\RequirePackage[scaled=0.92]{helvet}}{}   % Helvetica look like the original PDFs; Latin Modern Sans if psnfss is missing
+\renewcommand{\familydefault}{\sfdefault}
+\RequirePackage[letterpaper,left=0.8in,right=0.8in,top=0.95in,bottom=0.9in,headheight=14pt,footskip=24pt]{geometry}
+\RequirePackage[table,dvipsnames]{xcolor}
+\RequirePackage{array,longtable,needspace,float,enumitem,fancyhdr,tocloft,keyval}
+\RequirePackage{graphicx}
+\RequirePackage[font=footnotesize,labelformat=empty,justification=centering,textfont={color=guidegrey}]{caption}
+\RequirePackage{tikz}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage[hidelinks,unicode]{hyperref}
+
+% ------------------------------------------------------------------ colours
+\definecolor{guidenavy}{HTML}{1F3A5F}
+\definecolor{guideteal}{HTML}{1B7F8C}
+\definecolor{guidegrey}{HTML}{5B6770}
+\definecolor{guidelight}{HTML}{F3F4F6}
+\definecolor{guidezebra}{HTML}{F6F8FA}
+\definecolor{guidegrid}{HTML}{C9CED3}
+\definecolor{guidecode}{HTML}{8B1A1A}
+% call-out boxes: background / bar colour for each kind
+\definecolor{co-do-bg}{HTML}{EAF1FD}    \definecolor{co-do-bar}{HTML}{2F6FDE}
+\definecolor{co-see-bg}{HTML}{E8F5EC}   \definecolor{co-see-bar}{HTML}{2E8B57}
+\definecolor{co-ifnot-bg}{HTML}{FFF3DE} \definecolor{co-ifnot-bar}{HTML}{D98200}
+\definecolor{co-warn-bg}{HTML}{FCE9E7}  \definecolor{co-warn-bar}{HTML}{C0392B}
+\definecolor{co-tip-bg}{HTML}{EFEAF8}   \definecolor{co-tip-bar}{HTML}{6B4FBB}
+
+% ------------------------------------------------------------------ page setup, header and footer
+\define@key{guide}{headerleft}{\def\guide@headerleft{#1}}
+\define@key{guide}{headerright}{\def\guide@headerright{#1}}
+\define@key{guide}{footerleft}{\def\guide@footerleft{#1}}
+\define@key{guide}{title}{\def\guide@title{#1}}
+\define@key{guide}{subject}{\def\guide@subject{#1}}
+\def\guide@headerleft{}\def\guide@headerright{}\def\guide@footerleft{}\def\guide@title{}\def\guide@subject{}
+\newcommand{\guidesetup}[1]{%
+  \setkeys{guide}{#1}%
+  \hypersetup{pdftitle={\guide@title},pdfsubject={\guide@subject},pdfauthor={ChipWhisperer SCA101 course materials}}%
+  \pagestyle{fancy}\fancyhf{}%
+  \renewcommand{\headrulewidth}{0.4pt}\renewcommand{\footrulewidth}{0.4pt}%
+  \renewcommand{\headrule}{\hbox to\headwidth{\color{guidegrid}\leaders\hrule height \headrulewidth\hfill}}%
+  \renewcommand{\footrule}{\hbox to\headwidth{\color{guidegrid}\leaders\hrule height \footrulewidth\hfill}}%
+  \fancyhead[L]{\footnotesize\color{guidegrey}\guide@headerleft}%
+  \fancyhead[R]{\footnotesize\color{guidegrey}\guide@headerright}%
+  \fancyfoot[L]{\footnotesize\color{guidegrey}\guide@footerleft}%
+  \fancyfoot[R]{\footnotesize\color{guidegrey}Page \thepage}%
+}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\AtBeginDocument{\raggedright}                 % left-aligned text like the original PDFs (no stretched lines around code)
+\linespread{1.08}
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{0}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsecfont}{\bfseries\small}
+\renewcommand{\cftsubsecfont}{\small}
+\renewcommand{\cftsecpagefont}{\small}
+\renewcommand{\cftsubsecpagefont}{\small}
+\renewcommand{\contentsname}{\textcolor{guidenavy}{\bfseries Contents}}
+\setlength{\cftbeforesecskip}{3pt}
+\setlength{\cftbeforesubsecskip}{0pt}
+
+% ------------------------------------------------------------------ headings
+%   \guidehone{Heading}   chapter-level heading (goes in the contents)
+%   \guidehtwo{Heading}   section-level heading (goes in the contents)
+%   \guidehthree{Heading}   small teal heading (not in the contents)
+%   \guidestep{1.1}{Heading}   numbered step: a navy badge followed by the heading (goes in the contents)
+\newcommand{\guidehone}[1]{\Needspace{4\baselineskip}\par\vspace{4pt}\phantomsection
+  {\color{guidenavy}\bfseries\fontsize{20}{24}\selectfont #1\par}\vspace{4pt}%
+  \addcontentsline{toc}{section}{#1}}
+\newcommand{\guidehtwo}[1]{\Needspace{3\baselineskip}\par\vspace{8pt}\phantomsection
+  {\color{guidenavy}\bfseries\fontsize{12.5}{16}\selectfont #1\par}\vspace{2pt}%
+  \addcontentsline{toc}{subsection}{#1}}
+\newcommand{\guidehthree}[1]{\Needspace{3\baselineskip}\par\vspace{4pt}%
+  {\color{guideteal}\bfseries\fontsize{10.5}{14}\selectfont #1\par}\vspace{1pt}}
+\newcommand{\guidestep}[2]{\Needspace{3\baselineskip}\par\vspace{8pt}\phantomsection
+  {\color{guidenavy}\bfseries\fontsize{12.5}{16}\selectfont \colorbox{guidenavy}{\textcolor{white}{\strut\,#1\,}}\ \ #2\par}\vspace{2pt}%
+  \addcontentsline{toc}{subsection}{#1\ \ #2}}
+
+% ------------------------------------------------------------------ cover page
+%   \guidecover{KICKER}{Title\\Second line}{Subtitle}
+\newcommand{\guidecover}[3]{\thispagestyle{empty}\vspace*{0.5in}%
+  {\color{guideteal}\bfseries\fontsize{12}{16}\selectfont #1\par}\vspace{6pt}%
+  {\color{guidenavy}\bfseries\fontsize{34}{40}\selectfont #2\par}\vspace{8pt}%
+  {\color{guidegrey}\fontsize{15}{20}\selectfont #3\par}\vspace{14pt}}
+
+% ------------------------------------------------------------------ inline code and small text
+\newcommand{\bk}{\allowbreak}                  % a place where a long code word may break
+\usetikzlibrary{arrows.meta}
+\newcommand{\code}[1]{{\color{guidecode}\ttfamily\small #1}}
+\newcommand{\codesmall}[1]{{\color{guidecode}\ttfamily\footnotesize #1}}
+\newcommand{\guidesmall}[1]{{\small\color{guidegrey}#1\par}}
+
+% ------------------------------------------------------------------ call-out boxes
+%   \begin{guidecallout}{do|see|ifnot|warn|tip}{TITLE} ... \end{guidecallout}
+%   do = DO THIS, see = YOU SHOULD SEE, ifnot = IF IT DOESN'T, warn = WATCH OUT, tip = GOOD TO KNOW
+\newenvironment{guidecallout}[2]{%
+  \begin{tcolorbox}[enhanced,breakable,boxrule=0pt,frame hidden,colback=co-#1-bg,
+    borderline west={3pt}{0pt}{co-#1-bar},left=7pt,right=7pt,top=4pt,bottom=3pt,
+    before skip=6pt,after skip=8pt]%
+  {\color{co-#1-bar}\bfseries\footnotesize #2\par}\vspace{2pt}\small}%
+  {\end{tcolorbox}}
+
+% ------------------------------------------------------------------ code box (verbatim)
+\lstdefinestyle{guidecodestyle}{basicstyle=\ttfamily\footnotesize,columns=fullflexible,keepspaces=true,
+  showstringspaces=false,upquote=true,breaklines=false}
+\newtcblisting{guidecode}{enhanced,listing only,breakable,boxrule=0pt,frame hidden,colback=guidelight,
+  borderline west={3pt}{0pt}{guideteal},left=8pt,right=4pt,top=4pt,bottom=4pt,before skip=4pt,after skip=7pt,
+  listing options={style=guidecodestyle}}
+
+% ------------------------------------------------------------------ tables
+%   \begin{guidetable}{0.3,0.7} ... \end{guidetable}   (column widths as fractions of the text width)
+% The generated documents use the lower-level macros below; edit the cells freely.
+\newcolumntype{R}[1]{>{\raggedright\arraybackslash}p{\dimexpr #1\linewidth-2\tabcolsep\relax}}
+\newcommand{\hdrcell}[1]{\textcolor{white}{\textbf{#1}}}
+\newcommand{\srctag}[1]{\par{\scriptsize\color{guidegrey}Source: #1}}
+\setlength{\LTpre}{2pt}\setlength{\LTpost}{8pt}
+
+% ------------------------------------------------------------------ four-box legend (DO THIS / YOU SHOULD SEE / ...)
+\newcommand{\guidelegendbox}[3]{%
+  \begin{tcolorbox}[enhanced,boxrule=0pt,frame hidden,colback=co-#1-bg,borderline west={3pt}{0pt}{co-#1-bar},
+    left=5pt,right=3pt,top=3pt,bottom=3pt,width=0.235\linewidth,nobeforeafter,valign=top]
+  {\color{co-#1-bar}\bfseries\scriptsize #2\par}{\scriptsize #3}\end{tcolorbox}}
+\newcommand{\guidelegend}{\par\noindent
+  \guidelegendbox{do}{DO THIS}{An action to take.}\hfill
+  \guidelegendbox{see}{YOU SHOULD SEE}{What the screen should show.}\hfill
+  \guidelegendbox{ifnot}{IF IT DOESN'T}{What to try if it didn't.}\hfill
+  \guidelegendbox{warn}{WATCH OUT}{A mistake that costs time.}\par\vspace{4pt}}
+
+% ------------------------------------------------------------------ figures: \guidefigure{file}{width as fraction of text width}{caption}
+\newcommand{\guidefigure}[3]{\begin{figure}[H]\centering\includegraphics[width=#2\linewidth]{#1}\caption*{#3}\end{figure}}
+
+\endinput
