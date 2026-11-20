@@ -20,7 +20,7 @@ doc = K.init(OUT,
              title="Fault101 Fault 2_2 Explorer - Step-by-Step Student Guide",
              subject="Step-by-step guide to the Fault 2_2 Voltage Glitching password-bypass Explorer: why Fault 2_1's settings do not carry over, and how to search for ones that do",
              roadmap=[("1  Reuse", "Fault 2_1's setting"), ("2 - 3  Map", "the nearby area"), ("4  Search", "a wider box"),
-                      ("5 - 6  Zoom", "in and compare"), ("7  Check", "the guess itself")])
+                      ("5 - 6  Zoom", "in and compare"), ("7  Check", "the guess itself"), ("8  Choose", "your own password")])
 
 
 def EDIT(rows):
@@ -47,7 +47,7 @@ S += table([
     ["`%s`" % NBNAME, "The Explorer. Everything in this guide happens here.", "**Yes**"],
     ["`Fault 2_2 - Voltage Glitching to Bypass Password.ipynb`", "The original (non-Explorer) lab.", "Optional"],
     ["`SOLN_Fault 2_2 - ...ipynb`", "Answer key for the original lab.", "If stuck"],
-    ["`firmware/mcu/simpleserial-glitch/simpleserial-glitch.c`", "(a different folder: `chipwhisperer/firmware/...`) The `password()` function this lab targets.", "Background"],
+    ["`firmware/mcu/simpleserial-glitch/simpleserial-glitch.c`", "(a different folder: `chipwhisperer/firmware/...`) The `password()` function this lab targets. **Step 8 edits the `passwd[]` line of it.**", "Step 8"],
 ], [3.0 * inch, 3.1 * inch, W - 6.1 * inch])
 S += [P("**The four colored boxes you will see everywhere**", h3)] + legend()
 S += [Spacer(1, 4),
@@ -83,6 +83,7 @@ S += table([
     ["5", "Zoom in on a success and map its neighbourhood.", "A usable plateau in width/offset - and a hard lesson: these settings drift over time."],
     ["6", "Compare `hp` alone against `hp + lp` together.", "Stronger is not always better - and even that comparison needs re-checking, because of the drift."],
     ["7", "Check whether the guess itself matters.", "It does not: this is a control-flow fault, not a side channel."],
+    ["8", "Change the firmware's password to your own, rebuild, reflash, and glitch it.", "The same setting that worked against \"touch\" keeps working, at roughly the same rate, against a password you chose yourself."],
 ], [0.8 * inch, 2.7 * inch, W - 3.5 * inch], bold_first_col=True)
 S += [PageBreak()]
 
@@ -151,7 +152,10 @@ S += [P("**Goal:** three experiments in the 'obvious' area found nothing but cra
         "ranges wider by hand, let the computer try **random** combinations across a much bigger box and watch "
         "for the first success.")]
 S += [P("**Do this:** run the cell as it is. **This can take a few minutes** and may find nothing within the "
-        "time budget - both are normal outcomes here.")]
+        "time budget - both are normal outcomes here. For a sense of scale: our test runs resolved anywhere from "
+        "under a minute to the full 4-minute default budget. **If you are running this live with a class and need "
+        "a hard time limit, lower `TIME_BUDGET_S`** - just expect the 'no bypass found' outcome to come up more "
+        "often, which is still a real result worth discussing, not a failure to fix.")]
 S += callout("see", [
     "This is the one experiment where how much luck you need varies a lot between runs. In one run, a search "
     "like this tried **7248 settings over about 230 seconds and found only 2 successes** - roughly 1 in 3600 "
@@ -224,6 +228,51 @@ S += callout("see", [
     "byte was wrong, so there is nothing to gain from a 'smarter' wrong guess - unlike a real side-channel attack, "
     "where the guess is everything."])
 
+# ================================================================ EXPERIMENT 8
+S += [H1("Experiment 8 - choose your own password (hardware)")]
+S += [P("Every experiment so far has glitched the same built-in password, `\"touch\"` - a line in the firmware's "
+        "source code, not a secret anyone is hiding. This step has you change it yourself, rebuild, reflash, and "
+        "glitch **your own** password, so you see firsthand - not just told - that the fault does not care what "
+        "the password is.")]
+S += [P("**Where the password lives**", h3)]
+S += table([
+    ["Folder", "`firmware/mcu/simpleserial-glitch/` - from the notebook, `../../../firmware/mcu/simpleserial-glitch/`"],
+    ["File", "`simpleserial-glitch.c` - the only file you edit"],
+    ["Line", "`char passwd[] = \"touch\";` inside `password()` (search for `passwd[]`)"],
+], [1.1 * inch, W - 1.1 * inch], header=False, bold_first_col=True)
+S += [P("**What counts as a good password here**", h3)]
+S += table([
+    ["Rule", "Why"],
+    ["**Exactly 5 characters**", "`password()`'s loop always compares 5 bytes (`for(cnt = 0; cnt < 5; cnt++)`). A shorter string would read past its own end; a longer one would just have its extra characters ignored. The notebook's `use_password()` enforces this."],
+    ["Plain printable characters, no `\"` or `\\`", "Anything else either breaks the C string on that line or cannot be typed as a guess."],
+], [2.6 * inch, W - 2.6 * inch])
+S += callout("do", [
+    "Run the helper cell once, set `MY_PASSWORD` to your own 5-character string, and run `use_password(MY_PASSWORD)`. "
+    "It edits the file, rebuilds, reflashes, and checks the new password with the chip for you."])
+S += callout("see", [
+    "`passok=1` for your new password, `passok=0` for a wrong guess - and if you try the old `\"touch\"`, that "
+    "comes back `passok=0` too: the chip only knows the password you just gave it."])
+S += [P("**Now glitch it.** Put one of your own best settings from Experiments 5-7 into the next cell (or start "
+        "from ours) and fire a wrong guess at it, exactly as in the earlier experiments - no change to the attack "
+        "itself, only the firmware underneath it.")]
+S += callout("see", [
+    "**The same setting that worked against `\"touch\"` kept working, at roughly the same rate, after we changed "
+    "the password** - we measured it three separate times: 15% (6 of 40) against `\"touch\"`, then 17% (5 of 30) "
+    "and separately 10% (3 of 30) against two different runs with a freshly-chosen 5-character password. None of "
+    "those three numbers match exactly, but they all sit in the same rough range - exactly what you would expect "
+    "given how much these settings already drift between runs of the *same* password (Experiment 2). That makes "
+    "sense once you remember why: changing `\"touch\"` to another 5-character string does not change the shape of "
+    "the compiled comparison loop, only the constant it compares against - the same instant in the program is "
+    "still the vulnerable one. If your own run doesn't reproduce this at all, drift happens here too - use "
+    "Experiment 4's search again; it works on whatever password is currently flashed, unchanged."])
+S += callout("warn", [
+    "**Put the original password back when you are done.** The last cell in this experiment has a "
+    "`RESTORE_ORIGINAL` flag (default `False`, so nothing happens by accident) - set it to `True` and run it to "
+    "restore `\"touch\"` and reflash, so the next person starts from the same place you did. The helper functions "
+    "also take care to preserve the firmware file's exact line endings when they edit it, so a careful restore "
+    "leaves `git status` clean - check it yourself with `git status` in the `firmware/` folder if you want to be "
+    "sure."])
+
 # ================================================================ CHALLENGES
 S += [H1("Challenges (optional)")]
 S += numbered([
@@ -242,6 +291,9 @@ S += table([
     ["Every shot is `reset`.", "You are inside a crash region for this width/offset.", "Try a smaller width, or a different part of the search space (Experiment 4)."],
     ["Experiment 4 finds nothing in the time budget.", "A real result - see Experiment 4's 'what you should see'.", "Run it again (new random settings), or raise `TIME_BUDGET_S`."],
     ["A setting that worked earlier stops working.", "Drift (see the warning after Experiment 5).", "Re-measure with fresh shots; try nearby settings too."],
+    ["`use_password()` raises a `ValueError`.", "Your password is not exactly 5 characters, or uses `\"`, `\\`, or a non-printable character.", "Pick a different 5-character password and try again."],
+    ["`use_password()` raises `RuntimeError: firmware build failed`.", "A typo elsewhere in `simpleserial-glitch.c`, or a stray edit from a previous session.", "Read the build output printed above the error; if the file looks wrong, run `restore_original_password()` and start Experiment 8 again."],
+    ["`git status` shows `simpleserial-glitch.c` changed after you restored it.", "You restored the password but left `RESTORE_ORIGINAL = False`, or edited the file by hand outside the notebook.", "Run Experiment 8's last cell with `RESTORE_ORIGINAL = True`, or `git checkout -- firmware/mcu/simpleserial-glitch/simpleserial-glitch.c` from a terminal."],
     ["`OSError: Could not find ChipWhisperer`.", "Husky unplugged, or another notebook still holds it.", "Plug it in; shut down every other notebook; restart this kernel."],
     ["`USBErrorPipe` / `Unknown hwInfoVer`.", "The Husky's USB link or FPGA stopped answering.", "Unplug and replug the Husky directly into the computer; restart the kernel."],
     ["A cell was interrupted (Stop button).", "Target or glitch hardware may be left in an odd state.", "Run `recover()` in a new cell."],
@@ -261,6 +313,8 @@ S += EDIT([
     ["`CENTER`", "a found success", "The `(width, offset, ext_offset)` Experiment 5 zooms in around."],
     ["`WIDTH_STEPS`, `OFFSET_STEPS`", "lists", "Offsets from `CENTER` tried in Experiment 5's grid."],
     ["`GUESSES`", "list", "The guesses compared in Experiment 7."],
+    ["`MY_PASSWORD`", '`"f1zz9"`', "The 5-character password Experiment 8 flashes onto the chip."],
+    ["`RESTORE_ORIGINAL`", "`False`", "Set to `True` and run Experiment 8's last cell to put `\"touch\"` back."],
 ])
 
 # ================================================================ GLOSSARY
