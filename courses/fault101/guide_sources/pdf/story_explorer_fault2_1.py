@@ -53,7 +53,8 @@ S += [Spacer(1, 4),
         "CW312T-SAM4S target (Windows 11, Python 3.12, ChipWhisperer 6.0.0, firmware 1.5.0). Your kit will very likely need "
         "**different** width/offset numbers - voltage glitching depends on the exact cabling and board, more than clock glitching "
         "does. The **method** in each experiment (scan, zoom in, compare) is what carries over; treat every specific number here "
-        "as an example, not a target to match." % GUIDE_VERSION, small),
+        "as an example, not a target to match. **Settings can also drift within a single session on the same kit** - read the "
+        "note after Experiment 2 before you assume a number here is permanent." % GUIDE_VERSION, small),
       PageBreak()]
 
 # ================================================================ CONTENTS
@@ -150,6 +151,13 @@ S += callout("see", [
     "The coarse pass is grey at small widths, red at large widths, with a sharp edge in between (near width **1800** on our kit) "
     "and **usually no green at all** - the successes live in a band only a few steps wide, just *below* the edge. The zoomed "
     "pass is where green shows up."])
+S += callout("warn", [
+    "**These settings drift, even on the same kit, within a single session.** Working through Fault 2_2 and 2_3 on this exact "
+    "board, a `(width, offset, ext_offset)` that gave a clean, repeatable result went completely quiet 20-30 minutes later with "
+    "nothing physically changed - board temperature rising from continuous glitching is the suspected cause (we measured the "
+    "Husky's internal temperature climb from about 44°C to 53°C over one long session). Expect the same here: if a width "
+    "that worked a while ago stops crashing or stops succeeding, don't assume you did something wrong - rerun Experiment 2 to "
+    "find the edge again before trusting an old number."], title="GOOD TO KNOW")
 
 # ================================================================ EXPERIMENT 3
 S += [H1("Experiment 3 - find the right moment")]
