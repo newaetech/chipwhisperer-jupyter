@@ -10,7 +10,7 @@ else:
     from pdfkit import *
 
 OUT = sys.argv[1]
-NBNAME = "Fault 2_1 - Introduction to Voltage Glitching.ipynb"
+NBNAME = "Fault 2_1 - Introduction to Voltage Glitching Explorer.ipynb"
 GUIDE_VERSION = "1.0 - November 2026"
 
 doc = K.init(OUT,

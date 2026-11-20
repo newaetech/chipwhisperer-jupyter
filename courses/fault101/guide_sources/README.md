@@ -9,7 +9,7 @@ markup syntax and the LaTeX backend, all of which work identically here).
 
 | Story script | PDF in `courses/fault101/` | Companion notebook |
 |---|---|---|
-| `pdf/story_explorer_fault2_1.py` | `Fault 2_1 Explorer - Student Guide.pdf` | `Fault 2_1 - Introduction to Voltage Glitching.ipynb` (hands-on edition) |
+| `pdf/story_explorer_fault2_1.py` | `Fault 2_1 Explorer - Student Guide.pdf` | `Fault 2_1 - Introduction to Voltage Glitching Explorer.ipynb` (hands-on edition; this file also serves as the lab's only notebook - there is no separate stock worksheet version, unlike 2_2 and 2_3) |
 | `pdf/story_explorer_fault2_2.py` | `Fault 2_2 Explorer - Student Guide.pdf` | `Fault 2_2 - Voltage Glitching to Bypass Password Explorer.ipynb` |
 | `pdf/story_explorer_fault2_3.py` | `Fault 2_3 Explorer - Student Guide.pdf` | `Fault 2_3 - Voltage Glitching to Memory Dump Explorer.ipynb` |
 
