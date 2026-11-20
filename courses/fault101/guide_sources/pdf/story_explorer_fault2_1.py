@@ -148,9 +148,12 @@ S += numbered([
     "Change `REPEAT` to 2 and find the edge again.",
 ])
 S += callout("see", [
-    "The coarse pass is grey at small widths, red at large widths, with a sharp edge in between (near width **1800** on our kit) "
-    "and **usually no green at all** - the successes live in a band only a few steps wide, just *below* the edge. The zoomed "
-    "pass is where green shows up."])
+    "Mostly grey, with **two separate red bands** - not one simple edge you cross and stay past. On our kit: grey from width 0 "
+    "up to about 1750, red from about **1800-1850**, back to **grey again** at 1900-2050, then red again from about 2100 up. "
+    "Either band can crash the target; the one near 1800 is the one with a success band hiding just below it (that is where "
+    "Experiment 1's setting, width 1770, sits). **No green anywhere in this coarse pass** (not even in the second red band, at "
+    "this offset) - the zoomed run around the *first* edge is where green shows up. If your own kit's bands land somewhere "
+    "else, zoom in on whichever red region appears first as you raise the width."])
 S += callout("warn", [
     "**These settings drift, even on the same kit, within a single session.** Working through Fault 2_2 and 2_3 on this exact "
     "board, a `(width, offset, ext_offset)` that gave a clean, repeatable result went completely quiet 20-30 minutes later with "
